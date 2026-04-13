@@ -1,0 +1,22 @@
+{
+  "name": "tracker",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "db:migrate": "pnpm --filter @tracker/db migrate",
+    "db:seed": "pnpm --filter @tracker/db seed",
+    "docker:up": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d",
+    "docker:down": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml down",
+    "docker:reset": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml down -v && pnpm docker:up",
+    "setup": "bash scripts/setup-dev.sh"
+  },
+  "devDependencies": {
+    "turbo": "latest",
+    "typescript": "^5.5.0"
+  }
+}

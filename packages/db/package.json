@@ -1,0 +1,39 @@
+{
+  "name": "@tracker/db",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "echo 'lint db'",
+    "migrate": "mikro-orm migration:up",
+    "migrate:create": "mikro-orm migration:create",
+    "seed": "ts-node src/seeds/run.ts",
+    "seed:full": "ts-node src/seeds/seed-data.ts"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": ["./src/mikro-orm.config.ts"]
+  },
+  "dependencies": {
+    "@mikro-orm/core": "^6.4.0",
+    "@mikro-orm/postgresql": "^6.4.0",
+    "@mikro-orm/migrations": "^6.4.0",
+    "@mikro-orm/cli": "^6.4.0",
+    "@mikro-orm/reflection": "^6.4.0",
+    "@mikro-orm/seeder": "^6.4.0",
+    "@tracker/shared": "workspace:*",
+    "@tracker/config": "workspace:*",
+    "uuid": "^10.0.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.0",
+    "@types/uuid": "^10.0.0",
+    "@types/bcrypt": "^5.0.0",
+    "bcrypt": "^5.1.0"
+  }
+}

@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.dark {
+  --p-surface-0: #111827;
+  --p-surface-50: #1f2937;
+  --p-surface-100: #374151;
+  --p-surface-200: #4b5563;
+  --p-surface-300: #6b7280;
+  --p-surface-400: #9ca3af;
+  --p-surface-500: #d1d5db;
+  --p-surface-600: #e5e7eb;
+  --p-surface-700: #f3f4f6;
+  --p-surface-800: #f9fafb;
+  --p-surface-900: #ffffff;
+  color-scheme: dark;
+}
+
+.dark body,
+.dark .p-component {
+  color: #e5e7eb;
+}
+
+.dark .p-datatable .p-datatable-tbody > tr {
+  color: #e5e7eb;
+}
+
+.dark .p-datatable .p-datatable-thead > tr > th {
+  color: #f3f4f6;
+}
+
+.dark .p-card {
+  color: #e5e7eb;
+}
+
+.dark .p-inputtext {
+  color: #f3f4f6;
+}
+
+.dark .p-dropdown-label {
+  color: #f3f4f6;
+}

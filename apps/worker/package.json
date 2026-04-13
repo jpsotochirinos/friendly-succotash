@@ -1,0 +1,35 @@
+{
+  "name": "@tracker/worker",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/main.ts",
+    "start": "node dist/main.js",
+    "lint": "echo 'lint worker'",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "bullmq": "^5.0.0",
+    "ioredis": "^5.4.0",
+    "@mikro-orm/core": "^6.4.0",
+    "@mikro-orm/postgresql": "^6.4.0",
+    "@tracker/shared": "workspace:*",
+    "@tracker/config": "workspace:*",
+    "@tracker/db": "workspace:*",
+    "playwright": "latest",
+    "nodemailer": "^6.9.0",
+    "nspell": "^2.1.0",
+    "mammoth": "^1.8.0",
+    "pdf-parse": "^1.1.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.0",
+    "vitest": "^2.0.0",
+    "@types/nodemailer": "^6.4.0",
+    "@types/nspell": "^2.1.0",
+    "@types/pdf-parse": "^1.1.0"
+  }
+}
