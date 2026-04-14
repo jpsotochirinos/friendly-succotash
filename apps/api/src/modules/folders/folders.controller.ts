@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Body } from '@nestjs/common';
 import { FoldersService } from './folders.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
@@ -8,32 +8,38 @@ export class FoldersController {
   constructor(private readonly foldersService: FoldersService) {}
 
   @Get('trackable/:trackableId')
-  @RequirePermissions('folder:read')
+  @RequirePermissions('document:read')
   async getFolderTree(@Param('trackableId') trackableId: string) {
     return this.foldersService.getFolderTree(trackableId);
   }
 
   @Post()
-  @RequirePermissions('folder:create')
-  async create(
+  @RequirePermissions('document:create')
+  async createFolder(
     @Body() dto: { name: string; trackableId: string; parentId?: string },
     @CurrentUser() user: any,
   ) {
     return this.foldersService.createSubfolder({
-      ...dto,
+      name: dto.name,
+      trackableId: dto.trackableId,
+      parentId: dto.parentId,
       organizationId: user.organizationId,
     });
   }
 
-  @Patch(':id')
-  @RequirePermissions('folder:update')
-  async rename(@Param('id') id: string, @Body('name') name: string) {
-    return this.foldersService.update(id, { name } as any);
+  @Patch('reorder')
+  @RequirePermissions('document:update')
+  async reorderFolders(@Body() dto: { orderedIds: string[] }) {
+    await this.foldersService.reorderFolders(dto.orderedIds);
+    return { ok: true };
   }
 
-  @Delete(':id')
-  @RequirePermissions('folder:delete')
-  async remove(@Param('id') id: string) {
-    return this.foldersService.remove(id);
+  @Patch(':id')
+  @RequirePermissions('document:update')
+  async updateFolder(
+    @Param('id') id: string,
+    @Body() dto: { name?: string; emoji?: string },
+  ) {
+    return this.foldersService.updateFolder(id, dto);
   }
 }

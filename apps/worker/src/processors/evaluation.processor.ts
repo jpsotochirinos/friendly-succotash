@@ -1,18 +1,17 @@
 import { Worker, Job } from 'bullmq';
-import { MikroORM, EntityManager } from '@mikro-orm/postgresql';
+import { MikroORM } from '@mikro-orm/postgresql';
 import { getRedisConnection } from '../config/redis';
 import { extractText, extractStructure } from '../utils/text-extractor';
 import { chunkText } from '../utils/text-chunker';
-import { checkSpelling } from '../services/spell-checker';
-import { validateStructure } from '../services/structure-validator';
-import { validateReferences } from '../services/reference-validator';
+import { checkSpelling, validateReferences, validateCitations, analyzeCoherence } from '@tracker/shared';
 
 interface EvaluationJobData {
   documentId: string;
   documentVersionId?: string;
   config: {
     spellCheckEnabled: boolean;
-    structureCheckEnabled: boolean;
+    citationCheckEnabled: boolean;
+    coherenceCheckEnabled: boolean;
     referenceCheckEnabled: boolean;
     templateDocId?: string;
     similarityThreshold: number;
@@ -32,97 +31,103 @@ export function createEvaluationWorker(orm: MikroORM) {
         filters: false,
       }) as any;
 
-      if (!doc.minioKey) {
-        throw new Error('Document has no file stored');
-      }
+      // ── Extract text ──────────────────────────────────────────────────────
+      let text = doc.contentText || '';
 
-      await job.updateProgress(10);
+      if (doc.minioKey) {
+        await job.updateProgress(10);
 
-      const { Client: MinioClient } = await import('minio');
-      const minio = new MinioClient({
-        endPoint: process.env.MINIO_ENDPOINT || 'localhost',
-        port: Number(process.env.MINIO_PORT) || 9000,
-        useSSL: process.env.MINIO_USE_SSL === 'true',
-        accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-        secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
-      });
-
-      const bucket = process.env.MINIO_BUCKET || 'tracker-storage';
-      const stream = await minio.getObject(bucket, doc.minioKey);
-      const chunks: Buffer[] = [];
-      for await (const chunk of stream) {
-        chunks.push(Buffer.from(chunk));
-      }
-      const fileBuffer = Buffer.concat(chunks);
-
-      await job.updateProgress(20);
-
-      const text = await extractText(fileBuffer, doc.mimeType || 'text/plain');
-      const headings = await extractStructure(fileBuffer, doc.mimeType || 'text/plain');
-
-      doc.contentText = text;
-      await em.flush();
-
-      await job.updateProgress(30);
-
-      const textChunks = chunkText(text);
-      await em.nativeDelete('DocumentChunk', { document: documentId });
-      for (let i = 0; i < textChunks.length; i++) {
-        em.create('DocumentChunk', {
-          document: documentId,
-          chunkIndex: i,
-          content: textChunks[i],
+        const { Client: MinioClient } = await import('minio');
+        const minio = new MinioClient({
+          endPoint: process.env.MINIO_ENDPOINT || 'localhost',
+          port: Number(process.env.MINIO_PORT) || 9000,
+          useSSL: process.env.MINIO_USE_SSL === 'true',
+          accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
+          secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
         });
+
+        const bucket = process.env.MINIO_BUCKET || 'tracker-storage';
+        const stream = await minio.getObject(bucket, doc.minioKey);
+        const chunks: Buffer[] = [];
+        for await (const chunk of stream) {
+          chunks.push(Buffer.from(chunk));
+        }
+        const fileBuffer = Buffer.concat(chunks);
+
+        await job.updateProgress(20);
+
+        text = await extractText(fileBuffer, doc.mimeType || 'text/plain');
+        await extractStructure(fileBuffer, doc.mimeType || 'text/plain');
+
+        doc.contentText = text;
+        await em.flush();
+
+        await job.updateProgress(30);
+
+        const textChunks = chunkText(text);
+        await em.nativeDelete('DocumentChunk', { document: documentId });
+        for (let i = 0; i < textChunks.length; i++) {
+          em.create('DocumentChunk', {
+            document: documentId,
+            chunkIndex: i,
+            content: textChunks[i],
+          });
+        }
+        await em.flush();
       }
-      await em.flush();
 
-      await job.updateProgress(50);
+      await job.updateProgress(35);
 
+      // ── Run checks ────────────────────────────────────────────────────────
       const evaluationDetails: Record<string, unknown> = {};
       let totalScore = 0;
       let checksRun = 0;
 
+      // Step 1 — Spelling (Spanish, real nspell)
       if (config.spellCheckEnabled) {
         const spellResult = await checkSpelling(text);
-        evaluationDetails.spelling = spellResult;
+        evaluationDetails.spelling = {
+          ...spellResult,
+          label: 'Ortografía (Español)',
+        };
         totalScore += spellResult.accuracy;
         checksRun++;
-        await job.updateProgress(60);
+        await job.updateProgress(55);
       }
 
-      if (config.structureCheckEnabled && config.templateDocId) {
-        const templateDoc = await em.findOne('Document', config.templateDocId, {
-          filters: false,
-        }) as any;
-
-        if (templateDoc?.minioKey) {
-          const templateStream = await minio.getObject(bucket, templateDoc.minioKey);
-          const templateChunks: Buffer[] = [];
-          for await (const chunk of templateStream) {
-            templateChunks.push(Buffer.from(chunk));
-          }
-          const templateBuffer = Buffer.concat(templateChunks);
-          const templateHeadings = await extractStructure(
-            templateBuffer,
-            templateDoc.mimeType || 'text/plain',
-          );
-
-          const structResult = validateStructure(headings, templateHeadings);
-          evaluationDetails.structure = structResult;
-          totalScore += structResult.completeness;
-          checksRun++;
-        }
-        await job.updateProgress(75);
+      // Step 2 — Citations
+      if (config.citationCheckEnabled) {
+        const citationResult = validateCitations(text);
+        evaluationDetails.citations = {
+          ...citationResult,
+          label: 'Citas y referencias',
+        };
+        totalScore += citationResult.score;
+        checksRun++;
+        await job.updateProgress(70);
       }
 
-      if (config.referenceCheckEnabled) {
-        const refResult = validateReferences(text);
-        evaluationDetails.references = refResult;
-        totalScore += refResult.formatScore;
+      // Step 3 — Coherence
+      if (config.coherenceCheckEnabled) {
+        const coherenceResult = await analyzeCoherence(text);
+        evaluationDetails.coherence = {
+          ...coherenceResult,
+          label: 'Coherencia textual',
+        };
+        totalScore += coherenceResult.score;
         checksRun++;
         await job.updateProgress(85);
       }
 
+      // Legacy reference check (kept for backward compat)
+      if (config.referenceCheckEnabled && !config.citationCheckEnabled) {
+        const refResult = validateReferences(text);
+        evaluationDetails.references = refResult;
+        totalScore += refResult.formatScore;
+        checksRun++;
+      }
+
+      // ── Score + persist ───────────────────────────────────────────────────
       const finalScore = checksRun > 0 ? totalScore / checksRun : 0;
       const threshold = config.similarityThreshold;
       const passed = finalScore >= threshold;
@@ -138,14 +143,17 @@ export function createEvaluationWorker(orm: MikroORM) {
       });
 
       doc.evaluationScore = finalScore;
-      await em.flush();
+      // Advance status: passed minimum criteria → in_review; failed → revision_needed
+      doc.reviewStatus = passed ? 'in_review' : 'revision_needed';
 
+      await em.flush();
       await job.updateProgress(100);
 
       return {
         documentId,
         score: finalScore,
         passed,
+        newStatus: doc.reviewStatus,
         details: evaluationDetails,
       };
     },
@@ -156,11 +164,13 @@ export function createEvaluationWorker(orm: MikroORM) {
   );
 
   worker.on('completed', (job, result) => {
-    console.log(`Evaluation ${job.id} completed: score=${result.score}, passed=${result.passed}`);
+    console.log(
+      `[eval] ${job.id} completed — score=${result.score.toFixed(2)}, status=${result.newStatus}`,
+    );
   });
 
   worker.on('failed', (job, err) => {
-    console.error(`Evaluation ${job?.id} failed:`, err.message);
+    console.error(`[eval] ${job?.id} failed:`, err.message);
   });
 
   return worker;

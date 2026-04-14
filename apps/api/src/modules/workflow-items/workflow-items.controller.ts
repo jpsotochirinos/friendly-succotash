@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query,
+  Controller, Get, Post, Patch, Delete, Body, Param,
 } from '@nestjs/common';
 import { WorkflowItemsService } from './workflow-items.service';
 import { WorkflowService } from '../workflow/workflow.service';

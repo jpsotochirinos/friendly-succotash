@@ -94,8 +94,8 @@ const isDark = ref(false);
 const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true');
 
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: 'pi pi-chart-bar' },
   { to: '/trackables', label: 'Clientes', icon: 'pi pi-list' },
+  { to: '/reviews', label: 'Cola de revisiones', icon: 'pi pi-check-square' },
   { to: '/templates', label: 'Plantillas', icon: 'pi pi-file' },
   { to: '/roles', label: 'Roles', icon: 'pi pi-users' },
   { to: '/trash', label: 'Papelera', icon: 'pi pi-trash' },

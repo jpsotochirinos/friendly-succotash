@@ -78,20 +78,29 @@
         <template #body="{ data }">
           <div class="flex gap-1">
             <Button
-              icon="pi pi-sitemap"
+              icon="pi pi-pencil"
               text
               rounded
               size="small"
-              v-tooltip.top="'Ver flujo'"
+              v-tooltip.top="'Editar'"
               @click="router.push(`/trackables/${data.id}/flow`)"
             />
             <Button
-              icon="pi pi-folder"
+              icon="pi pi-inbox"
               text
               rounded
               size="small"
-              v-tooltip.top="'Carpetas'"
-              @click="router.push(`/trackables/${data.id}/folders`)"
+              v-tooltip.top="'Archivar'"
+              @click="archiveTrackable(data)"
+            />
+            <Button
+              icon="pi pi-trash"
+              text
+              rounded
+              size="small"
+              severity="danger"
+              v-tooltip.top="'Eliminar'"
+              @click="confirmDeleteTrackable(data)"
             />
           </div>
         </template>
@@ -137,6 +146,8 @@
         />
       </template>
     </Dialog>
+
+    <ConfirmDialog />
   </div>
 </template>
 
@@ -152,10 +163,15 @@ import Dialog from 'primevue/dialog';
 import Textarea from 'primevue/textarea';
 import Calendar from 'primevue/calendar';
 import Tag from 'primevue/tag';
+import { useConfirm } from 'primevue/useconfirm';
+import { useToast } from 'primevue/usetoast';
+import ConfirmDialog from 'primevue/confirmdialog';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import { apiClient } from '@/api/client';
 
 const router = useRouter();
+const confirm = useConfirm();
+const toast = useToast();
 
 const trackables = ref<any[]>([]);
 const loading = ref(false);
@@ -241,6 +257,38 @@ async function createTrackable() {
   } finally {
     creating.value = false;
   }
+}
+
+async function archiveTrackable(trackable: any) {
+  try {
+    await apiClient.patch(`/trackables/${trackable.id}`, { status: 'archived' });
+    toast.add({ severity: 'success', summary: 'Cliente archivado', life: 3000 });
+    await loadTrackables(1);
+    first.value = 0;
+  } catch {
+    toast.add({ severity: 'error', summary: 'Error al archivar', life: 3000 });
+  }
+}
+
+function confirmDeleteTrackable(trackable: any) {
+  confirm.require({
+    message: `¿Estás seguro de eliminar "${trackable.title}"? Esta acción no se puede deshacer.`,
+    header: 'Confirmar eliminación',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Cancelar',
+    acceptClass: 'p-button-danger',
+    accept: async () => {
+      try {
+        await apiClient.delete(`/trackables/${trackable.id}`);
+        toast.add({ severity: 'success', summary: 'Cliente eliminado', life: 3000 });
+        await loadTrackables(1);
+        first.value = 0;
+      } catch {
+        toast.add({ severity: 'error', summary: 'Error al eliminar', life: 3000 });
+      }
+    },
+  });
 }
 
 onMounted(() => {

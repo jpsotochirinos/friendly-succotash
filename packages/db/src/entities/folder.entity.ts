@@ -14,6 +14,12 @@ export class Folder extends TenantBaseEntity {
   @Property({ length: 255 })
   name!: string;
 
+  @Property({ length: 10, nullable: true })
+  emoji?: string;
+
+  @Property({ type: 'int', default: 0 })
+  sortOrder: number = 0;
+
   @ManyToOne('Trackable', { nullable: false })
   trackable!: Trackable;
 

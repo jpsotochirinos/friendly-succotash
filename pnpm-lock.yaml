@@ -186,6 +186,9 @@ importers:
       chart.js:
         specifier: ^4.5.1
         version: 4.5.1
+      mammoth:
+        specifier: ^1.8.0
+        version: 1.12.0
       pinia:
         specifier: ^2.2.0
         version: 2.3.1(typescript@5.9.3)(vue@3.5.32(typescript@5.9.3))
@@ -210,6 +213,9 @@ importers:
       vue-router:
         specifier: ^4.4.0
         version: 4.6.4(vue@3.5.32(typescript@5.9.3))
+      vuedraggable:
+        specifier: ^4.1.0
+        version: 4.1.0(vue@3.5.32(typescript@5.9.3))
     devDependencies:
       '@playwright/test':
         specifier: latest
@@ -317,13 +323,13 @@ importers:
     dependencies:
       '@mikro-orm/cli':
         specifier: ^6.4.0
-        version: 6.6.13(pg@8.20.0)
+        version: 6.6.13
       '@mikro-orm/core':
         specifier: ^6.4.0
         version: 6.6.13
       '@mikro-orm/migrations':
         specifier: ^6.4.0
-        version: 6.6.13(@mikro-orm/core@6.6.13)(@types/node@25.6.0)(pg@8.20.0)
+        version: 6.6.13(@mikro-orm/core@6.6.13)(@types/node@25.6.0)
       '@mikro-orm/postgresql':
         specifier: ^6.4.0
         version: 6.6.13(@mikro-orm/core@6.6.13)
@@ -363,7 +369,17 @@ importers:
         version: 5.9.3
 
   packages/shared:
+    dependencies:
+      dictionary-es:
+        specifier: ^4.0.0
+        version: 4.0.0
+      nspell:
+        specifier: ^2.1.0
+        version: 2.1.5
     devDependencies:
+      '@types/nspell':
+        specifier: ^2.1.0
+        version: 2.1.6
       typescript:
         specifier: ^5.5.0
         version: 5.9.3
@@ -2142,6 +2158,9 @@ packages:
   dezalgo@1.0.4:
     resolution: {integrity: sha512-rXSP0bf+5n0Qonsb+SVVfNfIsimO4HEtmnIpPHY8Q1UCzKlQrDMfdobr8nJOOsRgWCyMRqeSBQzmWUMq7zvVig==}
 
+  dictionary-es@4.0.0:
+    resolution: {integrity: sha512-8J3IYdaHYmkojxqhB+DneQpek6N/s3MwbVk3bPNGQSTBT5kxJtmbuiT0LSDP0Al6K9Vevo1sjspG8AGP9Yvxiw==}
+
   didyoumean@1.2.2:
     resolution: {integrity: sha512-gxtyfqMg7GKyhQmb056K7M3xszy/myH8w+B4RT+QXBQsvAOdc3XymqDDPHx1BgPgsdAA5SIifona89YtRATDzw==}
 
@@ -3654,6 +3673,9 @@ packages:
     resolution: {integrity: sha512-oZ7iUCxph8WYRHHcjBEc9unw3adt5CmSNlppj/5Q4k2RIrhl8Z5yY2Xr4j9zj0+wzVZ0bxmYoGSzKJnRl6A4yg==}
     engines: {node: '>=10.2.0'}
 
+  sortablejs@1.14.0:
+    resolution: {integrity: sha512-pBXvQCs5/33fdN1/39pPL0NZF20LeRbLQ5jtnheIPN9JQAaufGjKdWduZn4U7wCtVuzKhmRkI0DFYHYRbB2H1w==}
+
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -4168,6 +4190,11 @@ packages:
       typescript:
         optional: true
 
+  vuedraggable@4.1.0:
+    resolution: {integrity: sha512-FU5HCWBmsf20GpP3eudURW3WdWTKIbEIQxh9/8GE806hydR9qZqRRxRE3RjqX7PkuLuMQG/A7n3cfj9rCEchww==}
+    peerDependencies:
+      vue: ^3.0.1
+
   w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
     engines: {node: '>=18'}
@@ -4617,7 +4644,7 @@ snapshots:
 
   '@microsoft/tsdoc@0.15.1': {}
 
-  '@mikro-orm/cli@6.6.13(pg@8.20.0)':
+  '@mikro-orm/cli@6.6.13':
     dependencies:
       '@jercle/yargonaut': 1.1.5
       '@mikro-orm/core': 6.6.13
@@ -4664,7 +4691,7 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/migrations@6.6.13(@mikro-orm/core@6.6.13)(@types/node@25.6.0)(pg@8.20.0)':
+  '@mikro-orm/migrations@6.6.13(@mikro-orm/core@6.6.13)(@types/node@25.6.0)':
     dependencies:
       '@mikro-orm/core': 6.6.13
       '@mikro-orm/knex': 6.6.13(@mikro-orm/core@6.6.13)(pg@8.20.0)
@@ -6177,6 +6204,8 @@ snapshots:
     dependencies:
       asap: 2.0.6
       wrappy: 1.0.2
+
+  dictionary-es@4.0.0: {}
 
   didyoumean@1.2.2: {}
 
@@ -7824,6 +7853,8 @@ snapshots:
       - supports-color
       - utf-8-validate
 
+  sortablejs@1.14.0: {}
+
   source-map-js@1.2.1: {}
 
   source-map-support@0.5.21:
@@ -8327,6 +8358,11 @@ snapshots:
       '@vue/shared': 3.5.32
     optionalDependencies:
       typescript: 5.9.3
+
+  vuedraggable@4.1.0(vue@3.5.32(typescript@5.9.3)):
+    dependencies:
+      sortablejs: 1.14.0
+      vue: 3.5.32(typescript@5.9.3)
 
   w3c-xmlserializer@5.0.0:
     dependencies:

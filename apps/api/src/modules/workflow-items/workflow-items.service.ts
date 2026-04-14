@@ -42,6 +42,7 @@ export class WorkflowItemsService extends BaseCrudService<WorkflowItem> {
       dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
       requiresDocument: dto.requiresDocument || false,
       documentTemplate: dto.documentTemplateId || undefined,
+      metadata: dto.metadata,
       organization: organizationId,
     } as any);
 

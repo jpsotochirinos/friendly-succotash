@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString, IsEnum, IsBoolean, IsInt } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsEnum, IsBoolean, IsInt, IsObject } from 'class-validator';
 import { WorkflowItemType, ActionType } from '@tracker/shared';
 
 export class CreateWorkflowItemDto {
@@ -46,4 +46,8 @@ export class CreateWorkflowItemDto {
   @IsString()
   @IsOptional()
   documentTemplateId?: string;
+
+  @IsObject()
+  @IsOptional()
+  metadata?: Record<string, unknown>;
 }

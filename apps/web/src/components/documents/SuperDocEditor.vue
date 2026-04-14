@@ -39,11 +39,12 @@
           @click="exportDocument"
         />
         <Button
-          v-if="reviewStatus === 'draft'"
+          v-if="(reviewStatus === 'draft' || reviewStatus === 'revision_needed') && !hasUnsavedChanges"
           label="Enviar a revisión"
           icon="pi pi-send"
           size="small"
           severity="info"
+          :loading="submitting"
           @click="submitForReview"
         />
       </div>
@@ -65,6 +66,7 @@ import Button from 'primevue/button';
 import SelectButton from 'primevue/selectbutton';
 import Divider from 'primevue/divider';
 import Tag from 'primevue/tag';
+import { useToast } from 'primevue/usetoast';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import { apiClient } from '@/api/client';
 
@@ -79,10 +81,13 @@ const emit = defineEmits<{
   back: [];
 }>();
 
+const toast = useToast();
+
 const documentTitle = ref('');
 const reviewStatus = ref('');
 const hasUnsavedChanges = ref(false);
 const saving = ref(false);
+const submitting = ref(false);
 const editingMode = ref<'editing' | 'suggesting' | 'viewing'>('editing');
 
 let superdoc: any = null;
@@ -155,12 +160,23 @@ async function saveDocument() {
   try {
     const textContent = superdoc.getTextContent?.() || '';
 
+    const exported = await superdoc.export?.({ isFinalDoc: true });
+    if (exported instanceof Blob) {
+      const formData = new FormData();
+      const filename = `${documentTitle.value || 'document'}.docx`;
+      formData.append('file', exported, filename);
+      await apiClient.post(`/documents/${props.documentId}/version`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    }
+
     await apiClient.patch(`/documents/${props.documentId}/editor-content`, {
       editorContent: { savedAt: new Date().toISOString() },
       contentText: textContent,
     });
 
     hasUnsavedChanges.value = false;
+    reviewStatus.value = 'draft';
     emit('saved', props.documentId);
   } finally {
     saving.value = false;
@@ -182,11 +198,33 @@ async function exportDocument() {
 }
 
 async function submitForReview() {
-  await apiClient.patch(`/documents/${props.documentId}`, {
-    reviewStatus: 'in_review',
-  });
-  reviewStatus.value = 'in_review';
-  emit('statusChanged', props.documentId, 'in_review');
+  submitting.value = true;
+  try {
+    // Save any pending changes first
+    if (hasUnsavedChanges.value) {
+      await saveDocument();
+    }
+
+    await apiClient.post(`/documents/${props.documentId}/submit-review`);
+    reviewStatus.value = 'submitted';
+    emit('statusChanged', props.documentId, 'submitted');
+
+    toast.add({
+      severity: 'info',
+      summary: 'Documento enviado a evaluación',
+      detail: 'Se está analizando ortografía, citas y coherencia. El estado se actualizará automáticamente.',
+      life: 6000,
+    });
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'Error al enviar',
+      detail: 'No se pudo enviar el documento a revisión.',
+      life: 4000,
+    });
+  } finally {
+    submitting.value = false;
+  }
 }
 </script>
 

@@ -27,12 +27,7 @@ export const router = createRouter({
       component: AppLayout,
       meta: { requiresAuth: true },
       children: [
-        { path: '', redirect: '/dashboard' },
-        {
-          path: 'dashboard',
-          name: 'dashboard',
-          component: () => import('../views/dashboard/DashboardView.vue'),
-        },
+        { path: '', redirect: '/trackables' },
         {
           path: 'trackables',
           name: 'trackables',
@@ -45,10 +40,9 @@ export const router = createRouter({
           props: true,
         },
         {
-          path: 'trackables/:id/folders',
-          name: 'trackable-folders',
-          component: () => import('../views/documents/FolderBrowserView.vue'),
-          props: true,
+          path: 'reviews',
+          name: 'reviews',
+          component: () => import('../views/reviews/ReviewQueueView.vue'),
         },
         {
           path: 'templates',

@@ -10,8 +10,13 @@
     "lint": "echo 'lint shared'",
     "test": "vitest run"
   },
+  "dependencies": {
+    "nspell": "^2.1.0",
+    "dictionary-es": "^4.0.0"
+  },
   "devDependencies": {
     "typescript": "^5.5.0",
-    "vitest": "^2.0.0"
+    "vitest": "^2.0.0",
+    "@types/nspell": "^2.1.0"
   }
 }
