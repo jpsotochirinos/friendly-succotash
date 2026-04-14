@@ -30,7 +30,7 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Trackables by status chart -->
+      <!-- Clientes by status chart -->
       <Card>
         <template #title>Estado de trackables</template>
         <template #content>

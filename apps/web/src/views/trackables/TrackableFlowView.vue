@@ -12,7 +12,7 @@
         />
         <Button
           icon="pi pi-plus"
-          label="+ Agregar item"
+          label="Agregar item"
           size="small"
           @click="showCreateDialog = true"
         />
@@ -130,6 +130,55 @@
             />
           </div>
         </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
+          <div class="flex items-center justify-between mb-3">
+            <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Documentos</label>
+            <div class="flex gap-1">
+              <Button
+                icon="pi pi-upload"
+                text
+                rounded
+                size="small"
+                v-tooltip="'Subir archivo'"
+                @click="triggerFileUpload"
+              />
+              <Button
+                icon="pi pi-file-edit"
+                text
+                rounded
+                size="small"
+                v-tooltip="'Nuevo documento'"
+                @click="showNewDocDialog = true"
+              />
+            </div>
+          </div>
+
+          <div v-if="documentsLoading" class="text-center py-2">
+            <i class="pi pi-spin pi-spinner text-gray-400 text-sm" />
+          </div>
+
+          <div v-else-if="itemDocuments.length === 0" class="text-xs text-gray-400 dark:text-gray-500 py-4 text-center">
+            Sin documentos
+          </div>
+
+          <div v-else class="space-y-2">
+            <div
+              v-for="doc in itemDocuments"
+              :key="doc.id"
+              class="p-2 bg-gray-50 dark:bg-gray-700 rounded text-sm hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+              @click="router.push(`/documents/${doc.id}/edit`)"
+            >
+              <div class="flex items-center gap-2 mb-1">
+                <i class="pi pi-file text-xs text-gray-500" />
+                <span class="font-medium text-gray-700 dark:text-gray-200 truncate">{{ doc.title }}</span>
+              </div>
+              <div v-if="doc.reviewStatus" class="text-xs text-gray-500 dark:text-gray-400">
+                {{ doc.reviewStatus }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -208,12 +257,38 @@
         <Button label="Crear" :disabled="!newItem.title || !newItem.itemType" @click="createItem" />
       </template>
     </Dialog>
+
+    <Dialog
+      v-model:visible="showNewDocDialog"
+      header="Nuevo documento"
+      :modal="true"
+      :style="{ width: '400px' }"
+    >
+      <div class="flex flex-col gap-4 pt-2">
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Título *</label>
+          <InputText v-model="newDocTitle" placeholder="Título del documento" />
+        </div>
+      </div>
+
+      <template #footer>
+        <Button label="Cancelar" text @click="showNewDocDialog = false" />
+        <Button label="Crear" :disabled="!newDocTitle" @click="createBlankDocument" />
+      </template>
+    </Dialog>
+
+    <input
+      ref="uploadInputRef"
+      type="file"
+      style="display: none"
+      @change="handleFileUpload"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
@@ -239,6 +314,7 @@ interface WorkflowItem {
 }
 
 const route = useRoute();
+const router = useRouter();
 const toast = useToast();
 const trackableId = route.params.id as string;
 
@@ -248,6 +324,13 @@ const selectedItem = ref<WorkflowItem | null>(null);
 const availableTransitions = ref<Array<{ to: string; label: string }>>([]);
 const showCreateDialog = ref(false);
 const users = ref<Array<{ id: string; firstName?: string; email: string }>>([]);
+
+const rootFolderId = ref<string | null>(null);
+const itemDocuments = ref<Array<{ id: string; title: string; reviewStatus: string; mimeType?: string }>>([]);
+const documentsLoading = ref(false);
+const showNewDocDialog = ref(false);
+const newDocTitle = ref('');
+const uploadInputRef = ref<HTMLInputElement | null>(null);
 
 const columns = [
   { key: 'pending', label: 'Pendiente', bg: 'bg-gray-100 dark:bg-gray-800', border: 'border-gray-400' },
@@ -347,10 +430,35 @@ async function loadUsers() {
   users.value = Array.isArray(data) ? data : data.data;
 }
 
+async function loadRootFolder() {
+  try {
+    const { data } = await apiClient.get(`/folders/trackable/${trackableId}`);
+    if (data && data.length > 0) {
+      rootFolderId.value = data[0].id;
+    }
+  } catch (error) {
+    console.error('Error cargando carpeta raíz:', error);
+  }
+}
+
+async function loadItemDocuments(itemId: string) {
+  try {
+    documentsLoading.value = true;
+    const { data } = await apiClient.get('/documents', { params: { workflowItemId: itemId } });
+    itemDocuments.value = Array.isArray(data) ? data : data.data || [];
+  } catch (error) {
+    console.error('Error cargando documentos:', error);
+    itemDocuments.value = [];
+  } finally {
+    documentsLoading.value = false;
+  }
+}
+
 async function openSidebar(item: WorkflowItem) {
   selectedItem.value = item;
   const { data } = await apiClient.get(`/workflow-items/${item.id}/transitions`);
   availableTransitions.value = data;
+  await loadItemDocuments(item.id);
 }
 
 async function handleTransition(itemId: string, targetStatus: string) {
@@ -382,8 +490,60 @@ async function createItem() {
   toast.add({ severity: 'success', summary: 'Item creado', life: 3000 });
 }
 
+function triggerFileUpload() {
+  uploadInputRef.value?.click();
+}
+
+async function handleFileUpload(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file || !selectedItem.value || !rootFolderId.value) return;
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', file.name.replace(/\.[^/.]+$/, ''));
+    formData.append('folderId', rootFolderId.value);
+    formData.append('trackableId', trackableId);
+    formData.append('workflowItemId', selectedItem.value.id);
+
+    await apiClient.post('/documents/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+
+    await loadItemDocuments(selectedItem.value.id);
+    toast.add({ severity: 'success', summary: 'Archivo subido', life: 3000 });
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error al subir archivo', life: 3000 });
+  }
+
+  input.value = '';
+}
+
+async function createBlankDocument() {
+  if (!newDocTitle.value || !selectedItem.value || !rootFolderId.value) return;
+
+  try {
+    const { data } = await apiClient.post('/documents/create-blank', {
+      title: newDocTitle.value,
+      folderId: rootFolderId.value,
+      trackableId,
+      workflowItemId: selectedItem.value.id,
+    });
+
+    showNewDocDialog.value = false;
+    newDocTitle.value = '';
+    await loadItemDocuments(selectedItem.value.id);
+
+    router.push(`/documents/${data.id}/edit`);
+    toast.add({ severity: 'success', summary: 'Documento creado', life: 3000 });
+  } catch (error) {
+    toast.add({ severity: 'error', summary: 'Error al crear documento', life: 3000 });
+  }
+}
+
 onMounted(async () => {
-  await Promise.all([loadTrackable(), loadItems(), loadUsers()]);
+  await Promise.all([loadTrackable(), loadItems(), loadUsers(), loadRootFolder()]);
 });
 </script>
 

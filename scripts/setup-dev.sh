@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== Tracker Development Setup ==="
+echo "=== Alega Development Setup ==="
 
 # Check prerequisites
 command -v node >/dev/null 2>&1 || { echo "Node.js is required but not installed."; exit 1; }

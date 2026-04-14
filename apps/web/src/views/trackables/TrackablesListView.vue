@@ -1,8 +1,8 @@
 <template>
   <div class="p-6 space-y-6">
     <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold dark:text-gray-100">Trackables</h1>
-      <Button label="+ Nuevo trackable" icon="pi pi-plus" @click="showCreateDialog = true" />
+      <h1 class="text-2xl font-bold dark:text-gray-100">Clientes</h1>
+      <Button label="Nuevo cliente" icon="pi pi-plus" @click="showCreateDialog = true" />
     </div>
 
     <div class="flex flex-wrap gap-3 items-center">
@@ -100,7 +100,7 @@
 
     <Dialog
       v-model:visible="showCreateDialog"
-      header="Nuevo trackable"
+      header="Nuevo cliente"
       :modal="true"
       :style="{ width: '480px' }"
     >

@@ -138,7 +138,7 @@ onMounted(() => {
 
     <div class="flex items-center justify-between mb-4">
       <h1 class="text-2xl font-bold dark:text-white">Gestión de Roles</h1>
-      <Button label="+ Nuevo rol" icon="pi pi-plus" @click="openCreate" />
+      <Button label="Nuevo rol" icon="pi pi-plus" @click="openCreate" />
     </div>
 
     <DataTable :value="roles" :loading="loading" stripedRows responsiveLayout="scroll" class="dark:bg-surface-800">

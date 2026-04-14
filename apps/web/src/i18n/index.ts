@@ -2,7 +2,7 @@ import { createI18n } from 'vue-i18n';
 
 const messages = {
   es: {
-    app: { name: 'Tracker', loading: 'Cargando...' },
+    app: { name: 'Alega', loading: 'Cargando...' },
     auth: {
       login: 'Iniciar sesión',
       register: 'Registrarse',
@@ -10,14 +10,14 @@ const messages = {
     },
     nav: {
       dashboard: 'Dashboard',
-      trackables: 'Trackables',
+      trackables: 'Clientes',
       documents: 'Documentos',
       templates: 'Plantillas',
       logout: 'Cerrar sesión',
     },
   },
   en: {
-    app: { name: 'Tracker', loading: 'Loading...' },
+    app: { name: 'Alega', loading: 'Loading...' },
     auth: {
       login: 'Log in',
       register: 'Register',
@@ -25,7 +25,7 @@ const messages = {
     },
     nav: {
       dashboard: 'Dashboard',
-      trackables: 'Trackables',
+      trackables: 'Clientes',
       documents: 'Documents',
       templates: 'Templates',
       logout: 'Logout',

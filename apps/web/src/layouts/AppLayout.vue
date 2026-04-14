@@ -15,7 +15,7 @@
           v-show="!collapsed"
           class="text-xl font-bold text-blue-600 whitespace-nowrap overflow-hidden"
         >
-          Tracker
+          Alega
         </h1>
       </div>
 
@@ -95,7 +95,7 @@ const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true');
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: 'pi pi-chart-bar' },
-  { to: '/trackables', label: 'Trackables', icon: 'pi pi-list' },
+  { to: '/trackables', label: 'Clientes', icon: 'pi pi-list' },
   { to: '/templates', label: 'Plantillas', icon: 'pi pi-file' },
   { to: '/roles', label: 'Roles', icon: 'pi pi-users' },
   { to: '/trash', label: 'Papelera', icon: 'pi pi-trash' },
