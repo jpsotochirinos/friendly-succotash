@@ -8,6 +8,7 @@ import { DocumentsService } from './documents.service';
 import { SaveEditorContentDto } from './dto/save-editor.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
+import { SkipActivityLog } from '../../common/interceptors/skip-activity-log.decorator';
 
 @Controller('documents')
 export class DocumentsController {
@@ -84,6 +85,16 @@ export class DocumentsController {
       user.organizationId,
       dto.trackableId,
     );
+  }
+
+  @Post('ai/complete')
+  @RequirePermissions('document:read')
+  @SkipActivityLog()
+  async aiComplete(
+    @Body() body: { messages: unknown[]; stream?: boolean; options?: Record<string, unknown> },
+    @Res() res: Response,
+  ) {
+    return this.documentsService.aiComplete(body, res);
   }
 
   @Post(':id/export-docx')

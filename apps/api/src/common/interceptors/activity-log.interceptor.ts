@@ -4,17 +4,28 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Observable, tap } from 'rxjs';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ActivityLog } from '@tracker/db';
+import { SKIP_ACTIVITY_LOG } from './skip-activity-log.decorator';
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 @Injectable()
 export class ActivityLogInterceptor implements NestInterceptor {
-  constructor(private readonly em: EntityManager) {}
+  constructor(
+    private readonly em: EntityManager,
+    private readonly reflector: Reflector,
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const skip = this.reflector.getAllAndOverride<boolean>(SKIP_ACTIVITY_LOG, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (skip) return next.handle();
+
     const request = context.switchToHttp().getRequest();
     const method = request.method;
 

@@ -69,6 +69,17 @@
                 >
                   Sin items
                 </div>
+                <div>
+                  <Button
+                    v-if="activeTab === 0 && col.label === 'Pendiente' "
+                    icon="pi pi-plus"
+                    label="Agregar item"
+                    size="small"
+                    severity="secondary"
+                    variant="text"
+                    @click="showCreateDialog = true"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -133,7 +144,16 @@
         <div class="p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-3">
             <h2 class="text-lg font-semibold dark:text-gray-100">Actividades del cliente</h2>
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
+              <Button
+                v-if="activeTab === 3"
+                icon="pi pi-plus"
+                label="Agregar actividad"
+                size="small"
+                severity="secondary"
+                variant="text"
+                @click="showCreateDialog = true"
+              />
               <Dropdown
                 v-model="activityStatusFilter"
                 :options="statusFilterOptions"
@@ -542,8 +562,12 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha límite</label>
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha inicio</label>
           <Calendar v-model="newItem.dueDate" date-format="dd/mm/yy" show-icon />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha límite</label>
+          <Calendar v-model="newItem.startDate" date-format="dd/mm/yy" show-icon />
         </div>
       </div>
 
@@ -771,6 +795,7 @@ const newItem = ref({
   assignedToId: '',
   parentId: '',
   dueDate: null as Date | null,
+  startDate: null as Date | null,
 });
 
 const userOptions = computed(() =>
@@ -930,7 +955,7 @@ async function createItem() {
 
   await apiClient.post('/workflow-items', payload);
   showCreateDialog.value = false;
-  newItem.value = { title: '', itemType: '', actionType: '', assignedToId: '', parentId: '', dueDate: null };
+  newItem.value = { title: '', itemType: '', actionType: '', assignedToId: '', parentId: '', dueDate: null, startDate: null };
   await loadItems();
   toast.add({ severity: 'success', summary: 'Item creado', life: 3000 });
 }
@@ -1138,16 +1163,31 @@ const calendarCells = computed(() => {
   return cells;
 });
 
+const calendarPalette = [
+  'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+  'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
+  'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300',
+  'bg-lime-100 dark:bg-lime-900/40 text-lime-700 dark:text-lime-300',
+  'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
+  'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
+  'bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300',
+  'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300',
+  'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300',
+  'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300',
+  'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+  'bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-700 dark:text-fuchsia-300',
+  'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300',
+  'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300',
+];
+
 function calendarEventClass(item: WorkflowItem): string {
-  const base: Record<string, string> = {
-    pending: 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200',
-    active: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
-    in_progress: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
-    under_review: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
-    validated: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
-    closed: 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400',
-  };
-  return base[item.status] ?? base.pending;
+  let hash = 0;
+  for (let i = 0; i < item.id.length; i++) {
+    hash = (hash * 31 + item.id.charCodeAt(i)) >>> 0;
+  }
+  return calendarPalette[hash % calendarPalette.length];
 }
 
 // ── Activities tab ─────────────────────────────────────────────────────────────

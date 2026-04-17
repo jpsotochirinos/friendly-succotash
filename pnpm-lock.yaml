@@ -168,6 +168,9 @@ importers:
       '@primevue/themes':
         specifier: ^4.0.0
         version: 4.5.4
+      '@superdoc-dev/ai':
+        specifier: ^0.1.6
+        version: 0.1.6(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(superdoc@1.26.0(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.30))(yjs@13.6.30))(@noble/hashes@1.8.0)(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.0)(prosemirror-view@1.41.8)(typescript@5.9.3)(y-prosemirror@1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(y-protocols@1.0.7(yjs@13.6.30))(yjs@13.6.30))(yjs@13.6.30))
       '@vue-flow/background':
         specifier: ^1.3.0
         version: 1.3.2(@vue-flow/core@1.48.2(vue@3.5.32(typescript@5.9.3)))(vue@3.5.32(typescript@5.9.3))
@@ -323,13 +326,13 @@ importers:
     dependencies:
       '@mikro-orm/cli':
         specifier: ^6.4.0
-        version: 6.6.13
+        version: 6.6.13(pg@8.20.0)
       '@mikro-orm/core':
         specifier: ^6.4.0
         version: 6.6.13
       '@mikro-orm/migrations':
         specifier: ^6.4.0
-        version: 6.6.13(@mikro-orm/core@6.6.13)(@types/node@25.6.0)
+        version: 6.6.13(@mikro-orm/core@6.6.13)(@types/node@25.6.0)(pg@8.20.0)
       '@mikro-orm/postgresql':
         specifier: ^6.4.0
         version: 6.6.13(@mikro-orm/core@6.6.13)
@@ -1154,6 +1157,14 @@ packages:
 
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
+
+  '@superdoc-dev/ai@0.1.6':
+    resolution: {integrity: sha512-5h/F3200VOfpdpt+g0jg17p8UfKvOi4djwroijcTQiVVcQbY8mYw5LB7TL5WgIJ5pMjZgsk1jN3yH+c0C/46LQ==}
+    peerDependencies:
+      prosemirror-model: ^1.25.2
+      prosemirror-state: ^1.4.3
+      prosemirror-view: ^1.33.8
+      superdoc: 1.0.0-next.1
 
   '@tokenizer/inflate@0.2.7':
     resolution: {integrity: sha512-MADQgmZT1eKjp06jpI2yozxaU9uVs4GzzgSL+uEq7bVcJ9V1ZXQkeGNql1fsSI0gMy1vhvNTNbUqrx+pZfJVmg==}
@@ -4644,7 +4655,7 @@ snapshots:
 
   '@microsoft/tsdoc@0.15.1': {}
 
-  '@mikro-orm/cli@6.6.13':
+  '@mikro-orm/cli@6.6.13(pg@8.20.0)':
     dependencies:
       '@jercle/yargonaut': 1.1.5
       '@mikro-orm/core': 6.6.13
@@ -4691,7 +4702,7 @@ snapshots:
       - supports-color
       - tedious
 
-  '@mikro-orm/migrations@6.6.13(@mikro-orm/core@6.6.13)(@types/node@25.6.0)':
+  '@mikro-orm/migrations@6.6.13(@mikro-orm/core@6.6.13)(@types/node@25.6.0)(pg@8.20.0)':
     dependencies:
       '@mikro-orm/core': 6.6.13
       '@mikro-orm/knex': 6.6.13(@mikro-orm/core@6.6.13)(pg@8.20.0)
@@ -5110,6 +5121,13 @@ snapshots:
   '@scarf/scarf@1.4.0': {}
 
   '@socket.io/component-emitter@3.1.2': {}
+
+  '@superdoc-dev/ai@0.1.6(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(superdoc@1.26.0(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.30))(yjs@13.6.30))(@noble/hashes@1.8.0)(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.0)(prosemirror-view@1.41.8)(typescript@5.9.3)(y-prosemirror@1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(y-protocols@1.0.7(yjs@13.6.30))(yjs@13.6.30))(yjs@13.6.30))':
+    dependencies:
+      prosemirror-model: 1.25.4
+      prosemirror-state: 1.4.4
+      prosemirror-view: 1.41.8
+      superdoc: 1.26.0(@hocuspocus/provider@2.15.3(y-protocols@1.0.7(yjs@13.6.30))(yjs@13.6.30))(@noble/hashes@1.8.0)(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.0)(prosemirror-view@1.41.8)(typescript@5.9.3)(y-prosemirror@1.3.7(prosemirror-model@1.25.4)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(y-protocols@1.0.7(yjs@13.6.30))(yjs@13.6.30))(yjs@13.6.30)
 
   '@tokenizer/inflate@0.2.7':
     dependencies:

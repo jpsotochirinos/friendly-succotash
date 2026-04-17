@@ -567,4 +567,82 @@ export class DocumentsService extends BaseCrudService<Document> {
     this.em.remove(doc);
     await this.em.flush();
   }
+
+  async aiComplete(
+    body: { messages: unknown[]; stream?: boolean; options?: Record<string, unknown> },
+    res: import('express').Response,
+  ): Promise<void> {
+    const { messages, stream = false, options = {} } = body;
+
+    const providers = [
+      {
+        url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+        apiKey: process.env.GEMINI_API_KEY,
+        model: (options.model as string) || 'gemini-2.5-flash',
+      },
+      {
+        url: 'https://api.deepseek.com/v1/chat/completions',
+        apiKey: process.env.DEEPSEEK_API_KEY,
+        model: 'deepseek-chat',
+      },
+    ].filter((p) => p.apiKey);
+
+    for (const provider of providers) {
+      try {
+        const response = await fetch(provider.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${provider.apiKey}`,
+          },
+          body: JSON.stringify({
+            model: provider.model,
+            messages,
+            stream,
+            temperature: (options.temperature as number) ?? 0.7,
+            max_tokens: (options.maxTokens as number) ?? 2000,
+          }),
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          console.error(`[AI] ${provider.url} failed ${response.status}: ${errText}`);
+          throw new Error(`${provider.url} returned ${response.status}`);
+        }
+
+        if (stream) {
+          res.setHeader('Content-Type', 'text/event-stream');
+          res.setHeader('Cache-Control', 'no-cache');
+          res.setHeader('Connection', 'keep-alive');
+          const reader = (response.body as any).getReader();
+          const decoder = new TextDecoder();
+          let done = false;
+          while (!done) {
+            const { value, done: d } = await reader.read();
+            done = d;
+            if (value) res.write(decoder.decode(value, { stream: true }));
+          }
+          res.end();
+          return;
+        }
+
+        const data = await response.json() as any;
+        if (data.choices?.[0]?.message?.content) {
+          data.choices[0].message.content = stripMarkdownCodeBlock(data.choices[0].message.content);
+        }
+        res.json(data);
+        return;
+      } catch (err) {
+        console.error(`[AI] provider ${provider.url} error:`, (err as Error).message);
+        // try next provider
+      }
+    }
+
+    console.error('[AI] All providers failed or unconfigured');
+    res.status(503).json({ error: 'No AI providers configured or available' });
+  }
+}
+
+function stripMarkdownCodeBlock(content: string): string {
+  return content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
 }
