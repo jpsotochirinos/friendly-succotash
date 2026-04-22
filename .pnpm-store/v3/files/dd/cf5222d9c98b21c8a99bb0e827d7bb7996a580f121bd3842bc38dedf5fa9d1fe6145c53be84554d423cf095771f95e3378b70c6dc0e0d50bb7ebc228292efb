@@ -1,0 +1,20 @@
+export function findParentNodeClosestToPos($pos: import('prosemirror-model').ResolvedPos, predicate: (arg0: import('prosemirror-model').Node) => boolean): ParentNodeInfo | null;
+export type ParentNodeInfo = {
+    /**
+     * - The position of the parent node.
+     */
+    pos: number;
+    /**
+     * - The start position of the parent node.
+     */
+    start: number;
+    /**
+     * - The depth of the parent node.
+     */
+    depth: number;
+    /**
+     * - The parent node.
+     */
+    node: import('prosemirror-model').Node;
+};
+//# sourceMappingURL=findParentNodeClosestToPos.d.ts.map

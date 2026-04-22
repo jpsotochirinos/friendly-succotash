@@ -1,0 +1,2 @@
+export { PassthroughBlock, PassthroughInline } from './passthrough.js';
+//# sourceMappingURL=index.d.ts.map

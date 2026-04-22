@@ -7,6 +7,7 @@
         <input
           v-model="documentTitle"
           class="font-semibold text-lg bg-transparent border-0 border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:outline-none dark:text-gray-100 px-1 py-0.5 min-w-[200px]"
+          :readonly="readOnly"
           @change="onTitleChange"
         />
         <StatusBadge v-if="reviewStatus" :status="reviewStatus" />
@@ -15,31 +16,46 @@
 
       <div class="flex items-center gap-2">
         <SelectButton
+          v-if="canEdit"
           v-model="editingMode"
           :options="modeOptions"
           option-label="label"
           option-value="value"
           @change="onModeChange"
         />
+        <Tag v-else value="Solo lectura" severity="secondary" />
 
-        <Divider layout="vertical" />
+        <Divider v-if="canEdit" layout="vertical" />
+
+        <template v-if="canEdit">
+          <Button
+            :icon="showAiPanel ? 'pi pi-times' : 'pi pi-sparkles'"
+            :label="showAiPanel ? 'Cerrar Alega' : 'Asistente Alega'"
+            size="small"
+            :severity="showAiPanel ? 'secondary' : 'help'"
+            :outlined="!showAiPanel"
+            :disabled="!aiReady"
+            @click="showAiPanel = !showAiPanel"
+          />
+
+          <Divider layout="vertical" />
+        </template>
 
         <Button
-          :icon="showAiPanel ? 'pi pi-times' : 'pi pi-sparkles'"
-          :label="showAiPanel ? 'Cerrar Alega' : 'Asistente Alega'"
+          v-if="canEdit"
+          label="Guardar"
+          icon="pi pi-save"
           size="small"
-          :severity="showAiPanel ? 'secondary' : 'help'"
-          :outlined="!showAiPanel"
-          :disabled="!aiReady"
-          @click="showAiPanel = !showAiPanel"
+          :loading="saving"
+          @click="saveDocument"
         />
-
-        <Divider layout="vertical" />
-
-        <Button label="Guardar" icon="pi pi-save" size="small" :loading="saving" @click="saveDocument" />
         <Button label="Exportar DOCX" icon="pi pi-download" size="small" outlined @click="exportDocument" />
         <Button
-          v-if="(reviewStatus === 'draft' || reviewStatus === 'revision_needed') && !hasUnsavedChanges"
+          v-if="
+            canEdit &&
+            (reviewStatus === 'draft' || reviewStatus === 'revision_needed') &&
+            !hasUnsavedChanges
+          "
           label="Enviar a revisión"
           icon="pi pi-send"
           size="small"
@@ -58,12 +74,32 @@
       <div id="sd-editor" class="flex-1 min-h-0" />
 
       <Transition name="ai-panel">
-        <div v-if="showAiPanel" class="w-96 border-l bg-white dark:bg-gray-800 flex flex-col shrink-0">
+        <div v-if="canEdit && showAiPanel" class="w-96 border-l bg-white dark:bg-gray-800 flex flex-col shrink-0">
           <!-- Header -->
           <div class="flex items-center gap-2 px-3 py-2 border-b bg-purple-50 dark:bg-purple-950">
             <i class="pi pi-sparkles text-purple-600" />
             <span class="font-semibold text-sm text-purple-800 dark:text-purple-200">Asistente Alega</span>
             <span class="ml-auto text-xs text-purple-400">Cambios atribuidos a Alega</span>
+          </div>
+
+          <div class="px-3 py-2 border-b bg-gray-50 dark:bg-gray-900/50 flex flex-col gap-1.5 shrink-0">
+            <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400">Modo</span>
+            <SelectButton
+              v-model="aiAssistantMode"
+              :options="aiAssistantModeOptions"
+              option-label="label"
+              option-value="value"
+              :disabled="aiRunning"
+              class="w-full [&_.p-button]:text-xs [&_.p-button]:py-1.5"
+            />
+            <p class="text-[10px] text-gray-500 dark:text-gray-400 leading-snug">
+              <template v-if="aiAssistantMode === 'chat'">
+                Respuesta en el panel; puedes insertarla en el documento cuando quieras.
+              </template>
+              <template v-else>
+                Aplica cambios sugeridos sobre texto que ya exista en el documento (no sirve para redactar solo desde el chat).
+              </template>
+            </p>
           </div>
 
           <!-- Messages -->
@@ -77,13 +113,13 @@
             <template v-for="(msg, i) in aiMessages" :key="i">
               <div
                 v-if="msg.role === 'user'"
-                class="rounded-lg px-3 py-2 text-sm bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 self-end ml-8"
+                class="rounded-lg px-3 py-2 text-sm bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 self-end ml-8 max-w-full min-w-0 max-h-[min(45vh,14rem)] overflow-y-auto break-words whitespace-pre-wrap"
               >
                 {{ msg.content }}
               </div>
 
-              <div v-else class="self-start mr-8 flex flex-col gap-2">
-                <div class="rounded-lg px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100">
+              <div v-else class="self-start mr-8 flex flex-col gap-2 min-w-0 max-w-full">
+                <div class="rounded-lg px-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 max-h-[min(55vh,18rem)] overflow-y-auto break-words">
                   <div v-if="msg.loading" class="flex gap-1 items-center h-4">
                     <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:0ms" />
                     <span class="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style="animation-delay:150ms" />
@@ -146,13 +182,15 @@
             </p>
           </div>
 
-          <!-- Input -->
-          <div class="p-3 border-t flex gap-2">
+          <!-- Input: altura acotada para pegados largos (scroll interno) -->
+          <div class="p-3 border-t flex gap-2 items-end min-w-0 shrink-0">
             <Textarea
               v-model="aiPrompt"
               rows="2"
-              class="flex-1 text-sm resize-none"
-              placeholder="Pregunta o instruccion... (Ctrl+Enter)"
+              class="flex-1 min-w-0 text-sm resize-none max-h-[min(45vh,12rem)] overflow-y-auto"
+              :placeholder="aiAssistantMode === 'chat'
+                ? 'Pregunta o instruccion... (Ctrl+Enter)'
+                : 'Instruccion para editar el texto del documento... (Ctrl+Enter)'"
               :disabled="aiRunning"
               auto-resize
               @keydown.enter.ctrl="sendAiPrompt"
@@ -160,6 +198,7 @@
             <Button
               icon="pi pi-send"
               size="small"
+              class="shrink-0"
               :loading="aiRunning"
               :disabled="!aiPrompt.trim()"
               @click="sendAiPrompt"
@@ -172,7 +211,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { SuperDoc } from 'superdoc';
 import 'superdoc/style.css';
 import { AIActions, createAIProvider, EditorAdapter } from '@superdoc-dev/ai';
@@ -184,6 +223,7 @@ import Textarea from 'primevue/textarea';
 import { useToast } from 'primevue/usetoast';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import { apiClient } from '@/api/client';
+import { makeAuthFetch } from '@/utils/makeAuthFetch';
 
 interface AiMessage {
   role: 'user' | 'assistant';
@@ -193,7 +233,12 @@ interface AiMessage {
   inserted?: boolean;
 }
 
-const props = defineProps<{ documentId: string }>();
+const props = withDefaults(
+  defineProps<{ documentId: string; canEdit?: boolean }>(),
+  { canEdit: true },
+);
+
+const readOnly = computed(() => !props.canEdit);
 
 const emit = defineEmits<{
   saved: [documentId: string];
@@ -216,6 +261,35 @@ const aiRunning = ref(false);
 const aiPrompt = ref('');
 const aiMessages = ref<AiMessage[]>([]);
 const messagesContainer = ref<HTMLElement | null>(null);
+
+const AI_ASSISTANT_MODE_KEY = 'alega-superdoc-ai-mode';
+type AiAssistantMode = 'chat' | 'edit';
+
+function loadAiAssistantMode(): AiAssistantMode {
+  if (typeof localStorage === 'undefined') return 'chat';
+  try {
+    const v = localStorage.getItem(AI_ASSISTANT_MODE_KEY);
+    if (v === 'chat' || v === 'edit') return v;
+  } catch {
+    /* ignore */
+  }
+  return 'chat';
+}
+
+const aiAssistantMode = ref<AiAssistantMode>(loadAiAssistantMode());
+
+watch(aiAssistantMode, (m) => {
+  try {
+    localStorage.setItem(AI_ASSISTANT_MODE_KEY, m);
+  } catch {
+    /* ignore */
+  }
+});
+
+const aiAssistantModeOptions: { label: string; value: AiAssistantMode }[] = [
+  { label: 'Chat', value: 'chat' },
+  { label: 'Editar documento', value: 'edit' },
+];
 
 const quickActions = [
   {
@@ -277,33 +351,20 @@ const modeOptions = [
   { label: 'Ver', value: 'viewing' },
 ];
 
-function makeAuthFetch() {
-  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const token = localStorage.getItem('accessToken') ?? '';
-    const headers = new Headers(init?.headers);
-    headers.set('Authorization', `Bearer ${token}`);
+onMounted(async () => {
+  await loadDocument();
+});
 
-    let res = await fetch(input, { ...init, headers });
-
-    if (res.status === 401) {
-      try {
-        const refresh = await fetch('/api/auth/refresh', { method: 'POST', credentials: 'include' });
-        if (refresh.ok) {
-          const { accessToken } = await refresh.json();
-          localStorage.setItem('accessToken', accessToken);
-          headers.set('Authorization', `Bearer ${accessToken}`);
-          res = await fetch(input, { ...init, headers });
-        }
-      } catch {
-        // refresh failed — let the 401 propagate
-      }
+watch(
+  () => props.canEdit,
+  (v) => {
+    if (!v) {
+      editingMode.value = 'viewing';
+      showAiPanel.value = false;
+      superdoc?.setDocumentMode?.('viewing');
     }
-
-    return res;
-  };
-}
-
-onMounted(async () => { await loadDocument(); });
+  },
+);
 
 onBeforeUnmount(() => {
   aiActions?.destroy?.();
@@ -317,10 +378,15 @@ async function loadDocument() {
   documentTitle.value = data.title;
   reviewStatus.value = data.reviewStatus;
 
+  if (!props.canEdit) {
+    editingMode.value = 'viewing';
+    showAiPanel.value = false;
+  }
+
   const superdocConfig: any = {
     selector: '#sd-editor',
     toolbar: '#sd-toolbar',
-    documentMode: editingMode.value,
+    documentMode: props.canEdit ? editingMode.value : 'viewing',
     rulers: true,
   };
 
@@ -354,20 +420,20 @@ async function loadDocument() {
 }
 
 async function sendAiPrompt() {
+  if (!props.canEdit) return;
   const prompt = aiPrompt.value.trim();
   if (!prompt || !aiActions || aiRunning.value) return;
   aiPrompt.value = '';
-
-  const isQuestion = /^(qu[eé]|cu[aá]l|c[oó]mo|por qu[eé]|cu[aá]ndo|d[oó]nde|qui[eé]n|explica|describe|lista|analiza|resume|¿)/i.test(prompt);
 
   addUserMessage(prompt);
   const msgIdx = addAssistantLoading();
   aiRunning.value = true;
 
   try {
-    if (isQuestion) {
+    if (aiAssistantMode.value === 'chat') {
       const text = await aiActions.getCompletion(prompt);
-      setAssistantMessage(msgIdx, text ?? 'Sin respuesta.');
+      const cleaned = (text ?? '').trim();
+      setAssistantMessage(msgIdx, cleaned || 'Sin respuesta.', cleaned);
     } else {
       const result = await aiActions.action.insertTrackedChanges(prompt);
       setAssistantMessage(
@@ -386,7 +452,7 @@ async function sendAiPrompt() {
 }
 
 async function runQuickAction(qa: (typeof quickActions)[0]) {
-  if (!aiActions || aiRunning.value) return;
+  if (!props.canEdit || !aiActions || aiRunning.value) return;
 
   addUserMessage(qa.label);
   const msgIdx = addAssistantLoading();
@@ -442,7 +508,7 @@ function textToHtmlParagraphs(text: string): string {
 }
 
 function insertPendingText(msg: AiMessage, position: 'start' | 'end' | 'cursor') {
-  if (!msg.pendingText || !superdoc?.activeEditor) return;
+  if (!props.canEdit || !msg.pendingText || !superdoc?.activeEditor) return;
   try {
     const editor = superdoc.activeEditor;
     const adapter = new EditorAdapter(editor);
@@ -495,16 +561,17 @@ async function scrollMessages() {
 }
 
 async function onTitleChange() {
-  if (!documentTitle.value.trim()) return;
+  if (!props.canEdit || !documentTitle.value.trim()) return;
   await apiClient.patch(`/documents/${props.documentId}`, { title: documentTitle.value.trim() });
 }
 
 function onModeChange() {
+  if (!props.canEdit) return;
   superdoc?.setDocumentMode?.(editingMode.value);
 }
 
 async function saveDocument() {
-  if (!superdoc) return;
+  if (!props.canEdit || !superdoc) return;
   saving.value = true;
   try {
     const textContent = superdoc.getTextContent?.() || '';
@@ -543,6 +610,7 @@ async function exportDocument() {
 }
 
 async function submitForReview() {
+  if (!props.canEdit) return;
   submitting.value = true;
   try {
     if (hasUnsavedChanges.value) await saveDocument();

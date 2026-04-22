@@ -1,0 +1,48 @@
+import { Extension } from '../../core/Extension.js';
+/**
+ * Font family value
+ * @typedef {string} FontFamilyValue
+ * @description CSS font-family string (e.g., 'Arial', 'Times New Roman', 'sans-serif')
+ */
+/**
+ * Configuration options for FontFamily
+ * @typedef {Object} FontFamilyOptions
+ * @category Options
+ * @property {string[]} [types=['textStyle']] Mark types to add font family support to
+ */
+/**
+ * Attributes for font family marks
+ * @typedef {Object} FontFamilyAttributes
+ * @category Attributes
+ * @property {FontFamilyValue} [fontFamily] Font family for text
+ * @example
+ * // Set font family on selected text
+ * editor.commands.setFontFamily('Arial')
+ *
+ * // Change to serif font
+ * editor.commands.setFontFamily('Georgia, serif')
+ *
+ * // Remove custom font
+ * editor.commands.unsetFontFamily()
+ */
+/**
+ * @module FontFamily
+ * @sidebarTitle Font Family
+ * @snippetPath /snippets/extensions/font-family.mdx
+ */
+export const FontFamily: Extension<{
+    types: string[];
+}, Record<string, never>>;
+/**
+ * Font family value
+ */
+export type FontFamilyValue = string;
+/**
+ * Configuration options for FontFamily
+ */
+export type FontFamilyOptions = Object;
+/**
+ * Attributes for font family marks
+ */
+export type FontFamilyAttributes = Object;
+//# sourceMappingURL=font-family.d.ts.map

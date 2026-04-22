@@ -1,0 +1,22 @@
+import { FlowBlock, Layout, SectionMetadata } from '@superdoc/contracts';
+import { HeaderFooterLayoutResult, HeaderFooterConstraints } from '@superdoc/layout-bridge';
+export type HeaderFooterPerRidLayoutInput = {
+    headerBlocks?: unknown;
+    footerBlocks?: unknown;
+    headerBlocksByRId: Map<string, FlowBlock[]> | undefined;
+    footerBlocksByRId: Map<string, FlowBlock[]> | undefined;
+    constraints: HeaderFooterConstraints;
+};
+/**
+ * Layout header/footer blocks per rId, respecting per-section margins.
+ *
+ * For documents with multiple sections that have different margins, this function
+ * measures the same header/footer content at different widths and stores results
+ * with composite keys (`${rId}::s${sectionIndex}`) so each page gets the correctly
+ * sized layout.
+ */
+export declare function layoutPerRIdHeaderFooters(headerFooterInput: HeaderFooterPerRidLayoutInput | null, layout: Layout, sectionMetadata: SectionMetadata[], deps: {
+    headerLayoutsByRId: Map<string, HeaderFooterLayoutResult>;
+    footerLayoutsByRId: Map<string, HeaderFooterLayoutResult>;
+}): Promise<void>;
+//# sourceMappingURL=HeaderFooterPerRidLayout.d.ts.map

@@ -1,0 +1,5 @@
+export function setListTypeAt({ pos, kind }: {
+    pos: number;
+    kind: "ordered" | "bullet";
+}): import('./types/index.js').Command;
+//# sourceMappingURL=setListTypeAt.d.ts.map

@@ -1,0 +1,9 @@
+/**
+ * @type {import("./docxImporter").NodeHandlerEntry}
+ */
+export const runNodeHandlerEntity: import('./docxImporter').NodeHandlerEntry;
+export function handleRunNode(params: import('./docxImporter').NodeHandlerParams): {
+    nodes: any[];
+    consumed: number;
+};
+//# sourceMappingURL=runNodeImporter.d.ts.map

@@ -1,0 +1,20 @@
+declare const _default: import('vue').DefineComponent<{}, {
+    close: Function;
+    mode: string;
+    render: Function;
+    resolve: Function;
+    surfaceId: string;
+    request: Record<string, any>;
+    $props: {
+        readonly close?: Function | undefined;
+        readonly mode?: string | undefined;
+        readonly render?: Function | undefined;
+        readonly resolve?: Function | undefined;
+        readonly surfaceId?: string | undefined;
+        readonly request?: Record<string, any> | undefined;
+    };
+}, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, string, import('vue').PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import('vue').ComponentProvideOptions, true, {
+    container: HTMLDivElement;
+}, HTMLDivElement>;
+export default _default;
+//# sourceMappingURL=SurfaceExternalMount.vue.d.ts.map

@@ -1,0 +1,4 @@
+import { Plugin, PluginKey } from 'prosemirror-state';
+export function createStructuredContentLockPlugin(): Plugin<any[]>;
+export const STRUCTURED_CONTENT_LOCK_KEY: PluginKey<any>;
+//# sourceMappingURL=structured-content-lock-plugin.d.ts.map

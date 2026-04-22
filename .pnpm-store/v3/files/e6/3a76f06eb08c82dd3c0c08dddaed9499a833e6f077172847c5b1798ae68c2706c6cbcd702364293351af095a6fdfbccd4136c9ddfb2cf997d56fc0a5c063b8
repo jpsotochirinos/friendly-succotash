@@ -1,0 +1,184 @@
+import { Editor } from '../../Editor.js';
+import { Layout, FlowBlock, Measure } from '@superdoc/contracts';
+import { CellAnchorState, PendingMarginClick, HeaderFooterRegion } from '../types.js';
+import { PositionHit, PageGeometryHelper, TableHitResult } from '@superdoc/layout-bridge';
+import { EpochPositionMapper } from '../layout/EpochPositionMapper.js';
+import { HeaderFooterSessionManager } from '../header-footer/HeaderFooterSessionManager.js';
+/**
+ * Layout state provided by PresentationEditor.
+ */
+export type LayoutState = {
+    layout: Layout | null;
+    blocks: FlowBlock[];
+    measures: Measure[];
+};
+/**
+ * Dependencies injected from PresentationEditor.
+ */
+export type EditorInputDependencies = {
+    /** Get the active editor (body or header/footer) */
+    getActiveEditor: () => Editor;
+    /** Get the main body editor */
+    getEditor: () => Editor;
+    /** Get current layout state */
+    getLayoutState: () => LayoutState;
+    /** Get the epoch mapper for position translation */
+    getEpochMapper: () => EpochPositionMapper;
+    /** Get viewport host element */
+    getViewportHost: () => HTMLElement;
+    /** Get visible host element (for scroll) */
+    getVisibleHost: () => HTMLElement;
+    /** Get current layout mode */
+    getLayoutMode: () => 'vertical' | 'horizontal' | 'book';
+    /** Get header/footer session manager */
+    getHeaderFooterSession: () => HeaderFooterSessionManager | null;
+    /** Get page geometry helper */
+    getPageGeometryHelper: () => PageGeometryHelper | null;
+    /** Get layout options zoom */
+    getZoom: () => number;
+    /** Check if view is locked */
+    isViewLocked: () => boolean;
+    /** Get document mode */
+    getDocumentMode: () => 'editing' | 'viewing' | 'suggesting';
+    /** Get page element by index */
+    getPageElement: (pageIndex: number) => HTMLElement | null;
+    /** Check if selection-aware virtualization is enabled */
+    isSelectionAwareVirtualizationEnabled: () => boolean;
+};
+/**
+ * Callbacks for events that the manager emits.
+ * All callbacks are optional to allow incremental setup.
+ */
+export type EditorInputCallbacks = {
+    /** Schedule selection update */
+    scheduleSelectionUpdate?: () => void;
+    /** Schedule rerender */
+    scheduleRerender?: () => void;
+    /** Set pending doc change flag */
+    setPendingDocChange?: () => void;
+    /** Update selection virtualization pins */
+    updateSelectionVirtualizationPins?: (options?: {
+        includeDragBuffer?: boolean;
+        extraPages?: number[];
+    }) => void;
+    /** Schedule a11y announcement */
+    scheduleA11ySelectionAnnouncement?: (options: {
+        immediate: boolean;
+    }) => void;
+    /** Go to anchor */
+    goToAnchor?: (href: string) => void;
+    /** Emit event */
+    emit?: (event: string, payload: unknown) => void;
+    /** Normalize client point to layout coordinates */
+    normalizeClientPoint?: (clientX: number, clientY: number) => {
+        x: number;
+        y: number;
+        pageIndex?: number;
+        pageLocalY?: number;
+    } | null;
+    /** Hit test header/footer region */
+    hitTestHeaderFooterRegion?: (x: number, y: number, pageIndex?: number, pageLocalY?: number) => HeaderFooterRegion | null;
+    /** Exit header/footer mode */
+    exitHeaderFooterMode?: () => void;
+    /** Activate header/footer region */
+    activateHeaderFooterRegion?: (region: HeaderFooterRegion) => void;
+    /** Emit header/footer edit blocked */
+    emitHeaderFooterEditBlocked?: (reason: string) => void;
+    /** Find region for page */
+    findRegionForPage?: (kind: 'header' | 'footer', pageIndex: number) => HeaderFooterRegion | null;
+    /** Get current page index */
+    getCurrentPageIndex?: () => number;
+    /** Resolve descriptor for region */
+    resolveDescriptorForRegion?: (region: HeaderFooterRegion) => unknown | null;
+    /** Update selection debug HUD */
+    updateSelectionDebugHud?: () => void;
+    /** Clear hover region */
+    clearHoverRegion?: () => void;
+    /** Render hover region */
+    renderHoverRegion?: (region: HeaderFooterRegion) => void;
+    /** Focus editor after image selection */
+    focusEditorAfterImageSelection?: () => void;
+    /** Resolve a mounted inline image element by pmStart */
+    resolveInlineImageElementByPmStart?: (pmStart: number) => HTMLElement | null;
+    /** Resolve a mounted image fragment element by pmStart */
+    resolveImageFragmentElementByPmStart?: (pmStart: number) => HTMLElement | null;
+    /** Resolve field annotation from element */
+    resolveFieldAnnotationSelectionFromElement?: (el: HTMLElement) => {
+        node: unknown;
+        pos: number;
+    } | null;
+    /** Compute pending margin click */
+    computePendingMarginClick?: (pointerId: number, x: number, y: number) => PendingMarginClick | null;
+    /** Select word at position */
+    selectWordAt?: (pos: number) => boolean;
+    /** Select paragraph at position */
+    selectParagraphAt?: (pos: number) => boolean;
+    /** Finalize drag selection with DOM */
+    finalizeDragSelectionWithDom?: (pointer: {
+        clientX: number;
+        clientY: number;
+    }, dragAnchor: number, dragMode: 'char' | 'word' | 'para') => void;
+    /** Hit test table at coordinates */
+    hitTestTable?: (x: number, y: number) => TableHitResult | null;
+};
+export declare class EditorInputManager {
+    #private;
+    constructor();
+    /**
+     * Set dependencies from PresentationEditor.
+     */
+    setDependencies(deps: EditorInputDependencies): void;
+    /**
+     * Set callbacks for events.
+     */
+    setCallbacks(callbacks: EditorInputCallbacks): void;
+    /**
+     * Bind event listeners to DOM elements.
+     */
+    bind(): void;
+    /**
+     * Unbind event listeners.
+     */
+    unbind(): void;
+    /**
+     * Destroy the manager and clean up.
+     */
+    destroy(): void;
+    /** Whether currently dragging */
+    get isDragging(): boolean;
+    /** Current drag anchor position */
+    get dragAnchor(): number | null;
+    /** Cell anchor state for table selection */
+    get cellAnchor(): CellAnchorState | null;
+    /** Debug last pointer position */
+    get debugLastPointer(): {
+        clientX: number;
+        clientY: number;
+        x: number;
+        y: number;
+    } | null;
+    /** Debug last hit */
+    get debugLastHit(): {
+        source: 'dom' | 'geometry' | 'margin' | 'none';
+        pos: number | null;
+        layoutEpoch: number | null;
+        mappedPos: number | null;
+    } | null;
+    /** Last selected image block ID */
+    get lastSelectedImageBlockId(): string | null;
+    /** Drag anchor page index */
+    get dragAnchorPageIndex(): number | null;
+    /** Get the page index from the last raw hit during drag */
+    get dragLastHitPageIndex(): number | null;
+    /** Get the last raw hit during drag (for finalization) */
+    get dragLastRawHit(): PositionHit | null;
+    /**
+     * Clear cell anchor (used when document changes).
+     */
+    clearCellAnchor(): void;
+    /**
+     * Set suppress focus in flag (for draggable annotations).
+     */
+    setSuppressFocusInFromDraggable(value: boolean): void;
+}
+//# sourceMappingURL=EditorInputManager.d.ts.map

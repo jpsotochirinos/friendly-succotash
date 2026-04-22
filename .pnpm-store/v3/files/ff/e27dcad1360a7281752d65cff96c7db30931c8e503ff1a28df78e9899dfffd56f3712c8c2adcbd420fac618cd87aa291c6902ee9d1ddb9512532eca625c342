@@ -1,0 +1,2 @@
+export function handleGoogleDocsHtml(html: string, editor: Editor, view: Object): boolean;
+//# sourceMappingURL=google-docs-paste.d.ts.map

@@ -1,0 +1,113 @@
+import { Node as PMNode } from 'prosemirror-model';
+import { InlineDiffToken, InlineDiffResult } from './inline-diffing';
+import { AttributesDiff } from './attributes-diffing';
+import { NodePositionInfo } from './diff-utils';
+type NodeJSON = ReturnType<PMNode['toJSON']>;
+export interface ParagraphNodeInfo {
+    /** ProseMirror paragraph node reference. */
+    node: PMNode;
+    /** Absolute position of the paragraph in the document. */
+    pos: number;
+    /** Depth of the paragraph within the document tree. */
+    depth: number;
+    /** Flattened inline tokens for inline diffing. */
+    text: InlineDiffToken[];
+    /** Absolute end position used for trailing inserts. */
+    endPos: number;
+    /** Plain-text representation of the paragraph content. */
+    fullText: string;
+    /** Semantic fingerprint of all inline content (text + nodes), used for identity matching. */
+    contentSignature: string;
+}
+/**
+ * Base shape shared by every paragraph diff payload.
+ */
+interface ParagraphDiffBase<Action extends 'added' | 'deleted' | 'modified'> {
+    /** Change type for this paragraph. */
+    action: Action;
+    /** Node type name (always `paragraph`). */
+    nodeType: 'paragraph';
+    /** Anchor position in the old document for replaying diffs. */
+    pos: number;
+}
+/**
+ * Diff payload produced when a paragraph is inserted.
+ */
+type AddedParagraphDiff = ParagraphDiffBase<'added'> & {
+    /** Serialized paragraph payload inserted into the document. */
+    nodeJSON: NodeJSON;
+    /** Plain-text content of the inserted paragraph. */
+    text: string;
+};
+/**
+ * Diff payload produced when a paragraph is deleted.
+ */
+type DeletedParagraphDiff = ParagraphDiffBase<'deleted'> & {
+    /** Serialized paragraph payload removed from the document. */
+    nodeJSON: NodeJSON;
+    /** Plain-text content of the removed paragraph. */
+    oldText: string;
+};
+/**
+ * Diff payload emitted when a paragraph changes, including inline edits.
+ */
+type ModifiedParagraphDiff = ParagraphDiffBase<'modified'> & {
+    /** Serialized paragraph payload before the change. */
+    oldNodeJSON: NodeJSON;
+    /** Serialized paragraph payload after the change. */
+    newNodeJSON: NodeJSON;
+    /** Plain-text content before the change. */
+    oldText: string;
+    /** Plain-text content after the change. */
+    newText: string;
+    /** Inline diff operations within the paragraph. */
+    contentDiff: InlineDiffResult[];
+    /** Attribute-level diff for the paragraph. */
+    attrsDiff: AttributesDiff | null;
+};
+/**
+ * Union of every diff variant the paragraph diffing logic can produce.
+ */
+export type ParagraphDiff = AddedParagraphDiff | DeletedParagraphDiff | ModifiedParagraphDiff;
+/**
+ * Creates a reusable snapshot that stores flattened paragraph content plus position metadata.
+ *
+ * @param paragraph Paragraph node to flatten.
+ * @param paragraphPos Position of the paragraph in the document.
+ * @param depth Depth of the paragraph within the document tree.
+ * @returns Snapshot containing tokens (with offsets) and derived metadata.
+ */
+export declare function createParagraphSnapshot(paragraph: PMNode, paragraphPos: number, depth: number): ParagraphNodeInfo;
+/**
+ * Determines whether equal paragraph nodes should still be marked as modified because their serialized structure differs.
+ *
+ * @param oldParagraph Previous paragraph node reference.
+ * @param newParagraph Updated paragraph node reference.
+ * @returns True when the serialized JSON payload differs.
+ */
+export declare function shouldProcessEqualAsModification(oldParagraph: ParagraphNodeInfo, newParagraph: ParagraphNodeInfo): boolean;
+/**
+ * Compares two paragraphs for identity based on paraId, then content signature.
+ *
+ * The content signature covers both text and inline nodes (images, etc.),
+ * so image-only paragraphs with different images are not falsely paired.
+ */
+export declare function paragraphComparator(oldParagraph: ParagraphNodeInfo, newParagraph: ParagraphNodeInfo): boolean;
+/**
+ * Builds a normalized payload describing a paragraph addition, ensuring all consumers receive the same metadata shape.
+ */
+export declare function buildAddedParagraphDiff(paragraph: ParagraphNodeInfo, oldNodes?: readonly NodePositionInfo[], oldIdx?: number): AddedParagraphDiff;
+/**
+ * Builds a normalized payload describing a paragraph deletion so diff consumers can show removals with all context.
+ */
+export declare function buildDeletedParagraphDiff(paragraph: ParagraphNodeInfo): DeletedParagraphDiff;
+/**
+ * Builds the payload for a paragraph modification, including text-level diffs, so renderers can highlight edits inline.
+ */
+export declare function buildModifiedParagraphDiff(oldParagraph: ParagraphNodeInfo, newParagraph: ParagraphNodeInfo): ModifiedParagraphDiff | null;
+/**
+ * Decides whether a delete/insert pair should be reinterpreted as a modification to minimize noisy diff output.
+ */
+export declare function canTreatAsModification(oldParagraph: ParagraphNodeInfo, newParagraph: ParagraphNodeInfo): boolean;
+export {};
+//# sourceMappingURL=paragraph-diffing.d.ts.map

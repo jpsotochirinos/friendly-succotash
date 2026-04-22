@@ -1,0 +1,34 @@
+import { Node } from '../../core/Node.js';
+/**
+ * Configuration options for Document
+ * @typedef {Object} DocumentOptions
+ * @category Options
+ * @example
+ * // Document node is the root - always included
+ * new SuperDoc({
+ *   selector: '#editor',
+ *   document: 'document.docx',
+ *   // Document node wraps all content
+ * });
+ */
+/**
+ * Attributes for document nodes
+ * @typedef {Object} DocumentAttributes
+ * @category Attributes
+ * @property {Object} [attributes] @internal Internal document attributes
+ */
+/**
+ * @module Document
+ * @sidebarTitle Document
+ * @snippetPath /snippets/extensions/document.mdx
+ */
+export const Document: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+/**
+ * Configuration options for Document
+ */
+export type DocumentOptions = Object;
+/**
+ * Attributes for document nodes
+ */
+export type DocumentAttributes = Object;
+//# sourceMappingURL=document.d.ts.map

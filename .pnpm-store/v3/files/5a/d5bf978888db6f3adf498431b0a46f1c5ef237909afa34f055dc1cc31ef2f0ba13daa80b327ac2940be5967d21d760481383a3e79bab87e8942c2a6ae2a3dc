@@ -1,0 +1,1 @@
+{"version":3,"file":"ole-reader.d.ts","sourceRoot":"","sources":["../../../../../../../../super-editor/src/editors/v1/core/ooxml-encryption/ole-reader.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;GAUG;AAKH,MAAM,WAAW,oBAAoB;IACnC,cAAc,EAAE,UAAU,CAAC;IAC3B,gBAAgB,EAAE,UAAU,CAAC;CAC9B;AAED;;;;;;GAMG;AACH,wBAAgB,wBAAwB,CAAC,IAAI,EAAE,WAAW,GAAG,UAAU,GAAG,MAAM,GAAG,oBAAoB,CAkCtG"}

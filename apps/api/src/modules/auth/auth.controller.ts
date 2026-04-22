@@ -1,20 +1,26 @@
 import {
   Controller, Post, Get, Body, UseGuards, Req, Res,
-  HttpCode, HttpStatus, Query,
+  HttpCode, HttpStatus, Query, Next,
 } from '@nestjs/common';
-import { Response, Request } from 'express';
+import { Response, Request, NextFunction } from 'express';
+import passport from 'passport';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { MagicLinkRequestDto } from './dto/magic-link.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
-import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Get('availability')
+  async checkEmailAvailability(@Query('email') email: string) {
+    return this.authService.checkEmailAvailability(email ?? '');
+  }
 
   @Public()
   @Post('register')
@@ -33,19 +39,56 @@ export class AuthController {
 
   @Public()
   @Get('google')
-  @UseGuards(GoogleAuthGuard)
-  async googleAuth() {
-    // Redirects to Google
+  googleAuth(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Next() next: NextFunction,
+    @Query('state') state?: string,
+  ) {
+    const opts: passport.AuthenticateOptions = {
+      scope: ['email', 'profile'],
+      session: false,
+    };
+    if (state) {
+      (opts as Record<string, unknown>).state = state;
+    }
+    passport.authenticate('google', opts)(req, res, next);
   }
 
   @Public()
   @Get('google/callback')
-  @UseGuards(GoogleAuthGuard)
-  async googleCallback(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.googleLogin(req.user as any);
-    this.setRefreshTokenCookie(res, result.refreshToken);
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    res.redirect(`${frontendUrl}/auth/callback?token=${result.accessToken}`);
+  googleCallback(@Req() req: Request, @Res() res: Response) {
+    passport.authenticate(
+      'google',
+      { session: false },
+      (err: unknown, user: false | Record<string, unknown>) => {
+        void (async () => {
+          try {
+            if (err || !user) {
+              const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+              return res.redirect(`${frontendUrl}/auth/callback?error=google`);
+            }
+            const result = await this.authService.googleLogin(user as any);
+            this.setRefreshTokenCookie(res, result.refreshToken);
+            const state = typeof req.query.state === 'string' ? req.query.state : undefined;
+            if (state === 'desktop') {
+              const token = encodeURIComponent(result.accessToken);
+              const refresh = encodeURIComponent(result.refreshToken);
+              return res.redirect(
+                `alega-desktop://auth/callback?token=${token}&refresh=${refresh}`,
+              );
+            }
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            return res.redirect(
+              `${frontendUrl}/auth/callback?token=${encodeURIComponent(result.accessToken)}`,
+            );
+          } catch {
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            return res.redirect(`${frontendUrl}/auth/callback?error=google`);
+          }
+        })();
+      },
+    )(req, res);
   }
 
   @Public()
@@ -90,8 +133,29 @@ export class AuthController {
   }
 
   @Get('me')
-  async me(@CurrentUser() user: any) {
-    return user;
+  async me(
+    @CurrentUser()
+    user: {
+      id: string;
+      email: string;
+      firstName?: string | null;
+      lastName?: string | null;
+      birthDate?: string | null;
+      organizationId: string;
+      roleName?: string | null;
+      permissions: string[];
+    },
+  ) {
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName ?? null,
+      lastName: user.lastName ?? null,
+      birthDate: user.birthDate ?? null,
+      organizationId: user.organizationId,
+      roleName: user.roleName ?? null,
+      permissions: Array.isArray(user.permissions) ? [...user.permissions] : [],
+    };
   }
 
   private setRefreshTokenCookie(res: Response, token: string) {

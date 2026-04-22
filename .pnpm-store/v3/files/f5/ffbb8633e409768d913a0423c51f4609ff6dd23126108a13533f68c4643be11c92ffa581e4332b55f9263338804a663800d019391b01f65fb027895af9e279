@@ -1,0 +1,16 @@
+export function collectTrackedChanges({ state, from, to }: {
+    state: import('prosemirror-state').EditorState;
+    from: number;
+    to: number;
+}): Array<Object>;
+export function isTrackedChangeActionAllowed({ editor, action, trackedChanges }: {
+    editor: import('../../core/Editor.js').Editor;
+    action: "accept" | "reject";
+    trackedChanges: Array<Object>;
+}): boolean;
+export function collectTrackedChangesForContext({ state, pos, trackedChangeId }: {
+    state: import('prosemirror-state').EditorState;
+    pos: number | null;
+    trackedChangeId: string | null;
+}): Array<Object>;
+//# sourceMappingURL=permission-helpers.d.ts.map

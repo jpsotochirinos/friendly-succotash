@@ -1,0 +1,30 @@
+import { ReplayResult } from './replay-types';
+type ReplayStyleEditor = {
+    emit?: (event: string, payload?: unknown) => void;
+    converter?: {
+        translatedLinkedStyles?: {
+            docDefaults?: Record<string, unknown>;
+            latentStyles?: Record<string, unknown>;
+            styles?: Record<string, Record<string, unknown>>;
+        } | null;
+        convertedXml?: Record<string, unknown>;
+        documentModified?: boolean;
+        promoteToGuid?: () => string;
+    } | null;
+};
+/**
+ * Replays style metadata diffs directly into the converter's translated style snapshot.
+ *
+ * The resulting style snapshot is then synchronized back into `word/styles.xml`.
+ *
+ * @param params Replay parameters.
+ * @param params.stylesDiff Style diff payload to apply.
+ * @param params.editor Editor context containing converter and emitter.
+ * @returns Replay summary with applied/skipped counts and warnings.
+ */
+export declare function replayStyles({ stylesDiff, editor, }: {
+    stylesDiff: import('../algorithm/styles-diffing').StylesDiff | null;
+    editor?: ReplayStyleEditor;
+}): ReplayResult;
+export {};
+//# sourceMappingURL=replay-styles.d.ts.map

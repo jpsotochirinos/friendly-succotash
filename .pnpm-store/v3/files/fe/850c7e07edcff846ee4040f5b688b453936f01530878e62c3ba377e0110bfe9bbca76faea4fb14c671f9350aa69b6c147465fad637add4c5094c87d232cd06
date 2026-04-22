@@ -1,0 +1,14 @@
+import { ProofingSegment } from './types.js';
+/**
+ * Given the current segments, their paragraph positions, and a set of
+ * changed PM ranges, return the IDs of segments that need rechecking.
+ *
+ * @param segments - Current proofing segments (from extraction)
+ * @param segmentPositions - Map of segment ID → paragraph start position
+ * @param changedRanges - PM ranges affected by the transaction
+ */
+export declare function computeDirtySegmentIds(segments: ProofingSegment[], segmentPositions: Map<string, number>, changedRanges: Array<{
+    from: number;
+    to: number;
+}>): Set<string>;
+//# sourceMappingURL=dirty-ranges.d.ts.map

@@ -1,0 +1,2 @@
+export * from './bar-translator.js';
+//# sourceMappingURL=index.d.ts.map

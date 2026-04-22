@@ -1,0 +1,6 @@
+/**
+ * @param {Object} params - The parameters for translation.
+ * @returns {Object|Array|Object[]} The XML representation.
+ */
+export function translateStructuredContent(params: Object): Object | any[] | Object[];
+//# sourceMappingURL=translate-structured-content.d.ts.map

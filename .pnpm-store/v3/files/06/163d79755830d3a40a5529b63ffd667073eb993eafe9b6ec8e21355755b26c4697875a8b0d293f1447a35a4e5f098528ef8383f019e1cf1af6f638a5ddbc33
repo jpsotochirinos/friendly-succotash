@@ -1,0 +1,7 @@
+import { PluginKey } from 'prosemirror-state';
+/**
+ * Plugin key for accessing linked styles state
+ */
+export const LinkedStylesPluginKey: PluginKey<any>;
+export function createLinkedStylesPlugin(editor: Object): Object;
+//# sourceMappingURL=plugin.d.ts.map

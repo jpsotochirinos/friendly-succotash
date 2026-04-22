@@ -1,0 +1,7 @@
+import { Extension } from '../Extension.js';
+/**
+ * For reference.
+ * https://prosemirror.net/docs/ref/#history.history
+ */
+export const EditorFocus: Extension<Record<string, never>, Record<string, never>>;
+//# sourceMappingURL=editorFocus.d.ts.map

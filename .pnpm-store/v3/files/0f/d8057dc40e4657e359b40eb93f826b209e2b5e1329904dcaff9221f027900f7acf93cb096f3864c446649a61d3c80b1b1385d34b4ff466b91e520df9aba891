@@ -1,0 +1,23 @@
+import { Editor } from '../../core/Editor.js';
+import { TocMarkEntryInput, TocUnmarkEntryInput, TocListEntriesQuery, TocListEntriesResult, TocGetEntryInput, TocEntryInfo, TocEditEntryInput, TocEntryMutationResult, MutationOptions } from '@superdoc/document-api';
+/**
+ * Lists all TC entry nodes in the document body with optional filtering.
+ */
+export declare function tocListEntriesWrapper(editor: Editor, query?: TocListEntriesQuery): TocListEntriesResult;
+/**
+ * Gets detailed info for a single TC entry node.
+ */
+export declare function tocGetEntryWrapper(editor: Editor, input: TocGetEntryInput): TocEntryInfo;
+/**
+ * Inserts a new TC field at the target paragraph.
+ */
+export declare function tocMarkEntryWrapper(editor: Editor, input: TocMarkEntryInput, options?: MutationOptions): TocEntryMutationResult;
+/**
+ * Removes a single TC field node.
+ */
+export declare function tocUnmarkEntryWrapper(editor: Editor, input: TocUnmarkEntryInput, options?: MutationOptions): TocEntryMutationResult;
+/**
+ * Applies a patch to an existing TC entry's instruction.
+ */
+export declare function tocEditEntryWrapper(editor: Editor, input: TocEditEntryInput, options?: MutationOptions): TocEntryMutationResult;
+//# sourceMappingURL=toc-entry-wrappers.d.ts.map

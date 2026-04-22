@@ -1,0 +1,2 @@
+export * from './suff-translator.js';
+//# sourceMappingURL=index.d.ts.map

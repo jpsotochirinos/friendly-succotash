@@ -1,0 +1,141 @@
+declare const _default: import('vue').DefineComponent<{}, {
+    $emit: (event: "selection-update", ...args: any[]) => void;
+}, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, string, import('vue').PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import('vue').ComponentProvideOptions, true, {
+    superdocRoot: HTMLDivElement;
+    layers: HTMLDivElement;
+    selectionLayer: HTMLDivElement;
+    hrbrFieldsLayer: any;
+    commentsLayer: import('vue').CreateComponentPublicInstanceWithMixins<Readonly<{}> & Readonly<{}>, {
+        addCommentEntry: (selection: any) => void;
+        activateComment: (comment: any, e: any) => void;
+        setFloatingCommentOffset: (conversation: any) => void;
+        $emit: (event: "highlight-click", ...args: any[]) => void;
+        user: Record<string, any>;
+        parent: Record<string, any>;
+        $props: {
+            readonly user?: Record<string, any> | undefined;
+            readonly parent?: Record<string, any> | undefined;
+        };
+    }, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, import('vue').PublicProps, {}, true, {}, {}, import('vue').GlobalComponents, import('vue').GlobalDirectives, string, {}, HTMLDivElement, import('vue').ComponentProvideOptions, {
+        P: {};
+        B: {};
+        D: {};
+        C: {};
+        M: {};
+        Defaults: {};
+    }, Readonly<{}> & Readonly<{}>, {
+        addCommentEntry: (selection: any) => void;
+        activateComment: (comment: any, e: any) => void;
+        setFloatingCommentOffset: (conversation: any) => void;
+        $emit: (event: "highlight-click", ...args: any[]) => void;
+        user: Record<string, any>;
+        parent: Record<string, any>;
+        $props: {
+            readonly user?: Record<string, any> | undefined;
+            readonly parent?: Record<string, any> | undefined;
+        };
+    }, {}, {}, {}, {}> | null;
+    aiLayer: import('vue').CreateComponentPublicInstanceWithMixins<Readonly<{}> & Readonly<{}>, {
+        addAiHighlight: () => void;
+        removeAiHighlight: () => void;
+        updateAiHighlight: () => void;
+        editor: Record<string, any>;
+        $props: {
+            readonly editor?: Record<string, any> | undefined;
+        };
+    }, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, import('vue').PublicProps, {}, true, {}, {}, import('vue').GlobalComponents, import('vue').GlobalDirectives, string, {
+        highlightLayer: HTMLDivElement;
+    }, HTMLDivElement, import('vue').ComponentProvideOptions, {
+        P: {};
+        B: {};
+        D: {};
+        C: {};
+        M: {};
+        Defaults: {};
+    }, Readonly<{}> & Readonly<{}>, {
+        addAiHighlight: () => void;
+        removeAiHighlight: () => void;
+        updateAiHighlight: () => void;
+        editor: Record<string, any>;
+        $props: {
+            readonly editor?: Record<string, any> | undefined;
+        };
+    }, {}, {}, {}, {}> | null;
+    pdfViewerRef: (import('vue').CreateComponentPublicInstanceWithMixins<Readonly<{}> & Readonly<{}>, {
+        updateScale: (nextScale: any) => void;
+        $emit: (event: "page-rendered" | "selection-raw" | "bypass-selection" | "pages-loaded" | "document-loaded" | "document-ready" | "document-error", ...args: any[]) => void;
+        config: Record<string, any>;
+        file: Record<string, any>;
+        fileId?: string | undefined;
+        $props: {
+            readonly config?: Record<string, any> | undefined;
+            readonly file?: Record<string, any> | undefined;
+            readonly fileId?: string | undefined;
+        };
+    }, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, import('vue').PublicProps, {}, true, {}, {}, import('vue').GlobalComponents, import('vue').GlobalDirectives, string, {
+        rootRef: HTMLDivElement;
+        documentRef: import('vue').CreateComponentPublicInstanceWithMixins<Readonly<{}> & Readonly<{}>, {
+            $emit: (event: "page-rendered" | "page-error" | "selection-raw" | "bypass-selection" | "page-focus", ...args: any[]) => void;
+            pages: unknown[];
+            config: Record<string, any>;
+            hasTextLayer: boolean;
+            scale?: number | undefined;
+            pdf?: Record<string, any> | undefined;
+            outputScale?: number | undefined;
+            $props: {
+                readonly pages?: unknown[] | undefined;
+                readonly config?: Record<string, any> | undefined;
+                readonly hasTextLayer?: boolean | undefined;
+                readonly scale?: number | undefined;
+                readonly pdf?: Record<string, any> | undefined;
+                readonly outputScale?: number | undefined;
+            };
+        }, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, import('vue').PublicProps, {}, true, {}, {}, import('vue').GlobalComponents, import('vue').GlobalDirectives, string, {
+            documentRef: HTMLDivElement;
+            documentWrapper: HTMLDivElement;
+        }, HTMLDivElement, import('vue').ComponentProvideOptions, {
+            P: {};
+            B: {};
+            D: {};
+            C: {};
+            M: {};
+            Defaults: {};
+        }, Readonly<{}> & Readonly<{}>, {
+            $emit: (event: "page-rendered" | "page-error" | "selection-raw" | "bypass-selection" | "page-focus", ...args: any[]) => void;
+            pages: unknown[];
+            config: Record<string, any>;
+            hasTextLayer: boolean;
+            scale?: number | undefined;
+            pdf?: Record<string, any> | undefined;
+            outputScale?: number | undefined;
+            $props: {
+                readonly pages?: unknown[] | undefined;
+                readonly config?: Record<string, any> | undefined;
+                readonly hasTextLayer?: boolean | undefined;
+                readonly scale?: number | undefined;
+                readonly pdf?: Record<string, any> | undefined;
+                readonly outputScale?: number | undefined;
+            };
+        }, {}, {}, {}, {}> | null;
+    }, HTMLDivElement, import('vue').ComponentProvideOptions, {
+        P: {};
+        B: {};
+        D: {};
+        C: {};
+        M: {};
+        Defaults: {};
+    }, Readonly<{}> & Readonly<{}>, {
+        updateScale: (nextScale: any) => void;
+        $emit: (event: "page-rendered" | "selection-raw" | "bypass-selection" | "pages-loaded" | "document-loaded" | "document-ready" | "document-error", ...args: any[]) => void;
+        config: Record<string, any>;
+        file: Record<string, any>;
+        fileId?: string | undefined;
+        $props: {
+            readonly config?: Record<string, any> | undefined;
+            readonly file?: Record<string, any> | undefined;
+            readonly fileId?: string | undefined;
+        };
+    }, {}, {}, {}, {}> | null)[];
+}, HTMLDivElement>;
+export default _default;
+//# sourceMappingURL=SuperDoc.vue.d.ts.map

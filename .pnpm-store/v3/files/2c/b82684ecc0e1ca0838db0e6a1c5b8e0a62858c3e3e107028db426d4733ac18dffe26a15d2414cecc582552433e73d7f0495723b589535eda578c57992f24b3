@@ -1,0 +1,9 @@
+import { Editor } from '../../core/Editor.js';
+import { HyperlinksListQuery, HyperlinksListResult, HyperlinksGetInput, HyperlinkInfo, HyperlinksWrapInput, HyperlinksInsertInput, HyperlinksPatchInput, HyperlinksRemoveInput, HyperlinkMutationResult, MutationOptions } from '@superdoc/document-api';
+export declare function hyperlinksListWrapper(editor: Editor, query?: HyperlinksListQuery): HyperlinksListResult;
+export declare function hyperlinksGetWrapper(editor: Editor, input: HyperlinksGetInput): HyperlinkInfo;
+export declare function hyperlinksWrapWrapper(editor: Editor, input: HyperlinksWrapInput, options?: MutationOptions): HyperlinkMutationResult;
+export declare function hyperlinksInsertWrapper(editor: Editor, input: HyperlinksInsertInput, options?: MutationOptions): HyperlinkMutationResult;
+export declare function hyperlinksPatchWrapper(editor: Editor, input: HyperlinksPatchInput, options?: MutationOptions): HyperlinkMutationResult;
+export declare function hyperlinksRemoveWrapper(editor: Editor, input: HyperlinksRemoveInput, options?: MutationOptions): HyperlinkMutationResult;
+//# sourceMappingURL=hyperlinks-wrappers.d.ts.map

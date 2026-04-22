@@ -1,0 +1,14 @@
+import { Editor } from '../../Editor.js';
+export interface FindOrCreateOptions {
+    target: string;
+    type: string;
+    dryRun?: boolean;
+    expectedRevision?: string;
+}
+/**
+ * Find an existing relationship or create a new one via `mutatePart`.
+ *
+ * Returns the rId string, or null on failure.
+ */
+export declare function findOrCreateRelationship(editor: Editor, source: string, options: FindOrCreateOptions): string | null;
+//# sourceMappingURL=relationships-mutation.d.ts.map

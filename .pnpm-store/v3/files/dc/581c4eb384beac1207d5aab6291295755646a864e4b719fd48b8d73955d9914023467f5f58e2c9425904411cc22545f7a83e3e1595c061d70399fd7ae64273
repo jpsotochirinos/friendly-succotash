@@ -1,0 +1,50 @@
+import { InlineStylePolicy } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+/** A ProseMirror mark as seen on inline text nodes. */
+interface PmMark {
+    type: {
+        name: string;
+        create: (attrs?: Record<string, unknown> | null) => PmMark;
+    };
+    attrs: Record<string, unknown>;
+    eq: (other: PmMark) => boolean;
+}
+/** One contiguous run of text sharing identical marks. */
+export interface CapturedRun {
+    /** Offset relative to block start. */
+    from: number;
+    /** Offset relative to block start. */
+    to: number;
+    /** Character count (to - from). */
+    charCount: number;
+    /** The active marks on this run. */
+    marks: readonly PmMark[];
+}
+/** Mark capture result for a matched range. */
+export interface CapturedStyle {
+    /** Runs within the matched range, sorted by position. */
+    runs: CapturedRun[];
+    /** True if all runs share the exact same mark set. */
+    isUniform: boolean;
+}
+/**
+ * Capture inline runs (mark spans) from a block-relative text range.
+ *
+ * Walks the ProseMirror document between the absolute positions corresponding
+ * to the block-relative `from`/`to` offsets, collecting each inline text node
+ * as a run with its marks.
+ */
+export declare function captureRunsInRange(editor: Editor, blockPos: number, from: number, to: number): CapturedStyle;
+/**
+ * Check whether all runs share the exact same mark set.
+ */
+export declare function checkUniformity(runs: CapturedRun[]): boolean;
+/**
+ * Resolve the mark set to apply for a text.rewrite step, given the captured
+ * style data and the inline style policy.
+ *
+ * Returns an array of PM marks to apply to the replacement text.
+ */
+export declare function resolveInlineStyle(editor: Editor, captured: CapturedStyle, policy: InlineStylePolicy, stepId: string): readonly PmMark[];
+export {};
+//# sourceMappingURL=style-resolver.d.ts.map

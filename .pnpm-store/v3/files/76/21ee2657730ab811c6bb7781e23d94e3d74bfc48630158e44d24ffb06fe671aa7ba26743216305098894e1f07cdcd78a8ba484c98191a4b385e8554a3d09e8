@@ -1,0 +1,8 @@
+export function updatePosition({ allCommentPositions, threadId, pos, currentBounds, node }: {
+    allCommentPositions: Object;
+    threadId: string;
+    pos: number;
+    currentBounds: DOMRect | Object;
+    node: Object;
+}): void;
+//# sourceMappingURL=update-position.d.ts.map

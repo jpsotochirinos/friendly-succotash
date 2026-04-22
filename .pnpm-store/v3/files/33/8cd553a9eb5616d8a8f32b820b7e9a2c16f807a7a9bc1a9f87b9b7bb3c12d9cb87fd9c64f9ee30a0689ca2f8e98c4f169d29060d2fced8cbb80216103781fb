@@ -1,0 +1,7 @@
+import { FlowBlock, Layout } from '@superdoc/contracts';
+export declare function createLayoutMetrics(perf: Performance | undefined, startMark: number | undefined, layout: Layout, blocks: FlowBlock[]): {
+    durationMs: number;
+    blockCount: number;
+    pageCount: number;
+} | undefined;
+//# sourceMappingURL=PresentationLayoutMetrics.d.ts.map

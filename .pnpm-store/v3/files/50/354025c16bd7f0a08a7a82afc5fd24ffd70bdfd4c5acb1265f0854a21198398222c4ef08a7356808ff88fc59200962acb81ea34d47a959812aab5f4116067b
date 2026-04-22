@@ -1,0 +1,33 @@
+import { Editor } from '../core/Editor.js';
+import { MutationOptions, TextAddress, TextMutationReceipt } from '@superdoc/document-api';
+/**
+ * Legacy insert request with optional TextAddress target and block-relative locator.
+ * The public InsertWriteRequest is now target-less; this extends it for
+ * backward-compat test callers that still exercise the targeted path.
+ */
+type LegacyInsertWriteRequest = {
+    kind: 'insert';
+    target?: TextAddress;
+    text: string;
+    blockId?: string;
+    offset?: number;
+};
+type LegacyReplaceWriteRequest = {
+    kind: 'replace';
+    target?: TextAddress;
+    text: string;
+    blockId?: string;
+    start?: number;
+    end?: number;
+};
+type LegacyDeleteWriteRequest = {
+    kind: 'delete';
+    target?: TextAddress;
+    blockId?: string;
+    start?: number;
+    end?: number;
+};
+type LegacyWriteRequest = LegacyInsertWriteRequest | LegacyReplaceWriteRequest | LegacyDeleteWriteRequest;
+export declare function writeAdapter(editor: Editor, request: LegacyWriteRequest, options?: MutationOptions): TextMutationReceipt;
+export {};
+//# sourceMappingURL=write-adapter.d.ts.map

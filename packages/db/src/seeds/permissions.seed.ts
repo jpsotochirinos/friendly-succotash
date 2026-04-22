@@ -7,6 +7,9 @@ const PERMISSIONS = [
   { code: 'workflow_item:read', category: 'workflow', description: 'View workflow items' },
   { code: 'workflow_item:update', category: 'workflow', description: 'Edit workflow items' },
   { code: 'workflow_item:delete', category: 'workflow', description: 'Delete workflow items' },
+  { code: 'workflow_item:comment', category: 'workflow', description: 'Comment on workflow items' },
+  { code: 'workflow_template:read', category: 'workflow', description: 'View workflow templates' },
+  { code: 'workflow_template:manage', category: 'workflow', description: 'Create and edit org workflow templates' },
   { code: 'document:create', category: 'document', description: 'Create documents' },
   { code: 'document:read', category: 'document', description: 'View documents' },
   { code: 'document:update', category: 'document', description: 'Edit documents' },
@@ -25,9 +28,51 @@ const PERMISSIONS = [
   { code: 'workflow:close', category: 'workflow_action', description: 'Close validated items' },
   { code: 'workflow:reject', category: 'workflow_action', description: 'Reject items' },
   { code: 'workflow:skip', category: 'workflow_action', description: 'Skip workflow items' },
+  { code: 'workflow:update', category: 'workflow_action', description: 'Manage workflow definitions (states and transitions)' },
   { code: 'org:manage', category: 'system', description: 'Manage organization settings' },
   { code: 'role:manage', category: 'system', description: 'Manage roles and permissions' },
   { code: 'scraping:trigger', category: 'system', description: 'Trigger on-demand scraping' },
+  {
+    code: 'sinoe:manage',
+    category: 'integration',
+    description: 'Configure SINOE credentials and sync notifications',
+  },
+  { code: 'calendar:read', category: 'calendar', description: 'View organization calendar' },
+  { code: 'calendar:view_team', category: 'calendar', description: 'View team calendar scope' },
+  {
+    code: 'calendar:integration:manage',
+    category: 'calendar',
+    description: 'Connect Google/Outlook calendar',
+  },
+  { code: 'billing:read', category: 'billing', description: 'View plan, billing and AI credits' },
+  { code: 'billing:manage', category: 'billing', description: 'Change plan, payment methods and credit allocations' },
+  {
+    code: 'import:manage',
+    category: 'import',
+    description: 'Run data imports / migration batches for the organization',
+  },
+  {
+    code: 'whatsapp:use_assistant',
+    category: 'whatsapp',
+    description: 'Use the AI assistant over WhatsApp',
+  },
+  {
+    code: 'whatsapp:send_to_self',
+    category: 'whatsapp',
+    description: 'Allow assistant to send messages or links to own WhatsApp',
+  },
+  {
+    code: 'whatsapp:send_to_others',
+    category: 'whatsapp',
+    description: 'Allow assistant to message other org members via WhatsApp',
+  },
+  {
+    code: 'whatsapp:receive_notifications',
+    category: 'whatsapp',
+    description: 'Receive calendar and in-app notification digests via WhatsApp',
+  },
+  { code: 'feed:read', category: 'feed', description: 'View legal news and Alega updates feed' },
+  { code: 'feed:manage', category: 'feed', description: 'Manage feed items and RSS sources' },
 ];
 
 export { PERMISSIONS };

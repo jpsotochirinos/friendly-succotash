@@ -1,0 +1,17 @@
+import { PermissionRangesListInput, PermissionRangesListResult, PermissionRangesGetInput, PermissionRangeInfo, PermissionRangesCreateInput, PermissionRangesRemoveInput, PermissionRangesUpdatePrincipalInput, PermissionRangeMutationResult, PermissionRangeRemoveResult, PermissionRangePrincipal, PermissionRangeKind, MutationOptions } from '@superdoc/document-api';
+import { Editor } from '../core/Editor.js';
+export interface PermissionRangeEntry {
+    id: string;
+    principal: PermissionRangePrincipal;
+    kind: PermissionRangeKind;
+    from: number;
+    to: number;
+    startPos: number;
+    endPos: number;
+}
+export declare function permissionRangesListAdapter(editor: Editor, input?: PermissionRangesListInput): PermissionRangesListResult;
+export declare function permissionRangesGetAdapter(editor: Editor, input: PermissionRangesGetInput): PermissionRangeInfo;
+export declare function permissionRangesCreateAdapter(editor: Editor, input: PermissionRangesCreateInput, options?: MutationOptions): PermissionRangeMutationResult;
+export declare function permissionRangesRemoveAdapter(editor: Editor, input: PermissionRangesRemoveInput, options?: MutationOptions): PermissionRangeRemoveResult;
+export declare function permissionRangesUpdatePrincipalAdapter(editor: Editor, input: PermissionRangesUpdatePrincipalInput, options?: MutationOptions): PermissionRangeMutationResult;
+//# sourceMappingURL=permission-ranges-adapter.d.ts.map

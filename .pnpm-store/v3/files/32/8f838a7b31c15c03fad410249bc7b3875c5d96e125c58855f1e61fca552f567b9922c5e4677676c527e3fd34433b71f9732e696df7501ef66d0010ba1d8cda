@@ -1,0 +1,54 @@
+import { SectionBreakType, SectionColumns, SectionDirection, SectionHeaderFooterKind, SectionHeaderFooterRefs, SectionHeaderFooterVariant, SectionLineNumbering, SectionPageBorders, SectionPageMargins, SectionPageNumbering, SectionPageSetup, SectionVerticalAlign } from '@superdoc/document-api';
+export interface XmlElement {
+    type?: string;
+    name: string;
+    attributes?: Record<string, string | number | boolean>;
+    elements?: XmlElement[];
+}
+export declare function cloneXmlElement<T>(value: T): T;
+export declare function isSectPrElement(value: unknown): value is XmlElement;
+export declare function createSectPrElement(): XmlElement;
+export declare function ensureSectPrElement(current: unknown): XmlElement;
+export declare function findChild(element: XmlElement, childName: string): XmlElement | undefined;
+export declare function ensureChild(element: XmlElement, childName: string): XmlElement;
+export declare function removeChildren(element: XmlElement, predicate: (entry: XmlElement) => boolean): {
+    removed: boolean;
+    element: XmlElement;
+};
+export declare function readSectPrBreakType(sectPr: XmlElement): SectionBreakType | undefined;
+export declare function writeSectPrBreakType(sectPr: XmlElement, breakType: SectionBreakType): void;
+export declare function readSectPrMargins(sectPr: XmlElement): SectionPageMargins & {
+    header?: number;
+    footer?: number;
+};
+export declare function writeSectPrPageMargins(sectPr: XmlElement, margins: SectionPageMargins): void;
+export declare function writeSectPrHeaderFooterMargins(sectPr: XmlElement, margins: {
+    header?: number;
+    footer?: number;
+}): void;
+export declare function readSectPrPageSetup(sectPr: XmlElement): SectionPageSetup | undefined;
+export declare function writeSectPrPageSetup(sectPr: XmlElement, setup: SectionPageSetup): void;
+export declare function readSectPrColumns(sectPr: XmlElement): SectionColumns | undefined;
+export declare function writeSectPrColumns(sectPr: XmlElement, columns: SectionColumns): void;
+export declare function readSectPrLineNumbering(sectPr: XmlElement): SectionLineNumbering | undefined;
+export declare function writeSectPrLineNumbering(sectPr: XmlElement, numbering: SectionLineNumbering): void;
+export declare function readSectPrPageNumbering(sectPr: XmlElement): SectionPageNumbering | undefined;
+export declare function writeSectPrPageNumbering(sectPr: XmlElement, numbering: SectionPageNumbering): void;
+export declare function readSectPrTitlePage(sectPr: XmlElement): boolean;
+export declare function writeSectPrTitlePage(sectPr: XmlElement, enabled: boolean): void;
+export declare function readSectPrVerticalAlign(sectPr: XmlElement): SectionVerticalAlign | undefined;
+export declare function writeSectPrVerticalAlign(sectPr: XmlElement, value: SectionVerticalAlign): void;
+export declare function readSectPrDirection(sectPr: XmlElement): SectionDirection | undefined;
+export declare function writeSectPrDirection(sectPr: XmlElement, direction: SectionDirection): void;
+export declare function readSectPrRefsByKind(sectPr: XmlElement, kind: SectionHeaderFooterKind): SectionHeaderFooterRefs | undefined;
+/**
+ * Canonical adapter-facing alias used by section mutation adapters.
+ */
+export declare const readSectPrHeaderFooterRefs: typeof readSectPrRefsByKind;
+export declare function setSectPrHeaderFooterRef(sectPr: XmlElement, kind: SectionHeaderFooterKind, variant: SectionHeaderFooterVariant, refId: string): void;
+export declare function clearSectPrHeaderFooterRef(sectPr: XmlElement, kind: SectionHeaderFooterKind, variant: SectionHeaderFooterVariant): boolean;
+export declare function getSectPrHeaderFooterRef(sectPr: XmlElement, kind: SectionHeaderFooterKind, variant: SectionHeaderFooterVariant): string | undefined;
+export declare function readSectPrPageBorders(sectPr: XmlElement): SectionPageBorders | undefined;
+export declare function writeSectPrPageBorders(sectPr: XmlElement, borders: SectionPageBorders): void;
+export declare function clearSectPrPageBorders(sectPr: XmlElement): boolean;
+//# sourceMappingURL=sections-xml.d.ts.map

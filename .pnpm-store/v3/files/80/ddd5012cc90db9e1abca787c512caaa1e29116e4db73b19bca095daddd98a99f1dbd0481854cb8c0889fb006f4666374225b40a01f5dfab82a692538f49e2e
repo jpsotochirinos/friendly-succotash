@@ -1,0 +1,21 @@
+import { MutatePartRequest, CreatePartRequest, DeletePartRequest, MutatePartsRequest, MutatePartsResult, MutatePartResult } from '../types.js';
+/**
+ * Atomic multi-part mutation. All operations execute as one unit.
+ *
+ * On failure: all parts roll back to pre-call state.
+ * On success: one event, one revision increment, one invalidation pass.
+ *
+ * If any `afterCommit` hook fails, the mutation is still committed but
+ * `result.degraded` is set to `true` and the event includes `degraded`.
+ */
+export declare function mutateParts(request: MutatePartsRequest): MutatePartsResult;
+/**
+ * Convenience wrapper for single-part mutations.
+ * Delegates to `mutateParts` with a single-entry operations array.
+ *
+ * For mutate operations, captures the callback return value in `result`.
+ */
+export declare function mutatePart<TPart = unknown, TResult = unknown>(request: MutatePartRequest<TPart, TResult>): MutatePartResult<TResult>;
+export declare function mutatePart(request: CreatePartRequest): MutatePartResult<undefined>;
+export declare function mutatePart(request: DeletePartRequest): MutatePartResult<undefined>;
+//# sourceMappingURL=mutate-part.d.ts.map

@@ -1,0 +1,2 @@
+export * from './vanish-translator.js';
+//# sourceMappingURL=index.d.ts.map

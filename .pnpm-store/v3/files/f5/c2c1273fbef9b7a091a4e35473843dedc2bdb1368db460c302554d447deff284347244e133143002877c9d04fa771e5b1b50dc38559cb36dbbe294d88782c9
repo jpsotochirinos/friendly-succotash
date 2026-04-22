@@ -1,0 +1,6 @@
+/**
+ * @param {string} json
+ * @returns {Object}
+ */
+export function parseTagValueJSON(json: string): Object;
+//# sourceMappingURL=parse-tag-value-json.d.ts.map

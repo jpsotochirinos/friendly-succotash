@@ -1,0 +1,27 @@
+import { TextAddress, TextMutationResolution } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+import { ResolvedTextTarget } from './adapter-utils.js';
+/**
+ * Reads the canonical flattened text between two resolved document positions.
+ *
+ * Uses `\n` as the block separator and `\ufffc` (Object Replacement Character) as the
+ * leaf-inline placeholder, matching the offset model used by `TextAddress`.
+ *
+ * @param editor - The editor instance to read from.
+ * @param range - Resolved absolute document positions.
+ * @returns The text content between the resolved positions.
+ */
+export declare function readTextAtResolvedRange(editor: Editor, range: ResolvedTextTarget): string;
+/**
+ * Builds a `TextMutationResolution` from already-resolved adapter data.
+ *
+ * @param input - The resolved target, range, and text snapshot.
+ * @returns A `TextMutationResolution` suitable for inclusion in a `TextMutationReceipt`.
+ */
+export declare function buildTextMutationResolution(input: {
+    requestedTarget?: TextAddress;
+    target: TextAddress;
+    range: ResolvedTextTarget;
+    text: string;
+}): TextMutationResolution;
+//# sourceMappingURL=text-mutation-resolution.d.ts.map

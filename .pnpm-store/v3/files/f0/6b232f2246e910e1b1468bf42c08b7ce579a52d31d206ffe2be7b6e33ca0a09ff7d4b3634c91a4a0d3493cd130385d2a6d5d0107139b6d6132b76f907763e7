@@ -1,0 +1,59 @@
+import { Transaction } from 'prosemirror-state';
+import { Schema } from 'prosemirror-model';
+import { ReplayResult } from './replay-types';
+import { HeaderFootersDiff } from '../algorithm/header-footer-diffing';
+type ReplayHeaderFooterEditor = {
+    state: {
+        doc: import('prosemirror-model').Node;
+    };
+    emit?: (event: string, payload?: unknown) => void;
+    converter?: {
+        headers?: Record<string, unknown>;
+        footers?: Record<string, unknown>;
+        headerIds?: Record<string, unknown>;
+        footerIds?: Record<string, unknown>;
+        convertedXml?: Record<string, unknown>;
+        bodySectPr?: unknown;
+        savedTagsToRestore?: Array<Record<string, unknown>>;
+        exportToXmlJson?: (opts: {
+            data: unknown;
+            editor: {
+                schema: Schema;
+                getUpdatedJson: () => unknown;
+            };
+            editorSchema: Schema;
+            isHeaderFooter: boolean;
+            comments?: unknown[];
+            commentDefinitions?: unknown[];
+            isFinalDoc?: boolean;
+        }) => {
+            result?: {
+                elements?: Array<{
+                    elements?: unknown[];
+                }>;
+            };
+        };
+        headerFooterModified?: boolean;
+        documentModified?: boolean;
+    } | null;
+};
+/**
+ * Replays header/footer diffs into the current editor state.
+ *
+ * @param params Replay inputs.
+ * @param params.tr Transaction that should receive section slot mutations.
+ * @param params.headerFootersDiff Header/footer diff payload to apply.
+ * @param params.schema Schema used to rebuild stored PM JSON documents.
+ * @param params.editor Editor whose converter caches should be updated.
+ * @param params.trackedChangesRequested Whether the outer replay requested tracked mode.
+ * @returns Replay summary with applied/skipped counts and warnings.
+ */
+export declare function replayHeaderFooters({ tr, headerFootersDiff, schema, editor, trackedChangesRequested, }: {
+    tr: Transaction;
+    headerFootersDiff: HeaderFootersDiff | null;
+    schema: Schema;
+    editor?: ReplayHeaderFooterEditor;
+    trackedChangesRequested?: boolean;
+}): ReplayResult;
+export {};
+//# sourceMappingURL=replay-header-footers.d.ts.map

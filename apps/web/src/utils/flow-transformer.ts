@@ -4,14 +4,20 @@ interface WorkflowItem {
   id: string;
   parentId?: string | null;
   title: string;
-  itemType: 'service' | 'task' | 'action';
+  kind?: string | null;
+  /** State key (same as legacy `status` in API responses). */
+  stateKey?: string;
   status: string;
-  assignedTo?: { id: string; firstName?: string; lastName?: string; email: string } | null;
+  assignedTo?: { id: string; firstName?: string; lastName?: string; email: string } | null | undefined;
+  startDate?: string | null;
   dueDate?: string | null;
+  metadata?: Record<string, unknown>;
   depth: number;
   sortOrder: number;
-  requiresDocument: boolean;
+  requiresDocument?: boolean;
   actionType?: string;
+  isLegalDeadline?: boolean;
+  accentColor?: string | null;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -25,38 +31,63 @@ const STATUS_COLORS: Record<string, string> = {
   rejected: '#ef4444',
 };
 
+/** Aplana árbol anidado (children) a lista con parentId para el grafo. */
+export function flattenWorkflowTree(
+  nodes: Array<WorkflowItem & { children?: WorkflowItem[] }>,
+  parentId: string | null = null,
+): WorkflowItem[] {
+  const out: WorkflowItem[] = [];
+  for (const n of nodes) {
+    const { children, ...rest } = n as WorkflowItem & { children?: WorkflowItem[] };
+    out.push({
+      ...rest,
+      parentId: parentId ?? (rest as any).parentId ?? null,
+    });
+    if (children?.length) {
+      out.push(...flattenWorkflowTree(children as any, n.id));
+    }
+  }
+  return out;
+}
+
 export function workflowItemsToFlowElements(
   items: WorkflowItem[],
 ): { nodes: Node[]; edges: Edge[] } {
-  const nodes: Node[] = items.map((item) => ({
+  const nodes: Node[] = items.map((item) => {
+    const sk = item.stateKey ?? item.status;
+    return {
     id: item.id,
-    type: item.itemType,
+    type: 'default',
     position: { x: 0, y: 0 },
     data: {
       label: item.title,
-      status: item.status,
-      statusColor: STATUS_COLORS[item.status] || '#94a3b8',
+      status: sk,
+      statusColor: STATUS_COLORS[sk] || '#94a3b8',
       assignedTo: item.assignedTo,
       dueDate: item.dueDate,
-      itemType: item.itemType,
+      kind: item.kind,
       requiresDocument: item.requiresDocument,
       actionType: item.actionType,
       depth: item.depth,
     },
-  }));
+  };
+  });
 
   const edges: Edge[] = items
     .filter((item) => item.parentId)
-    .map((item) => ({
+    .map((item) => {
+      const sk = item.stateKey ?? item.status;
+      return {
       id: `e-${item.parentId}-${item.id}`,
       source: item.parentId!,
       target: item.id,
-      animated: ['active', 'in_progress'].includes(item.status),
+      animated: ['active', 'in_progress'].includes(sk),
       style: {
-        stroke: STATUS_COLORS[item.status] || '#94a3b8',
+        stroke: STATUS_COLORS[sk] || '#94a3b8',
         strokeWidth: 2,
       },
-    }));
+    };
+    });
 
   const groupedByParent = new Map<string, WorkflowItem[]>();
   items.forEach((item) => {

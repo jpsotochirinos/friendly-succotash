@@ -1,0 +1,2 @@
+export { VerticalNavigation, VerticalNavigationPluginKey } from './vertical-navigation.js';
+//# sourceMappingURL=index.d.ts.map

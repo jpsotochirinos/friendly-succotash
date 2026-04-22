@@ -2,42 +2,426 @@
 @tailwind components;
 @tailwind utilities;
 
-.dark {
-  --p-surface-0: #111827;
-  --p-surface-50: #1f2937;
-  --p-surface-100: #374151;
-  --p-surface-200: #4b5563;
-  --p-surface-300: #6b7280;
-  --p-surface-400: #9ca3af;
-  --p-surface-500: #d1d5db;
-  --p-surface-600: #e5e7eb;
-  --p-surface-700: #f3f4f6;
-  --p-surface-800: #f9fafb;
-  --p-surface-900: #ffffff;
+/* ------------------------------------------------------------------ */
+/* Alega — Design tokens                                              */
+/* ------------------------------------------------------------------ */
+:root {
+  /* Marca */
+  --brand-abismo: #0d0f2b;
+  --brand-medianoche: #141852;
+  --brand-real: #1b2080;
+  --brand-zafiro: #2d3fbf;
+  --brand-hielo: #c8ccf5;
+  --brand-papel: #f2f3fb;
+
+  /* Roles semánticos (modo claro por defecto) */
+  --surface-app: #f2f3fb;
+  --surface-app-soft: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #eceefa;
+  --surface-border: rgba(20, 24, 82, 0.1);
+  --surface-border-strong: rgba(20, 24, 82, 0.18);
+
+  --fg-default: #141852;
+  --fg-muted: #4a5285;
+  --fg-subtle: #6e76a6;
+  --fg-on-brand: #ffffff;
+
+  --accent: #2d3fbf;
+  --accent-hover: #1b2080;
+  --accent-soft: rgba(45, 63, 191, 0.1);
+  --accent-ring: rgba(45, 63, 191, 0.35);
+
+  --shadow-sm: 0 1px 2px rgba(13, 15, 43, 0.06);
+  --shadow-md: 0 4px 14px rgba(13, 15, 43, 0.08);
+  --shadow-lg: 0 12px 32px -8px rgba(13, 15, 43, 0.18);
+
+  /* Shell app (sidebar / cabeceras) — borde tinte Zafiro como en el spec */
+  --layout-border: rgba(45, 63, 191, 0.14);
+  --layout-sidebar-bg: var(--surface-raised);
+  --layout-sidebar-shadow: none;
+}
+
+html.dark {
   color-scheme: dark;
+
+  --surface-app: #0d0f2b;
+  --surface-app-soft: #111434;
+  --surface-raised: #141852;
+  --surface-sunken: #0a0c22;
+  /* Bordes más legibles sobre Abismo / Medianoche (tinte marca) */
+  --surface-border: rgba(140, 152, 230, 0.2);
+  --surface-border-strong: rgba(175, 185, 245, 0.38);
+
+  --fg-default: #f2f3fb;
+  --fg-muted: #d6daf8;
+  --fg-subtle: rgba(214, 218, 248, 0.72);
+  --fg-on-brand: #ffffff;
+
+  /* Primario reconocible como Zafiro en UI; hover más claro */
+  --accent: #949df8;
+  --accent-hover: #c4c9fc;
+  --accent-soft: rgba(45, 63, 191, 0.32);
+  --accent-ring: rgba(148, 157, 248, 0.55);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 18px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 44px -8px rgba(0, 0, 0, 0.58);
+
+  --layout-border: rgba(130, 142, 220, 0.38);
+  --layout-sidebar-bg: linear-gradient(165deg, #171b58 0%, #141852 52%, #121648 100%);
+  --layout-sidebar-shadow: inset -1px 0 0 rgba(45, 63, 191, 0.22), -4px 0 24px -12px rgba(0, 0, 0, 0.45);
 }
 
-.dark body,
-.dark .p-component {
-  color: #e5e7eb;
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+@layer base {
+  html {
+    @apply antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    background-color: var(--surface-app);
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--surface-app);
+    color: var(--fg-default);
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    transition: background-color 0.25s ease, color 0.25s ease;
+    height: 100%;
+    margin: 0;
+  }
+
+  #app {
+    height: 100%;
+    min-height: 0;
+  }
+
+  ::selection {
+    background-color: var(--accent-soft);
+    color: var(--fg-default);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  /* Scrollbar discreto, alineado con la marca */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-border-strong) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--surface-border-strong);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--fg-subtle);
+    background-clip: padding-box;
+  }
 }
 
-.dark .p-datatable .p-datatable-tbody > tr {
-  color: #e5e7eb;
+/* ------------------------------------------------------------------ */
+/* Componentes reutilizables                                           */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .app-surface {
+    background-color: var(--surface-app);
+    color: var(--fg-default);
+  }
+
+  .app-card {
+    background-color: var(--surface-raised);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--shadow-md);
+    border-radius: 1rem;
+    color: var(--fg-default);
+  }
+
+  .app-divider {
+    background-color: var(--surface-border);
+  }
+
+  /* Etiqueta de sección (opcional en PageHeader) */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--surface-border);
+    margin-bottom: 0.5rem;
+  }
+
+  /* Fondo atmosférico suave (auth, onboarding) — no confundir con el gradiente sólido de marca */
+  .brand-gradient-soft {
+    background-image:
+      radial-gradient(120% 80% at 0% 0%, rgba(45, 63, 191, 0.18), transparent 60%),
+      radial-gradient(100% 80% at 100% 0%, rgba(200, 204, 245, 0.55), transparent 55%),
+      linear-gradient(180deg, var(--surface-app) 0%, var(--surface-app-soft) 100%);
+  }
+  html.dark .brand-gradient-soft {
+    background-image:
+      radial-gradient(120% 80% at 0% 0%, rgba(45, 63, 191, 0.45), transparent 60%),
+      radial-gradient(90% 70% at 100% 10%, rgba(27, 32, 128, 0.55), transparent 55%),
+      linear-gradient(180deg, var(--brand-abismo) 0%, #0a0c22 100%);
+  }
+
+  /* Gradiente oficial de marca (spec landing): Zafiro → Real, 135° */
+  .bg-brand-gradient {
+    background-image: linear-gradient(135deg, var(--brand-zafiro) 0%, var(--brand-real) 100%);
+  }
+  .bg-brand-gradient-reverse {
+    background-image: linear-gradient(135deg, var(--brand-real) 0%, var(--brand-medianoche) 100%);
+  }
+  .text-brand-gradient {
+    background-image: linear-gradient(135deg, var(--brand-zafiro) 0%, var(--brand-real) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .nav-item {
+    @apply relative flex items-center rounded-lg text-sm font-medium transition-colors;
+    color: var(--fg-muted);
+  }
+  .nav-item:hover {
+    background-color: var(--accent-soft);
+    color: var(--fg-default);
+  }
+  .nav-item.is-active {
+    background-color: var(--accent-soft);
+    color: var(--accent);
+  }
+  .nav-item.is-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 3px;
+    border-radius: 999px;
+    background-color: var(--accent);
+  }
+
+  html.dark .nav-item:hover {
+    background-color: rgba(45, 63, 191, 0.22);
+    color: var(--fg-default);
+  }
+  html.dark .nav-item.is-active {
+    background-color: rgba(45, 63, 191, 0.3);
+    color: var(--brand-hielo);
+  }
+  html.dark .nav-item.is-active::before {
+    background-color: var(--brand-zafiro);
+    box-shadow: 0 0 12px rgba(45, 63, 191, 0.45);
+  }
+
+  /* Barra lateral principal (AppLayout) */
+  .app-layout-sidebar {
+    background: var(--layout-sidebar-bg);
+    border-right: 1px solid var(--layout-border);
+    box-shadow: var(--layout-sidebar-shadow);
+  }
+  .app-layout-sidebar-header {
+    border-bottom: 1px solid var(--layout-border);
+  }
+  .app-layout-sidebar-footer {
+    border-top: 1px solid var(--layout-border);
+  }
+  .app-layout-user-chip {
+    background-color: var(--surface-sunken);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+  html.dark .app-layout-user-chip {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 1px 0 rgba(0, 0, 0, 0.25);
+  }
+
+  /* Transiciones de enrutamiento */
+  .view-fade-enter-active,
+  .view-fade-leave-active {
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+  .view-fade-enter-from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  .view-fade-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
-.dark .p-datatable .p-datatable-thead > tr > th {
-  color: #f3f4f6;
+/* ------------------------------------------------------------------ */
+/* Ajustes finos de PrimeVue para coherencia con la marca              */
+/* ------------------------------------------------------------------ */
+.p-component {
+  font-family: inherit;
 }
 
-.dark .p-card {
-  color: #e5e7eb;
+html.dark .p-card,
+html.dark .p-datatable,
+html.dark .p-panel,
+html.dark .p-dialog,
+html.dark .p-toast-message {
+  color: var(--fg-default);
 }
 
-.dark .p-inputtext {
-  color: #f3f4f6;
+html.dark .p-inputtext,
+html.dark .p-password-input,
+html.dark .p-textarea,
+html.dark .p-dropdown,
+html.dark .p-multiselect {
+  color: var(--fg-default);
 }
 
-.dark .p-dropdown-label {
-  color: #f3f4f6;
+html.dark .p-inputtext::placeholder,
+html.dark .p-textarea::placeholder {
+  color: rgba(200, 204, 245, 0.55);
+}
+
+html.dark .p-floatlabel > label {
+  color: rgba(200, 204, 245, 0.75);
+}
+
+/* Botones link con color de marca */
+.p-button.p-button-link {
+  color: var(--accent);
+}
+.p-button.p-button-link:hover {
+  color: var(--accent-hover);
+}
+
+/* Divider con tono neutro correcto en dark */
+html.dark .p-divider.p-divider-horizontal:before {
+  border-top-color: var(--surface-border);
+}
+
+/* Reducción de movimiento respetada */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* FullCalendar — prioridad / estado */
+.fc-event.fc-priority-low {
+  border-left: 4px solid #94a3b8 !important;
+}
+.fc-event.fc-priority-normal {
+  border-left: 4px solid #3b82f6 !important;
+}
+.fc-event.fc-priority-high {
+  border-left: 4px solid #f97316 !important;
+}
+.fc-event.fc-priority-urgent {
+  border-left: 4px solid #ef4444 !important;
+}
+.fc-event.fc-pri-tint-low .fc-event-main {
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface-raised)) !important;
+}
+.fc-event.fc-pri-tint-normal .fc-event-main {
+  background: color-mix(in srgb, #dbeafe 45%, var(--surface-raised)) !important;
+}
+.fc-event.fc-pri-tint-high .fc-event-main {
+  background: color-mix(in srgb, #ffedd5 55%, var(--surface-raised)) !important;
+}
+.fc-event.fc-pri-tint-urgent .fc-event-main {
+  background: color-mix(in srgb, #fee2e2 50%, var(--surface-raised)) !important;
+}
+html.dark .fc-event.fc-pri-tint-normal .fc-event-main {
+  background: color-mix(in srgb, rgba(59, 130, 246, 0.25) 60%, var(--surface-raised)) !important;
+}
+html.dark .fc-event.fc-pri-tint-high .fc-event-main {
+  background: color-mix(in srgb, rgba(249, 115, 22, 0.28) 60%, var(--surface-raised)) !important;
+}
+html.dark .fc-event.fc-pri-tint-urgent .fc-event-main {
+  background: color-mix(in srgb, rgba(239, 68, 68, 0.3) 60%, var(--surface-raised)) !important;
+}
+.fc-event.fc-done {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+.fc-event.fc-source-birthday {
+  background: rgba(244, 114, 182, 0.35) !important;
+  border-color: rgba(219, 39, 119, 0.5) !important;
+}
+.fc-event.fc-source-external {
+  border-style: dashed !important;
+}
+.fc .fc-toolbar-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--fg-default);
+}
+.fc .fc-col-header-cell-cushion,
+.fc .fc-daygrid-day-number {
+  color: var(--fg-default);
+}
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border-color: var(--surface-border);
+}
+
+/* FullCalendar — texto oscuro legible (evita blanco sobre fondos pastel) */
+.fc {
+  --fc-event-text-color: var(--fg-default);
+  --fc-neutral-text-color: var(--fg-muted);
+  --fc-border-color: var(--surface-border);
+}
+.fc .fc-event,
+.fc .fc-event .fc-event-title,
+.fc .fc-h-event .fc-event-title,
+.fc .fc-daygrid-block-event .fc-event-title,
+.fc .fc-v-event .fc-event-title {
+  color: var(--fg-default) !important;
+}
+.fc .fc-daygrid-day-number {
+  font-weight: 500;
+}
+.fc .fc-list-event-title {
+  color: var(--fg-default) !important;
+}
+.fc-peru-holiday {
+  --fc-event-text-color: var(--fg-default);
+}
+.fc-peru-holiday .fc-event-main {
+  background: color-mix(in srgb, #5eead4 38%, var(--surface-raised)) !important;
+  border-color: #0d9488 !important;
+  color: var(--fg-default) !important;
+}
+.fc-event-non-workflow .fc-event-main {
+  color: var(--fg-default) !important;
+}
+html.dark .fc-peru-holiday .fc-event-main {
+  background: color-mix(in srgb, rgba(45, 212, 191, 0.28) 55%, var(--surface-raised)) !important;
+  border-color: rgba(45, 212, 191, 0.55) !important;
 }

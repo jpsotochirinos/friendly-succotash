@@ -1,0 +1,34 @@
+import { ToolbarCommandState, ToolbarContext } from '../types.js';
+export declare const getCurrentUndoDepth: (context: ToolbarContext | null) => any;
+export declare const getCurrentRedoDepth: (context: ToolbarContext | null) => any;
+export declare const createHistoryStateDeriver: (kind: "undo" | "redo") => ({ context }: {
+    context: ToolbarContext | null;
+}) => ToolbarCommandState;
+export declare const createRulerStateDeriver: () => ({ context, superdoc }: {
+    context: ToolbarContext | null;
+    superdoc: Record<string, any>;
+}) => ToolbarCommandState;
+export declare const createZoomStateDeriver: () => ({ context, superdoc }: {
+    context: ToolbarContext | null;
+    superdoc: Record<string, any>;
+}) => ToolbarCommandState;
+export declare const createDocumentModeStateDeriver: () => ({ context, superdoc }: {
+    context: ToolbarContext | null;
+    superdoc: Record<string, any>;
+}) => ToolbarCommandState;
+export declare const createRulerExecute: () => ({ superdoc }: {
+    context: ToolbarContext | null;
+    superdoc: Record<string, any>;
+    payload?: unknown;
+}) => boolean;
+export declare const createZoomExecute: () => ({ superdoc, payload }: {
+    context: ToolbarContext | null;
+    superdoc: Record<string, any>;
+    payload?: unknown;
+}) => boolean;
+export declare const createDocumentModeExecute: () => ({ superdoc, payload }: {
+    context: ToolbarContext | null;
+    superdoc: Record<string, any>;
+    payload?: unknown;
+}) => boolean;
+//# sourceMappingURL=document.d.ts.map

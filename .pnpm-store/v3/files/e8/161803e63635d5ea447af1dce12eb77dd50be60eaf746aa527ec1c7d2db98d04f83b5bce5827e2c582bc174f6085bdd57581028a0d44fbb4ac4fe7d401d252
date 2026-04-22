@@ -1,0 +1,5 @@
+import { NodeTranslator } from '../../../node-translator/index.js';
+export function createTrackChangeRunPropertyTranslator(xmlName: any, sdNodeOrKeyName: any): NodeTranslator;
+export const trackInsertRunPropertyTranslator: NodeTranslator;
+export const trackDeleteRunPropertyTranslator: NodeTranslator;
+//# sourceMappingURL=track-change-run-property-translator.d.ts.map

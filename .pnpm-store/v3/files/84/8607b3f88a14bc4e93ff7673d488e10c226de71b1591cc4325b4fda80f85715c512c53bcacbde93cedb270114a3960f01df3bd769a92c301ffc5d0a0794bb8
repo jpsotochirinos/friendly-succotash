@@ -1,0 +1,21 @@
+import { Editor } from '../../../core/Editor.js';
+/**
+ * Part-sync consumer: Yjs `parts` map changes → local mutation core.
+ *
+ * Observes the Yjs `parts` map for remote changes and applies them locally
+ * via `mutateParts`. Each part is validated individually — a single bad part
+ * does not block the rest.
+ */
+import * as Y from 'yjs';
+export interface PartConsumer {
+    /** Tear down the Yjs observer. */
+    destroy(): void;
+}
+export declare function isApplyingRemotePartChanges(): boolean;
+export declare function createPartConsumer(editor: Editor, ydoc: Y.Doc): PartConsumer;
+/**
+ * Full-replace a part's data with remote data.
+ * Clears all existing keys, then copies from source.
+ */
+export declare function replacePartData(target: unknown, source: unknown): void;
+//# sourceMappingURL=consumer.d.ts.map

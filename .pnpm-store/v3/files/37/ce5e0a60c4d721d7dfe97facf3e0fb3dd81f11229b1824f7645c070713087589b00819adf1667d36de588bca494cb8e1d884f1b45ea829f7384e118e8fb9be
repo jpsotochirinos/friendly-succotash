@@ -1,0 +1,9 @@
+import { Root } from 'mdast';
+/**
+ * Parse a Markdown string into an mdast AST tree.
+ *
+ * Supports GitHub Flavored Markdown (tables, strikethrough, autolinks, task lists).
+ * This operation is synchronous and side-effect-free.
+ */
+export declare function parseMarkdownToAst(markdown: string): Root;
+//# sourceMappingURL=parseMarkdownAst.d.ts.map

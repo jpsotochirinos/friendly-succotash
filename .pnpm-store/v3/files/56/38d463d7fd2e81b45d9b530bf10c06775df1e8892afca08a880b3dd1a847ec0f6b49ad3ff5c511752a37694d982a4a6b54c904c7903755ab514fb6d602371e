@@ -1,0 +1,22 @@
+import { StylesDiff } from '../../extensions/diffing/algorithm/styles-diffing';
+type ConverterWithStyles = {
+    convertedXml?: Record<string, unknown>;
+    translatedLinkedStyles?: {
+        docDefaults?: Record<string, unknown>;
+        latentStyles?: Record<string, unknown>;
+        styles?: Record<string, unknown>;
+    } | null;
+};
+/**
+ * Synchronizes replayed style-diff mutations into `word/styles.xml`.
+ *
+ * This helper intentionally updates only style sections touched by the replay
+ * diff to avoid rewriting unrelated XML nodes.
+ *
+ * @param converter Converter state to mutate.
+ * @param stylesDiff Style diff payload used to determine XML updates.
+ * @returns `true` when the styles part was found and updated.
+ */
+export declare function syncStylesDiffToConvertedXml(converter: ConverterWithStyles, stylesDiff: StylesDiff | null): boolean;
+export {};
+//# sourceMappingURL=styles-xml-helpers.d.ts.map

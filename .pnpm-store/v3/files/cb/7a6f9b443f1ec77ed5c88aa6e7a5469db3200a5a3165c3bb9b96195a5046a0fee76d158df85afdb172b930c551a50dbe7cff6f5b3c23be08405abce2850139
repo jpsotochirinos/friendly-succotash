@@ -1,0 +1,56 @@
+export class ShapeGroupView {
+    constructor(props: any);
+    node: any;
+    view: any;
+    getPos: any;
+    decorations: any;
+    innerDecorations: any;
+    editor: any;
+    extension: any;
+    htmlAttributes: any;
+    root: any;
+    mount(): void;
+    get dom(): any;
+    get contentDOM(): null;
+    createElement(): {
+        element: HTMLDivElement;
+    };
+    createShapeElement(shape: any, groupTransform: any, defs: any, shapeIndex: any): SVGGElement | null;
+    createTextElement(textContent: any, textAlign: any, width: any, height: any, options: any): SVGForeignObjectElement;
+    /**
+     * Applies line end markers (arrowheads) to a target SVG element.
+     * @param {SVGElement} target - The SVG element to apply markers to
+     * @param {Object} lineEnds - Line ends configuration with head/tail
+     * @param {string|null} strokeColor - Stroke color, or null if no stroke
+     * @param {number} strokeWidth - Stroke width in pixels
+     * @param {SVGDefsElement} defs - The defs element to append markers to
+     * @param {string} markerBase - Base ID for generating unique marker IDs
+     */
+    applyLineEndsToTarget(target: SVGElement, lineEnds: Object, strokeColor: string | null, strokeWidth: number, defs: SVGDefsElement, markerBase: string): void;
+    /**
+     * Creates an SVG marker element for a line end (arrowhead).
+     * @param {SVGDefsElement} defs - The defs element to append the marker to
+     * @param {string} id - Unique ID for the marker
+     * @param {Object} lineEnd - Line end configuration with type, width, length
+     * @param {string} strokeColor - Color to use for the marker fill
+     * @param {number} _strokeWidth - Stroke width (currently unused, reserved for future scaling)
+     * @param {boolean} isStart - Whether this is a start marker (tail) or end marker (head)
+     * @param {Object|null} effectExtent - Effect extent for sizing, or null
+     */
+    createLineEndMarker(defs: SVGDefsElement, id: string, lineEnd: Object, strokeColor: string, _strokeWidth: number, isStart: boolean, effectExtent: Object | null): void;
+    /**
+     * Creates an SVG shape element for a line end marker.
+     * Supports diamond, oval, and triangle (default) shapes.
+     * @param {string} type - The shape type ('diamond', 'oval', or 'triangle')
+     * @param {string} strokeColor - Color to fill the shape with
+     * @param {boolean} isStart - Whether this is a start marker (affects triangle orientation)
+     * @returns {SVGElement} The created SVG shape element
+     */
+    createLineEndShape(type: string, strokeColor: string, isStart: boolean): SVGElement;
+    createGradient(gradientData: any, gradientId: any): SVGGradientElement | null;
+    createImageElement(shape: any, _groupTransform: any): SVGImageElement | null;
+    buildView(): void;
+    update(): boolean;
+    #private;
+}
+//# sourceMappingURL=ShapeGroupView.d.ts.map

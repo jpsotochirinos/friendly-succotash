@@ -1,0 +1,32 @@
+/**
+ * Creates a validator for Word document relationships (word/_rels/document.xml.rels)
+ *
+ * This validator ensures the relationships file is properly structured and contains
+ * valid relationship entries that reference existing files and follow Word's conventions.
+ *
+ * @typedef {import('../../../types.js').Editor} Editor
+ * @typedef {import('../../../types.js').ValidatorLogger} ValidatorLogger
+ * @param {Object} params - Validator parameters
+ * @param {Editor} params.editor - The editor instance containing the document
+ * @param {ValidatorLogger} params.logger - Logger for validation messages
+ * @returns {Function} Validator function that returns {results: string[], modified: boolean}
+ */
+export function createRelationshipsValidator({ editor, logger }: {
+    editor: Editor;
+    logger: ValidatorLogger;
+}): Function;
+/**
+ * Creates a validator for Word document relationships (word/_rels/document.xml.rels)
+ *
+ * This validator ensures the relationships file is properly structured and contains
+ * valid relationship entries that reference existing files and follow Word's conventions.
+ */
+export type Editor = import('../../../types.js').Editor;
+/**
+ * Creates a validator for Word document relationships (word/_rels/document.xml.rels)
+ *
+ * This validator ensures the relationships file is properly structured and contains
+ * valid relationship entries that reference existing files and follow Word's conventions.
+ */
+export type ValidatorLogger = import('../../../types.js').ValidatorLogger;
+//# sourceMappingURL=relationships-validator.d.ts.map

@@ -1,0 +1,19 @@
+declare const _default: import('vue').DefineComponent<{}, {
+    focus: (options?: {}) => void;
+    $emit: (event: "focus" | "blur" | "update:modelValue", ...args: any[]) => void;
+    options: Record<string, any>;
+    placeholder: string;
+    users: unknown[];
+    modelValue?: string | undefined;
+    $props: {
+        readonly options?: Record<string, any> | undefined;
+        readonly placeholder?: string | undefined;
+        readonly users?: unknown[] | undefined;
+        readonly modelValue?: string | undefined;
+    };
+}, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, string, import('vue').PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import('vue').ComponentProvideOptions, true, {
+    contentElem: HTMLDivElement;
+    editorElem: HTMLDivElement;
+}, HTMLDivElement>;
+export default _default;
+//# sourceMappingURL=SuperInput.vue.d.ts.map

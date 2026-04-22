@@ -65,6 +65,11 @@ export class StorageService implements OnModuleInit {
     return this.client.getObject(this.bucket, key);
   }
 
+  async statObject(key: string): Promise<{ size: number }> {
+    const s = await this.client.statObject(this.bucket, key);
+    return { size: Number(s.size) };
+  }
+
   async delete(key: string): Promise<void> {
     await this.client.removeObject(this.bucket, key);
   }
@@ -79,5 +84,42 @@ export class StorageService implements OnModuleInit {
 
   buildKey(orgId: string, trackableId: string, ...parts: string[]): string {
     return `org-${orgId}/trackable-${trackableId}/${parts.join('/')}`;
+  }
+
+  /** Staging de importaciones (mismo bucket, prefijo dedicado). */
+  buildStagingKey(orgId: string, batchId: string, ...parts: string[]): string {
+    return `staging/org-${orgId}/batch-${batchId}/${parts.join('/')}`;
+  }
+
+  async uploadStaging(
+    key: string,
+    buffer: Buffer,
+    contentType: string,
+    metadata?: Record<string, string>,
+  ): Promise<string> {
+    return this.upload(key, buffer, contentType, metadata);
+  }
+
+  async copyFileToKey(sourcePath: string, destKey: string, contentType: string): Promise<string> {
+    const fs = await import('node:fs/promises');
+    const buf = await fs.readFile(sourcePath);
+    return this.upload(destKey, buf, contentType);
+  }
+
+  async removeStagingPrefix(orgId: string, batchId: string): Promise<void> {
+    const prefix = `staging/org-${orgId}/batch-${batchId}/`;
+    const keys: string[] = [];
+    let marker: string | undefined;
+    for (;;) {
+      const res = await this.client.listObjectsQuery(this.bucket, prefix, marker);
+      for (const obj of res.objects) {
+        if (obj.name) keys.push(obj.name);
+      }
+      if (!res.isTruncated) break;
+      marker = res.nextMarker;
+    }
+    if (keys.length) {
+      await this.client.removeObjects(this.bucket, keys);
+    }
   }
 }

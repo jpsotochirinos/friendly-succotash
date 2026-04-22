@@ -1,0 +1,29 @@
+export function mergeRanges(ranges: {
+    from: number;
+    to: number;
+}[], docSize: number): {
+    from: number;
+    to: number;
+}[];
+export function collectChangedRanges(transactions: import('prosemirror-state').Transaction[], docSize: number): {
+    from: number;
+    to: number;
+}[];
+export function mapRangesThroughTransactions(ranges: {
+    from: number;
+    to: number;
+}[], transactions: import('prosemirror-state').Transaction[], docSize: number): {
+    from: number;
+    to: number;
+}[];
+export function collectChangedRangesThroughTransactions(transactions: import('prosemirror-state').Transaction[], docSize: number, options?: {
+    extraRanges?: {
+        from: number;
+        to: number;
+    }[];
+} | undefined): {
+    from: number;
+    to: number;
+}[];
+export function clampRange(start: number, end: number, docSize: number): [number, number] | null;
+//# sourceMappingURL=rangeUtils.d.ts.map

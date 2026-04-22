@@ -1,0 +1,24 @@
+/**
+ * @param {Object} params
+ * @returns {Array|null}
+ */
+export function handleDocPartObj(params: Object): any[] | null;
+export function tableOfContentsHandler(params: {
+    nodes: any[];
+    nodeListHandler: Object;
+    extraParams: {
+        sdtPr: Object;
+    };
+    path?: any[] | undefined;
+}): Object;
+export function genericDocPartHandler(params: {
+    nodes: any[];
+    nodeListHandler: Object;
+    extraParams: {
+        sdtPr: Object;
+        docPartGalleryType: string;
+    };
+    path?: any[] | undefined;
+}): Object;
+export function normalizeDocPartContent(nodes?: any[]): any[];
+//# sourceMappingURL=handle-doc-part-obj.d.ts.map

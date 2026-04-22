@@ -1,0 +1,7 @@
+/**
+ * Convert SDT child elements into Word run elements.
+ * @param {Array<Object>|Object} elements
+ * @returns {Array<Object>}
+ */
+export function convertSdtContentToRuns(elements: Array<Object> | Object): Array<Object>;
+//# sourceMappingURL=convert-sdt-content-to-runs.d.ts.map

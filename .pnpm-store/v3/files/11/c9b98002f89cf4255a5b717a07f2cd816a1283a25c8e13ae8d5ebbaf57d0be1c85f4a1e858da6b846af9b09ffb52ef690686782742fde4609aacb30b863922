@@ -1,0 +1,45 @@
+import { TocSwitchConfig, TocConfigurePatch } from '@superdoc/document-api';
+export declare const DEFAULT_TOC_CONFIG: TocSwitchConfig;
+/** The canonical default instruction string (matches deterministic serializer order). */
+export declare const DEFAULT_TOC_INSTRUCTION = "TOC \\o \"1-3\" \\u \\h \\z";
+/**
+ * Derives the `includePageNumbers` boolean from the parsed \n and \o switches.
+ *
+ * - \n absent → true (page numbers included)
+ * - \n present and fully covers \o range (or "1-9" when \o absent) → false
+ * - \n present but only partially covers → true (partial is not "no page numbers")
+ */
+export declare function deriveIncludePageNumbers(omitRange: {
+    from: number;
+    to: number;
+} | undefined, outlineLevels: {
+    from: number;
+    to: number;
+} | undefined): boolean;
+export declare function parseTocInstruction(instruction: string): TocSwitchConfig;
+/**
+ * Serializes a TocSwitchConfig back to a canonical instruction string.
+ *
+ * Switch order is deterministic:
+ * \o, \u, \f, \l, \t, \h, \z, \n, \p, then preserved (\a, \b, \c, \d, \s, \w),
+ * then rawExtensions in original order.
+ *
+ * Note: `includePageNumbers`, `tabLeader`, and `rightAlignPageNumbers` are NOT
+ * serialized here. `includePageNumbers` controls \n (handled via omitPageNumberLevels).
+ * `tabLeader` controls \p (handled via separator). `rightAlignPageNumbers` is a
+ * PM node attribute, not a field switch.
+ */
+export declare function serializeTocInstruction(config: TocSwitchConfig): string;
+/**
+ * Merges a TocConfigurePatch into an existing TocSwitchConfig.
+ *
+ * Handles conflict validation:
+ * - `tabLeader` + `separator` in the same patch → Error
+ * - `includePageNumbers` + `omitPageNumberLevels` in the same patch → Error
+ * - `includePageNumbers: true` → removes \n switch
+ * - `includePageNumbers: false` → sets \n to match \o range
+ * - `tabLeader` → sets \p via mapping
+ */
+export declare function applyTocPatch(existing: TocSwitchConfig, patch: TocConfigurePatch): TocSwitchConfig;
+export declare function areTocConfigsEqual(a: TocSwitchConfig, b: TocSwitchConfig): boolean;
+//# sourceMappingURL=toc-switches.d.ts.map

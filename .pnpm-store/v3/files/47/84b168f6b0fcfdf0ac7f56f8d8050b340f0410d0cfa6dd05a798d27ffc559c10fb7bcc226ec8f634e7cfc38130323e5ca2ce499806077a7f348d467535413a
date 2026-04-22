@@ -1,0 +1,5 @@
+/**
+ * @type {import("./docxImporter").NodeHandlerEntry}
+ */
+export const bibliographyHandlerEntity: import('./docxImporter').NodeHandlerEntry;
+//# sourceMappingURL=bibliographyImporter.d.ts.map

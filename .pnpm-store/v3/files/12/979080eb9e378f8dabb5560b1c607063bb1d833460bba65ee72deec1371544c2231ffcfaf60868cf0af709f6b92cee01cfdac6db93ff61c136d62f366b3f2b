@@ -1,0 +1,22 @@
+import { CreateSectionBreakInput, CreateSectionBreakResult, DocumentMutationResult, MutationOptions, SectionMutationResult, SectionsClearHeaderFooterRefInput, SectionsClearPageBordersInput, SectionsGetInput, SectionsListQuery, SectionsListResult, SectionsSetBreakTypeInput, SectionsSetColumnsInput, SectionsSetHeaderFooterMarginsInput, SectionsSetHeaderFooterRefInput, SectionsSetLineNumberingInput, SectionsSetLinkToPreviousInput, SectionsSetOddEvenHeadersFootersInput, SectionsSetPageBordersInput, SectionsSetPageMarginsInput, SectionsSetPageNumberingInput, SectionsSetPageSetupInput, SectionsSetSectionDirectionInput, SectionsSetTitlePageInput, SectionsSetVerticalAlignInput, SectionInfo } from '@superdoc/document-api';
+import { Editor } from '../core/Editor.js';
+export declare function createSectionBreakAdapter(editor: Editor, input: CreateSectionBreakInput, options?: MutationOptions): CreateSectionBreakResult;
+export declare function sectionsListAdapter(editor: Editor, query?: SectionsListQuery): SectionsListResult;
+export declare function sectionsGetAdapterByInput(editor: Editor, input: SectionsGetInput): SectionInfo;
+export declare function sectionsSetBreakTypeAdapter(editor: Editor, input: SectionsSetBreakTypeInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetPageMarginsAdapter(editor: Editor, input: SectionsSetPageMarginsInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetHeaderFooterMarginsAdapter(editor: Editor, input: SectionsSetHeaderFooterMarginsInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetPageSetupAdapter(editor: Editor, input: SectionsSetPageSetupInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetColumnsAdapter(editor: Editor, input: SectionsSetColumnsInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetLineNumberingAdapter(editor: Editor, input: SectionsSetLineNumberingInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetPageNumberingAdapter(editor: Editor, input: SectionsSetPageNumberingInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetTitlePageAdapter(editor: Editor, input: SectionsSetTitlePageInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetOddEvenHeadersFootersAdapter(editor: Editor, input: SectionsSetOddEvenHeadersFootersInput, options?: MutationOptions): DocumentMutationResult;
+export declare function sectionsSetVerticalAlignAdapter(editor: Editor, input: SectionsSetVerticalAlignInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetSectionDirectionAdapter(editor: Editor, input: SectionsSetSectionDirectionInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetHeaderFooterRefAdapter(editor: Editor, input: SectionsSetHeaderFooterRefInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsClearHeaderFooterRefAdapter(editor: Editor, input: SectionsClearHeaderFooterRefInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetLinkToPreviousAdapter(editor: Editor, input: SectionsSetLinkToPreviousInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsSetPageBordersAdapter(editor: Editor, input: SectionsSetPageBordersInput, options?: MutationOptions): SectionMutationResult;
+export declare function sectionsClearPageBordersAdapter(editor: Editor, input: SectionsClearPageBordersInput, options?: MutationOptions): SectionMutationResult;
+//# sourceMappingURL=sections-adapter.d.ts.map

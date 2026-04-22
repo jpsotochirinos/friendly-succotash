@@ -5,6 +5,7 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { randomUUID } from 'node:crypto';
 import { Observable, tap } from 'rxjs';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { ActivityLog } from '@tracker/db';
@@ -43,8 +44,11 @@ export class ActivityLogInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(async (responseData) => {
         try {
-          const entityId = responseData?.id || params?.id || 'unknown';
           const action = this.resolveAction(method, handlerName);
+          const { entityId, detailsExtra } = this.resolveEntityIdForLog(
+            responseData,
+            params,
+          );
 
           this.em.create(ActivityLog, {
             entityType: controllerName,
@@ -56,6 +60,7 @@ export class ActivityLogInterceptor implements NestInterceptor {
             details: {
               handler: handlerName,
               params: params || {},
+              ...detailsExtra,
             },
           } as any);
 
@@ -65,6 +70,34 @@ export class ActivityLogInterceptor implements NestInterceptor {
         }
       }),
     );
+  }
+
+  /**
+   * `activity_logs.entity_id` is UUID. Many handlers return `{ jobId }` or numeric ids — never use the literal "unknown".
+   */
+  private resolveEntityIdForLog(
+    responseData: Record<string, unknown> | undefined,
+    params: Record<string, string> | undefined,
+  ): { entityId: string; detailsExtra: Record<string, unknown> } {
+    const raw =
+      responseData?.id ??
+      (responseData as { jobId?: string | number } | undefined)?.jobId ??
+      params?.id;
+    if (raw == null || raw === '') {
+      return { entityId: randomUUID(), detailsExtra: { syntheticEntityId: true } };
+    }
+    const s = String(raw);
+    if (this.isUuid(s)) {
+      return { entityId: s, detailsExtra: {} };
+    }
+    return {
+      entityId: randomUUID(),
+      detailsExtra: { nonUuidRef: s },
+    };
+  }
+
+  private isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
   }
 
   private resolveAction(method: string, handler: string): string {

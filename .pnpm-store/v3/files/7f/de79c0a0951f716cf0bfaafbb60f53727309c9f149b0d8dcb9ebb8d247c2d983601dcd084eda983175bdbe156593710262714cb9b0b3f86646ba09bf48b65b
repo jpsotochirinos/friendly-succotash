@@ -1,0 +1,203 @@
+var emptyOptions = {};
+function toString(value, options) {
+	const settings = options || emptyOptions;
+	return one(value, typeof settings.includeImageAlt === "boolean" ? settings.includeImageAlt : true, typeof settings.includeHtml === "boolean" ? settings.includeHtml : true);
+}
+function one(value, includeImageAlt, includeHtml) {
+	if (node(value)) {
+		if ("value" in value) return value.type === "html" && !includeHtml ? "" : value.value;
+		if (includeImageAlt && "alt" in value && value.alt) return value.alt;
+		if ("children" in value) return all(value.children, includeImageAlt, includeHtml);
+	}
+	if (Array.isArray(value)) return all(value, includeImageAlt, includeHtml);
+	return "";
+}
+function all(values, includeImageAlt, includeHtml) {
+	const result = [];
+	let index = -1;
+	while (++index < values.length) result[index] = one(values[index], includeImageAlt, includeHtml);
+	return result.join("");
+}
+function node(value) {
+	return Boolean(value && typeof value === "object");
+}
+const convert = (function(test) {
+	if (test === null || test === void 0) return ok;
+	if (typeof test === "function") return castFactory(test);
+	if (typeof test === "object") return Array.isArray(test) ? anyFactory(test) : propertiesFactory(test);
+	if (typeof test === "string") return typeFactory(test);
+	throw new Error("Expected function, string, or object as test");
+});
+function anyFactory(tests) {
+	const checks = [];
+	let index = -1;
+	while (++index < tests.length) checks[index] = convert(tests[index]);
+	return castFactory(any);
+	function any(...parameters) {
+		let index$1 = -1;
+		while (++index$1 < checks.length) if (checks[index$1].apply(this, parameters)) return true;
+		return false;
+	}
+}
+function propertiesFactory(check) {
+	const checkAsRecord = check;
+	return castFactory(all$1);
+	function all$1(node$1) {
+		const nodeAsRecord = node$1;
+		let key;
+		for (key in check) if (nodeAsRecord[key] !== checkAsRecord[key]) return false;
+		return true;
+	}
+}
+function typeFactory(check) {
+	return castFactory(type);
+	function type(node$1) {
+		return node$1 && node$1.type === check;
+	}
+}
+function castFactory(testFunction) {
+	return check;
+	function check(value, index, parent) {
+		return Boolean(looksLikeANode(value) && testFunction.call(this, value, typeof index === "number" ? index : void 0, parent || void 0));
+	}
+}
+function ok() {
+	return true;
+}
+function looksLikeANode(value) {
+	return value !== null && typeof value === "object" && "type" in value;
+}
+function color(d) {
+	return d;
+}
+var empty = [];
+const CONTINUE = true;
+const EXIT = false;
+const SKIP = "skip";
+function visitParents(tree, test, visitor, reverse) {
+	let check;
+	if (typeof test === "function" && typeof visitor !== "function") {
+		reverse = visitor;
+		visitor = test;
+	} else check = test;
+	const is = convert(check);
+	const step = reverse ? -1 : 1;
+	factory(tree, void 0, [])();
+	function factory(node$1, index, parents) {
+		const value = node$1 && typeof node$1 === "object" ? node$1 : {};
+		if (typeof value.type === "string") {
+			const name = typeof value.tagName === "string" ? value.tagName : typeof value.name === "string" ? value.name : void 0;
+			Object.defineProperty(visit$1, "name", { value: "node (" + color(node$1.type + (name ? "<" + name + ">" : "")) + ")" });
+		}
+		return visit$1;
+		function visit$1() {
+			let result = empty;
+			let subresult;
+			let offset;
+			let grandparents;
+			if (!test || is(node$1, index, parents[parents.length - 1] || void 0)) {
+				result = toResult(visitor(node$1, parents));
+				if (result[0] === false) return result;
+			}
+			if ("children" in node$1 && node$1.children) {
+				const nodeAsParent = node$1;
+				if (nodeAsParent.children && result[0] !== "skip") {
+					offset = (reverse ? nodeAsParent.children.length : -1) + step;
+					grandparents = parents.concat(nodeAsParent);
+					while (offset > -1 && offset < nodeAsParent.children.length) {
+						const child = nodeAsParent.children[offset];
+						subresult = factory(child, offset, grandparents)();
+						if (subresult[0] === false) return subresult;
+						offset = typeof subresult[1] === "number" ? subresult[1] : offset + step;
+					}
+				}
+			}
+			return result;
+		}
+	}
+}
+function toResult(value) {
+	if (Array.isArray(value)) return value;
+	if (typeof value === "number") return [true, value];
+	return value === null || value === void 0 ? empty : [value];
+}
+function visit(tree, testOrVisitor, visitorOrReverse, maybeReverse) {
+	let reverse;
+	let test;
+	let visitor;
+	if (typeof testOrVisitor === "function" && typeof visitorOrReverse !== "function") {
+		test = void 0;
+		visitor = testOrVisitor;
+		reverse = visitorOrReverse;
+	} else {
+		test = testOrVisitor;
+		visitor = visitorOrReverse;
+		reverse = maybeReverse;
+	}
+	visitParents(tree, test, overload, reverse);
+	function overload(node$1, parents) {
+		const parent = parents[parents.length - 1];
+		const index = parent ? parent.children.indexOf(node$1) : void 0;
+		return visitor(node$1, index, parent);
+	}
+}
+const phrasing = convert([
+	"break",
+	"delete",
+	"emphasis",
+	"footnote",
+	"footnoteReference",
+	"image",
+	"imageReference",
+	"inlineCode",
+	"inlineMath",
+	"link",
+	"linkReference",
+	"mdxJsxTextElement",
+	"mdxTextExpression",
+	"strong",
+	"text",
+	"textDirective"
+]);
+Object.defineProperty(exports, "EXIT", {
+	enumerable: true,
+	get: function() {
+		return EXIT;
+	}
+});
+Object.defineProperty(exports, "SKIP", {
+	enumerable: true,
+	get: function() {
+		return SKIP;
+	}
+});
+Object.defineProperty(exports, "convert", {
+	enumerable: true,
+	get: function() {
+		return convert;
+	}
+});
+Object.defineProperty(exports, "phrasing", {
+	enumerable: true,
+	get: function() {
+		return phrasing;
+	}
+});
+Object.defineProperty(exports, "toString", {
+	enumerable: true,
+	get: function() {
+		return toString;
+	}
+});
+Object.defineProperty(exports, "visit", {
+	enumerable: true,
+	get: function() {
+		return visit;
+	}
+});
+Object.defineProperty(exports, "visitParents", {
+	enumerable: true,
+	get: function() {
+		return visitParents;
+	}
+});

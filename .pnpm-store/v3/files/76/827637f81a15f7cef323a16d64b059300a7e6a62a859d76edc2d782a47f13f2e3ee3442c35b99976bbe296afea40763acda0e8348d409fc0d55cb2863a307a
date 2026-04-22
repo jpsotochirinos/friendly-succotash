@@ -1,0 +1,26 @@
+import { Editor } from '../../core/Editor.js';
+import { InlineIndex } from './inline-address-resolver.js';
+import { BlockIndex } from './node-address-resolver.js';
+/**
+ * Returns the cached block index for the editor's current document.
+ * Rebuilds automatically when the document snapshot changes.
+ *
+ * @param editor - The editor instance.
+ * @returns The block-level positional index.
+ */
+export declare function getBlockIndex(editor: Editor): BlockIndex;
+/**
+ * Returns the cached inline index for the editor's current document.
+ * Lazily built on first access; rebuilt when the document snapshot changes.
+ *
+ * @param editor - The editor instance.
+ * @returns The inline-level positional index.
+ */
+export declare function getInlineIndex(editor: Editor): InlineIndex;
+/**
+ * Removes cached indexes for the given editor instance.
+ *
+ * @param editor - The editor whose cache entry should be cleared.
+ */
+export declare function clearIndexCache(editor: Editor): void;
+//# sourceMappingURL=index-cache.d.ts.map

@@ -1,0 +1,2 @@
+export function getActiveFormatting(editor: any): any;
+//# sourceMappingURL=getActiveFormatting.d.ts.map

@@ -1,0 +1,5 @@
+export function getPreferredCommentFocusTargetClientY(): number;
+export function getVisibleThreadAnchorClientY(layersElement: any, positionEntry: any): any;
+export function getVisibleThreadHighlightClientY(threadIds: any): any;
+export function scrollThreadAnchorToFocusTarget(presentation: any, primaryThreadId: any, fallbackThreadId: any, targetClientY: any): any;
+//# sourceMappingURL=comment-focus.d.ts.map

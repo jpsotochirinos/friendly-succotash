@@ -1,0 +1,2 @@
+export function flattenPoints(points: any): any;
+//# sourceMappingURL=flattenPoints.d.ts.map

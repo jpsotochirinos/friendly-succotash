@@ -1,0 +1,93 @@
+export type NodeHandlerParams = {
+    /**
+     * - The array of nodes to process.
+     */
+    nodes: any[];
+    /**
+     * - The parsed DOCX object.
+     */
+    docx: Object;
+    /**
+     * - Numbering definitions extracted from numbering.xml.
+     */
+    numbering?: {
+        /**
+         * - Numbering mappings keyed by numId.
+         */
+        definitions?: Record<string, any> | undefined;
+        /**
+         * - Abstract numbering templates keyed by abstractNumberId.
+         */
+        abstracts?: Record<string, any> | undefined;
+    } | undefined;
+    /**
+     * - Indicates if the processing is inside a track change.
+     */
+    insideTrackChange: boolean;
+    /**
+     * - The node list handler.
+     */
+    nodeListHandler: NodeListHandler;
+    /**
+     * - The converter object.
+     */
+    converter: Object;
+    /**
+     * - The editor object.
+     */
+    editor: import('../../../../Editor').Editor;
+    /**
+     * - The name of the file being processed.
+     */
+    filename?: string | undefined;
+    /**
+     * - The ID of the parent style.
+     */
+    parentStyleId?: string | undefined;
+    /**
+     * - The imported lists object
+     */
+    lists?: Object | undefined;
+    /**
+     * - The inline fonts found in the document
+     */
+    inlineDocumentFonts?: string[] | undefined;
+    /**
+     * - The path of nodes leading to the current node.
+     */
+    path?: any[] | undefined;
+    /**
+     * - The extra params.
+     */
+    extraParams?: Record<string, any> | undefined;
+};
+export type XmlNode = Object;
+export type PmNodeJson = {
+    type: string;
+    content: any;
+    text: any;
+    attrs: {};
+    marks: any;
+    sdNodeOrKeyName: string;
+};
+export type PmMarkJson = {
+    type: string;
+    attrs: {};
+};
+export type ParsedDocx = Object;
+export type NodeListHandler = {
+    handler: NodeListHandlerFn;
+    handlerEntities: NodeHandlerEntry[];
+};
+export type NodeListHandlerFn = (params: NodeHandlerParams) => PmNodeJson[];
+export type NodeHandler = (params: NodeHandlerParams) => {
+    nodes: PmNodeJson[];
+    consumed: number;
+};
+export type NodeHandlerEntry = {
+    handlerName: string;
+    handler: NodeHandler;
+};
+export type SuperConverter = Object;
+export type Editor = Object;
+//# sourceMappingURL=index.d.ts.map

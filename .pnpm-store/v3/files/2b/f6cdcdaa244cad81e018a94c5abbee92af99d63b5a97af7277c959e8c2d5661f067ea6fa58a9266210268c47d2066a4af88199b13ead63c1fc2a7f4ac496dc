@@ -1,0 +1,2 @@
+export function findMark(state: any, markType: any, toArr?: boolean): any[] | undefined;
+//# sourceMappingURL=findMark.d.ts.map

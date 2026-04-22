@@ -1,0 +1,15 @@
+export function insertContentAt(position: import('prosemirror-model').ResolvedPos | number | {
+    from: number;
+    to: number;
+}, value: string | Array<string | {
+    text?: string;
+}> | ProseMirrorNode | ProseMirrorFragment, options: {
+    asText?: boolean | undefined;
+    updateSelection?: boolean | undefined;
+    applyInputRules?: boolean | undefined;
+    applyPasteRules?: boolean | undefined;
+    parseOptions?: Object | undefined;
+}): boolean;
+export type ProseMirrorNode = import('prosemirror-model').Node;
+export type ProseMirrorFragment = import('prosemirror-model').Fragment;
+//# sourceMappingURL=insertContentAt.d.ts.map

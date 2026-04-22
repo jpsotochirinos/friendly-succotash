@@ -1,0 +1,227 @@
+export type TranslatorTypes = string;
+/**
+ * @enum {string}
+ */
+export const TranslatorTypes: Readonly<{
+    NODE: "node";
+    ATTRIBUTE: "attribute";
+}>;
+/**
+ * @typedef {keyof typeof TranslatorTypes} TranslatorTypeKey
+ * @typedef {typeof TranslatorTypes[TranslatorTypeKey]} TranslatorType
+ * @typedef {string} XmlNodeName
+ * @typedef {string|string[]} SuperDocNodeOrKeyName
+ */
+/**
+ * @typedef {Object} AttrConfig
+ * @property {string} xmlName - The name of the attribute in OOXML
+ * @property {string} sdName - The name of the attribute in SuperDoc
+ * @property {Function} [encode] - Function to encode the attribute from OOXML to SuperDoc
+ * @property {Function} [decode] - Function to decode the attribute from SuperDoc to OOXML
+ */
+/** @typedef {import('../../v2/importer/types').NodeHandlerParams} SCEncoderConfig */
+/** @typedef {import('../../v2/types').SuperDocNode} SCEncoderResult */
+/** @typedef {import('@superdoc/common').Comment} Comment */
+/**
+ * @typedef {Object} SCDecoderConfig
+ * @property {{ attrs?: any, marks?: any[], type: string, content?: any[], text?: string }} node
+ * @property {any[]} [children]
+ * @property {any[]} [relationships]
+ * @property {Comment[]} [comments]
+ * @property {'external' | 'clean'} [commentsExportType]
+ * @property {any[]} [exportedCommentDefs]
+ * @property {Map<string, string>} [statFieldCacheMap]
+ * @property {Record<string, any>} [extraParams]
+ * @property {import('../../../Editor.js').Editor} [editor]
+ */
+/** @typedef {{ name: string, attributes?: any, elements: any[] }} SCDecoderResult */
+/**
+ * @callback NodeTranslatorEncodeFn
+ * @param {SCEncoderConfig} params
+ * @param {EncodedAttributes} [encodedAttrs]
+ * @returns {import('../../v2/types').SuperDocNode}
+ */
+/**
+ * @callback NodeTranslatorDecodeFn
+ * @param {SCDecoderConfig} params
+ * @param {DecodedAttributes} [decodedAttrs]
+ * @returns {import('../../v2/types').OpenXmlNode | import('../../v2/types').OpenXmlNode[]}
+ */
+/** @callback MatchesEncodeFn @param {any[]} nodes @param {any} [ctx] @returns {boolean} */
+/** @callback MatchesDecodeFn @param {any} node @param {any} [ctx] @returns {boolean} */
+/**
+ * @typedef {Object} EncodedAttributes
+ */
+/**
+ * @typedef {Object} DecodedAttributes
+ */
+/**
+ * @typedef {Object} NodeTranslatorConfig
+ * @property {string} xmlName - The name of the node in OOXML
+ * @property {SuperDocNodeOrKeyName} sdNodeOrKeyName - The name of the node in SuperDoc
+ * @property {TranslatorType} [type="node"] - The type of the translator.
+ * @property {NodeTranslatorEncodeFn} encode - The function to encode the data.
+ * @property {NodeTranslatorDecodeFn} [decode] - The function to decode the data.
+ * @property {number} [priority] - The priority of the handler.
+ * @property {AttrConfig[]} [attributes] - Attribute handlers list.
+ * @property {MatchesEncodeFn} [matchesEncode] - The function to check if the handler can encode the data.
+ * @property {MatchesDecodeFn} [matchesDecode] - The function to check if the handler can decode the data.
+ */
+export class NodeTranslator {
+    /** @type {typeof TranslatorTypes} */
+    static translatorTypes: typeof TranslatorTypes;
+    /**
+     * Create a new NodeTranslator instance from a configuration object.
+     * @param {NodeTranslatorConfig} config - The configuration object.
+     * @returns {NodeTranslator} The created NodeTranslator instance.
+     */
+    static from(config: NodeTranslatorConfig): NodeTranslator;
+    /**
+     * @param {string} xmlName
+     * @param {SuperDocNodeOrKeyName} sdNodeOrKeyName
+     * @param {NodeTranslatorEncodeFn} encode
+     * @param {NodeTranslatorDecodeFn} decode
+     * @param {number} [priority]
+     * @param {MatchesEncodeFn} [matchesEncode]
+     * @param {MatchesDecodeFn} [matchesDecode]
+     * @param {AttrConfig[]} [attributes]
+     */
+    constructor(xmlName: string, sdNodeOrKeyName: SuperDocNodeOrKeyName, encode: NodeTranslatorEncodeFn, decode: NodeTranslatorDecodeFn, priority?: number, matchesEncode?: MatchesEncodeFn, matchesDecode?: MatchesDecodeFn, attributes?: AttrConfig[]);
+    /** @type {string} */
+    xmlName: string;
+    /** @type {SuperDocNodeOrKeyName} */
+    sdNodeOrKeyName: SuperDocNodeOrKeyName;
+    /** @type {number} */
+    priority: number;
+    /** @type {NodeTranslatorEncodeFn} */
+    encodeFn: NodeTranslatorEncodeFn;
+    /** @type {NodeTranslatorDecodeFn} */
+    decodeFn: NodeTranslatorDecodeFn;
+    /** @type {MatchesEncodeFn} */
+    matchesEncode: MatchesEncodeFn;
+    /** @type {MatchesDecodeFn} */
+    matchesDecode: MatchesDecodeFn;
+    /** @type {AttrConfig[]} */
+    attributes: AttrConfig[];
+    /**
+     * Encode the attributes for the node.
+     * @param {SCEncoderConfig} params
+     * @returns {Object} Encoded attributes object.
+     */
+    encodeAttributes(params: SCEncoderConfig): Object;
+    /**
+     * Decode the attributes for the node.
+     * @param {SCDecoderConfig} params
+     * @returns {Object} Decoded attributes object.
+     */
+    decodeAttributes(params: SCDecoderConfig): Object;
+    /**
+     * Decode the attributes for the node.
+     * @param {SCDecoderConfig} params
+     * @returns {Object} Decoded attributes object.
+     */
+    decode(params: SCDecoderConfig): Object;
+    /**
+     * Encode the attributes for the node.
+     * @param {SCEncoderConfig} params
+     * @returns {Object} Encoded attributes object.
+     */
+    encode(params: SCEncoderConfig): Object;
+    /**
+     * Convert the NodeTranslator instance to a string representation.
+     * @returns {string} - The string representation of the NodeTranslator instance.
+     */
+    toString(): string;
+}
+export type TranslatorTypeKey = keyof typeof TranslatorTypes;
+export type TranslatorType = (typeof TranslatorTypes)[TranslatorTypeKey];
+export type XmlNodeName = string;
+export type SuperDocNodeOrKeyName = string | string[];
+export type AttrConfig = {
+    /**
+     * - The name of the attribute in OOXML
+     */
+    xmlName: string;
+    /**
+     * - The name of the attribute in SuperDoc
+     */
+    sdName: string;
+    /**
+     * - Function to encode the attribute from OOXML to SuperDoc
+     */
+    encode?: Function | undefined;
+    /**
+     * - Function to decode the attribute from SuperDoc to OOXML
+     */
+    decode?: Function | undefined;
+};
+export type SCEncoderConfig = import('../../v2/importer/types').NodeHandlerParams;
+export type SCEncoderResult = import('../../v2/types').SuperDocNode;
+export type Comment = import('@superdoc/common').Comment;
+export type SCDecoderConfig = {
+    node: {
+        attrs?: any;
+        marks?: any[];
+        type: string;
+        content?: any[];
+        text?: string;
+    };
+    children?: any[] | undefined;
+    relationships?: any[] | undefined;
+    comments?: import('@superdoc/common').Comment[] | undefined;
+    commentsExportType?: "external" | "clean" | undefined;
+    exportedCommentDefs?: any[] | undefined;
+    statFieldCacheMap?: Map<string, string> | undefined;
+    extraParams?: Record<string, any> | undefined;
+    editor?: import('packages/superdoc/src').Editor | undefined;
+};
+export type SCDecoderResult = {
+    name: string;
+    attributes?: any;
+    elements: any[];
+};
+export type NodeTranslatorEncodeFn = (params: SCEncoderConfig, encodedAttrs?: Object | undefined) => import('../../v2/types').SuperDocNode;
+export type NodeTranslatorDecodeFn = (params: SCDecoderConfig, decodedAttrs?: Object | undefined) => import('../../v2/types').OpenXmlNode | import('../../v2/types').OpenXmlNode[];
+export type MatchesEncodeFn = (nodes: any[], ctx?: any) => boolean;
+export type MatchesDecodeFn = (node: any, ctx?: any) => boolean;
+export type EncodedAttributes = Object;
+export type DecodedAttributes = Object;
+export type NodeTranslatorConfig = {
+    /**
+     * - The name of the node in OOXML
+     */
+    xmlName: string;
+    /**
+     * - The name of the node in SuperDoc
+     */
+    sdNodeOrKeyName: SuperDocNodeOrKeyName;
+    /**
+     * - The type of the translator.
+     */
+    type?: TranslatorType | undefined;
+    /**
+     * - The function to encode the data.
+     */
+    encode: NodeTranslatorEncodeFn;
+    /**
+     * - The function to decode the data.
+     */
+    decode?: NodeTranslatorDecodeFn | undefined;
+    /**
+     * - The priority of the handler.
+     */
+    priority?: number | undefined;
+    /**
+     * - Attribute handlers list.
+     */
+    attributes?: AttrConfig[] | undefined;
+    /**
+     * - The function to check if the handler can encode the data.
+     */
+    matchesEncode?: MatchesEncodeFn | undefined;
+    /**
+     * - The function to check if the handler can decode the data.
+     */
+    matchesDecode?: MatchesDecodeFn | undefined;
+};
+//# sourceMappingURL=node-translator.d.ts.map

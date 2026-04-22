@@ -1,0 +1,14 @@
+import { Node as ProseMirrorNode } from 'prosemirror-model';
+/**
+ * Produces a deterministic public ID for a tableOfContentsEntry inline node.
+ *
+ * The ID is derived from the node's position and instruction text, making it
+ * stable within a document revision but not across edits that change position
+ * or content (revision-scoped).
+ *
+ * @param node - The tableOfContentsEntry ProseMirror node.
+ * @param pos - The node's absolute position in the document.
+ * @returns A deterministic string id prefixed with `tc-entry-`.
+ */
+export declare function resolvePublicTcEntryNodeId(node: ProseMirrorNode, pos: number): string;
+//# sourceMappingURL=toc-entry-node-id.d.ts.map

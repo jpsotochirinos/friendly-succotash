@@ -32,9 +32,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     return {
       id: user.id,
       email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      birthDate: user.birthDate
+        ? (user.birthDate instanceof Date
+            ? user.birthDate.toISOString().slice(0, 10)
+            : String(user.birthDate).slice(0, 10))
+        : null,
       organizationId: user.organization.id,
-      role: user.role,
-      permissions: user.role?.permissions?.getItems().map(p => p.code) || [],
+      roleName: user.role?.name,
+      permissions: user.role?.permissions?.getItems().map((p) => p.code) || [],
     };
   }
 }

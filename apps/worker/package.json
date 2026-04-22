@@ -5,31 +5,41 @@
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/main.ts",
+    "sinoe:debug": "ts-node src/scrapers/sinoe/scripts/run-sinoe.ts",
+    "whatsapp:briefing:once": "ts-node src/scripts/enqueue-whatsapp-briefing.ts",
+    "feed:ingest:once": "ts-node src/scripts/enqueue-feed-ingest.ts",
     "start": "node dist/main.js",
     "lint": "echo 'lint worker'",
     "test": "vitest run"
   },
   "dependencies": {
-    "bullmq": "^5.0.0",
-    "ioredis": "^5.4.0",
+    "@google/generative-ai": "^0.24.1",
     "@mikro-orm/core": "^6.4.0",
     "@mikro-orm/postgresql": "^6.4.0",
-    "@tracker/shared": "workspace:*",
+    "@mikro-orm/reflection": "^6.4.0",
     "@tracker/config": "workspace:*",
     "@tracker/db": "workspace:*",
-    "playwright": "latest",
+    "@tracker/shared": "workspace:*",
+    "bullmq": "^5.0.0",
+    "dotenv": "^16.4.0",
+    "google-auth-library": "^10.6.2",
+    "googleapis": "^171.4.0",
+    "ioredis": "^5.4.0",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.8.0",
+    "minio": "^8.0.0",
     "nodemailer": "^6.9.0",
     "nspell": "^2.1.0",
-    "mammoth": "^1.8.0",
     "pdf-parse": "^1.1.0",
-    "dotenv": "^16.4.0"
+    "playwright": "latest",
+    "rss-parser": "3.13.0"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "ts-node": "^10.9.0",
-    "vitest": "^2.0.0",
     "@types/nodemailer": "^6.4.0",
     "@types/nspell": "^2.1.0",
-    "@types/pdf-parse": "^1.1.0"
+    "@types/pdf-parse": "^1.1.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
   }
 }

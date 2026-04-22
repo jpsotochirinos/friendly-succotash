@@ -1,0 +1,20 @@
+export namespace mathNodeHandlerEntity {
+    export let handlerName: string;
+    export { handleMathNode as handler };
+}
+/**
+ * Combined math handler. Tries m:oMathPara first (display math), then m:oMath (inline math).
+ */
+declare function handleMathNode(params: any): {
+    nodes: {
+        type: string;
+        attrs: {
+            originalXml: any;
+            textContent: string;
+        };
+        marks: never[];
+    }[];
+    consumed: number;
+};
+export {};
+//# sourceMappingURL=math-importer.d.ts.map

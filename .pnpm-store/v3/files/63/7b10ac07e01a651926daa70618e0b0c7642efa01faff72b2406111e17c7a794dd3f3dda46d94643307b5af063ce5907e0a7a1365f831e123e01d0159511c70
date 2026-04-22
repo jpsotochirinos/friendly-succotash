@@ -1,0 +1,2 @@
+export * from './east-asian-regex.js';
+//# sourceMappingURL=index.d.ts.map

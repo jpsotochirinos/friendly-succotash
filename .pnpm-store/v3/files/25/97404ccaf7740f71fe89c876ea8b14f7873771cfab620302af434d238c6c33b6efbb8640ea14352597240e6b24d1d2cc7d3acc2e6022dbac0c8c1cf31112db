@@ -1,0 +1,10 @@
+import { InlineRunPatchKey } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+export interface InlinePropertyGuardIssue {
+    code: 'CAPABILITY_UNAVAILABLE';
+    message: string;
+    details?: Record<string, unknown>;
+}
+export declare function getInlinePropertyCapabilityIssue(editor: Editor, keys: readonly InlineRunPatchKey[], operationName?: string): InlinePropertyGuardIssue | undefined;
+export declare function getTrackedInlinePropertySupportIssue(keys: readonly InlineRunPatchKey[], operationName?: string): InlinePropertyGuardIssue | undefined;
+//# sourceMappingURL=inline-property-guards.d.ts.map

@@ -1,0 +1,9 @@
+export function insertHeadingAt({ pos, level, text, sdBlockId, paraId, tracked }: {
+    pos: number;
+    level: number;
+    text?: string;
+    sdBlockId?: string;
+    paraId?: string;
+    tracked?: boolean;
+}): import('./types/index.js').Command;
+//# sourceMappingURL=insertHeadingAt.d.ts.map

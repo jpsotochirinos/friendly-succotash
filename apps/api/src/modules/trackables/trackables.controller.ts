@@ -5,6 +5,7 @@ import { TrackablesService } from './trackables.service';
 import { WorkflowService } from '../workflow/workflow.service';
 import { CreateTrackableDto } from './dto/create-trackable.dto';
 import { UpdateTrackableDto } from './dto/update-trackable.dto';
+import { CreateTrackablePartyDto, UpdateTrackablePartyDto } from './dto/trackable-party.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { TrackableStatus } from '@tracker/shared';
@@ -39,19 +40,53 @@ export class TrackablesController {
     @Query('type') type?: string,
     @Query('assignedTo') assignedToId?: string,
     @Query('search') search?: string,
+    @Query('scope') scope?: 'active' | 'archived',
   ) {
     return this.trackablesService.findByFilters(
       user.organizationId,
       { page, limit, sortBy, sortOrder },
-      { status, type, assignedToId, search },
+      { scope: scope ?? 'active', status, type, assignedToId, search },
     );
+  }
+
+  @Get(':id/parties')
+  @RequirePermissions('trackable:read')
+  async listParties(@Param('id') id: string) {
+    return this.trackablesService.listParties(id);
+  }
+
+  @Post(':id/parties')
+  @RequirePermissions('trackable:update')
+  async createParty(
+    @Param('id') id: string,
+    @Body() dto: CreateTrackablePartyDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.trackablesService.createParty(id, dto, user.organizationId);
+  }
+
+  @Patch(':id/parties/:partyId')
+  @RequirePermissions('trackable:update')
+  async updateParty(
+    @Param('id') id: string,
+    @Param('partyId') partyId: string,
+    @Body() dto: UpdateTrackablePartyDto,
+  ) {
+    return this.trackablesService.updateParty(id, partyId, dto);
+  }
+
+  @Delete(':id/parties/:partyId')
+  @RequirePermissions('trackable:update')
+  async removeParty(@Param('id') id: string, @Param('partyId') partyId: string) {
+    await this.trackablesService.removeParty(id, partyId);
+    return { ok: true };
   }
 
   @Get(':id')
   @RequirePermissions('trackable:read')
   async findOne(@Param('id') id: string) {
     return this.trackablesService.findOne(id, {
-      populate: ['createdBy', 'assignedTo', 'folders'] as any,
+      populate: ['createdBy', 'assignedTo', 'folders', 'client'] as any,
     });
   }
 
@@ -67,7 +102,7 @@ export class TrackablesController {
     @Param('id') id: string,
     @Body() dto: UpdateTrackableDto,
   ) {
-    return this.trackablesService.update(id, dto as any);
+    return this.trackablesService.patchTrackable(id, dto);
   }
 
   @Patch(':id/transition')

@@ -1,0 +1,17 @@
+import { CollaborationProvider } from '../types/EditorConfig.js';
+/**
+ * Returns true when the provider reports a synced state.
+ * Some providers use `synced`, others use `isSynced`.
+ */
+export declare function isCollaborationProviderSynced(provider: CollaborationProvider | null | undefined): boolean;
+/**
+ * Run `onSynced` once the provider is synced.
+ *
+ * Supports providers that emit:
+ * - `synced` (no args)
+ * - `sync` (boolean arg, e.g. Liveblocks emits `false` then `true`)
+ *
+ * Returns a cleanup function that removes listeners when called before sync.
+ */
+export declare function onCollaborationProviderSynced(provider: CollaborationProvider | null | undefined, onSynced: () => void): () => void;
+//# sourceMappingURL=collaboration-provider-sync.d.ts.map

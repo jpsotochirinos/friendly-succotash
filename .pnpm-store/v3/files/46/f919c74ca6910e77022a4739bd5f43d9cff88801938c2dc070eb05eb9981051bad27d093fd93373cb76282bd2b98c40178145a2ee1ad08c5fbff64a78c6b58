@@ -1,0 +1,20 @@
+import { Editor } from '../../core/Editor.js';
+import { ListInsertInput, ListItemInfo, ListsGetInput, ListsInsertResult, ListsListQuery, ListsListResult, ListsMutateItemResult, ListTargetInput, ListsCreateInput, ListsCreateResult, ListsAttachInput, ListsDetachInput, ListsDetachResult, ListsJoinInput, ListsJoinResult, ListsCanJoinInput, ListsCanJoinResult, ListsSeparateInput, ListsSeparateResult, ListsSetLevelInput, ListsSetValueInput, ListsContinuePreviousInput, ListsCanContinuePreviousInput, ListsCanContinuePreviousResult, ListsSetLevelRestartInput, ListsConvertToTextInput, ListsConvertToTextResult, MutationOptions } from '@superdoc/document-api';
+export declare function listsListWrapper(editor: Editor, query?: ListsListQuery): ListsListResult;
+export declare function listsGetWrapper(editor: Editor, input: ListsGetInput): ListItemInfo;
+export declare function listsCanJoinWrapper(editor: Editor, input: ListsCanJoinInput): ListsCanJoinResult;
+export declare function listsCanContinuePreviousWrapper(editor: Editor, input: ListsCanContinuePreviousInput): ListsCanContinuePreviousResult;
+export declare function listsInsertWrapper(editor: Editor, input: ListInsertInput, options?: MutationOptions): ListsInsertResult;
+export declare function listsIndentWrapper(editor: Editor, input: ListTargetInput, options?: MutationOptions): ListsMutateItemResult;
+export declare function listsOutdentWrapper(editor: Editor, input: ListTargetInput, options?: MutationOptions): ListsMutateItemResult;
+export declare function listsCreateWrapper(editor: Editor, input: ListsCreateInput, options?: MutationOptions): ListsCreateResult;
+export declare function listsAttachWrapper(editor: Editor, input: ListsAttachInput, options?: MutationOptions): ListsMutateItemResult;
+export declare function listsDetachWrapper(editor: Editor, input: ListsDetachInput, options?: MutationOptions): ListsDetachResult;
+export declare function listsJoinWrapper(editor: Editor, input: ListsJoinInput, options?: MutationOptions): ListsJoinResult;
+export declare function listsSeparateWrapper(editor: Editor, input: ListsSeparateInput, options?: MutationOptions): ListsSeparateResult;
+export declare function listsSetLevelWrapper(editor: Editor, input: ListsSetLevelInput, options?: MutationOptions): ListsMutateItemResult;
+export declare function listsSetValueWrapper(editor: Editor, input: ListsSetValueInput, options?: MutationOptions): ListsMutateItemResult;
+export declare function listsContinuePreviousWrapper(editor: Editor, input: ListsContinuePreviousInput, options?: MutationOptions): ListsMutateItemResult;
+export declare function listsSetLevelRestartWrapper(editor: Editor, input: ListsSetLevelRestartInput, options?: MutationOptions): ListsMutateItemResult;
+export declare function listsConvertToTextWrapper(editor: Editor, input: ListsConvertToTextInput, options?: MutationOptions): ListsConvertToTextResult;
+//# sourceMappingURL=lists-wrappers.d.ts.map

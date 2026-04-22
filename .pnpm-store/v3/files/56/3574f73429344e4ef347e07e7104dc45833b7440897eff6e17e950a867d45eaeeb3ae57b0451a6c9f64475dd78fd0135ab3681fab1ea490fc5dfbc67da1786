@@ -1,0 +1,10 @@
+import { Node } from '../../core/Node.js';
+/**
+ * Inline atom node representing a Word document-statistic field (NUMWORDS, NUMCHARS).
+ *
+ * The field type is derived at runtime from the first token of `instruction`.
+ * `resolvedText` holds the cached display value — seeded from the imported
+ * OOXML cached result and later updated in place by `fields.rebuild`.
+ */
+export const DocumentStatField: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+//# sourceMappingURL=document-stat-field.d.ts.map

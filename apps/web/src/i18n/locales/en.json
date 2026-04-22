@@ -1,0 +1,14 @@
+{
+  "_comment": "Parallel reference; active messages in src/i18n/index.ts",
+  "nav": {
+    "trackables": "Matters / files",
+    "flowTemplates": "Workflow templates",
+    "templates": "Templates (docs)"
+  },
+  "legal": {
+    "expediente": "Matter file",
+    "actuacion": "Procedural step",
+    "diligencia": "Sub-step",
+    "plazoLegal": "Legal deadline"
+  }
+}

@@ -1,0 +1,66 @@
+import { Node } from '../../core/Node.js';
+/**
+ * Configuration options for PageNumber
+ * @typedef {Object} PageNumberOptions
+ * @category Options
+ * @property {Object} [htmlAttributes] - HTML attributes for page number elements
+ */
+/**
+ * Attributes for page number nodes
+ * @typedef {Object} PageNumberAttributes
+ * @category Attributes
+ * @property {Array} [marksAsAttrs=null] @internal - Internal marks storage
+ */
+/**
+ * @module PageNumber
+ * @sidebarTitle Page Number
+ * @snippetPath /snippets/extensions/page-number.mdx
+ * @shortcut Mod-Shift-alt-p | addAutoPageNumber | Insert page number
+ */
+export const PageNumber: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+/**
+ * Configuration options for TotalPageCount
+ * @typedef {Object} TotalPageCountOptions
+ * @category Options
+ * @property {Object} [htmlAttributes] - HTML attributes for total page count elements
+ */
+/**
+ * Attributes for total page count nodes
+ * @typedef {Object} TotalPageCountAttributes
+ * @category Attributes
+ * @property {Array} [marksAsAttrs=null] @internal - Internal marks storage
+ */
+/**
+ * @module TotalPageCount
+ * @sidebarTitle Total Page Count
+ * @snippetPath /snippets/extensions/total-page-count.mdx
+ * @shortcut Mod-Shift-alt-c | addTotalPageCount | Insert total page count
+ */
+export const TotalPageCount: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+export class AutoPageNumberNodeView {
+    constructor(node: any, getPos: any, decorations: any, editor: any, htmlAttributes?: {});
+    node: any;
+    editor: any;
+    view: any;
+    getPos: any;
+    dom: HTMLSpanElement;
+    update(node: any): boolean;
+    #private;
+}
+/**
+ * Configuration options for PageNumber
+ */
+export type PageNumberOptions = Object;
+/**
+ * Attributes for page number nodes
+ */
+export type PageNumberAttributes = Object;
+/**
+ * Configuration options for TotalPageCount
+ */
+export type TotalPageCountOptions = Object;
+/**
+ * Attributes for total page count nodes
+ */
+export type TotalPageCountAttributes = Object;
+//# sourceMappingURL=page-number.d.ts.map

@@ -1,0 +1,2 @@
+export * from './textDirection-translator.js';
+//# sourceMappingURL=index.d.ts.map

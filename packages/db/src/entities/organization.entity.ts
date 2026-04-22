@@ -15,7 +15,7 @@ import type { Trackable } from './trackable.entity';
 
 @Entity({ tableName: 'organizations' })
 export class Organization extends BaseEntity {
-  [OptionalProps]?: 'planTier' | 'isActive' | 'createdAt' | 'updatedAt';
+  [OptionalProps]?: 'planTier' | 'isActive' | 'createdAt' | 'updatedAt' | 'workflowActionTypeDefaults';
 
   @Property({ length: 255 })
   name!: string;
@@ -29,11 +29,22 @@ export class Organization extends BaseEntity {
   @Property({ type: JsonType, nullable: true })
   onboardingState?: Record<string, unknown>;
 
+  /** Feature flags (p. ej. `{ "useConfigurableWorkflows": true }`). */
+  @Property({ type: JsonType, nullable: true })
+  featureFlags?: { useConfigurableWorkflows?: boolean } & Record<string, unknown>;
+
+  /**
+   * Overrides por org: action type (string) → workflow definition id (uuid).
+   * Prioridad al resolver flujo de una actividad: plantilla > este mapa > workflow sistema por ActionType > matter.
+   */
+  @Property({ type: JsonType, nullable: true })
+  workflowActionTypeDefaults?: Record<string, string>;
+
   @Property({ default: true })
   isActive: boolean = true;
 
   @Property({ nullable: true })
-  logoUrl?: string;
+  logoUrl?: string | null;
 
   @OneToMany('User', 'organization')
   users = new Collection<User>(this);

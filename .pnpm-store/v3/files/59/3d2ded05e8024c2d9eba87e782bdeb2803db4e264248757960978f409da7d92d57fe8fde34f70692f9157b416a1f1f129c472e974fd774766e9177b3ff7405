@@ -1,0 +1,14 @@
+import { TableBlock, TableFragment, TableMeasure } from '@superdoc/contracts';
+export type TableCaretLayoutRect = {
+    pageIndex: number;
+    x: number;
+    y: number;
+    height: number;
+};
+export type ComputeTableCaretLayoutRectDeps = {
+    viewportHost: HTMLElement;
+    visibleHost: HTMLElement;
+    zoom: number;
+};
+export declare function computeTableCaretLayoutRectFromDom({ viewportHost, visibleHost, zoom }: ComputeTableCaretLayoutRectDeps, pos: number, _fragment: TableFragment, _tableBlock: TableBlock, _tableMeasure: TableMeasure, pageIndex: number): TableCaretLayoutRect | null;
+//# sourceMappingURL=TableCaretDomGeometry.d.ts.map

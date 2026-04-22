@@ -1,0 +1,25 @@
+/**
+ * @param {Object} params
+ * @returns {Object|null}
+ */
+export function handleAnnotationNode(params: Object): Object | null;
+export function getAttrsFromElements({ sdtPr, tag, alias, sdtId }: {
+    sdtPr: any;
+    tag: any;
+    alias: any;
+    sdtId: any;
+}): {
+    type: any;
+    fieldId: any;
+    displayLabel: any;
+    fieldType: any;
+    fieldColor: any;
+    multipleImage: boolean;
+    fontFamily: any;
+    fontSize: any;
+    textColor: any;
+    textHighlight: any;
+    sdtId: any;
+};
+export function parseAnnotationMarks(content?: Object): Object;
+//# sourceMappingURL=handle-annotation-node.d.ts.map

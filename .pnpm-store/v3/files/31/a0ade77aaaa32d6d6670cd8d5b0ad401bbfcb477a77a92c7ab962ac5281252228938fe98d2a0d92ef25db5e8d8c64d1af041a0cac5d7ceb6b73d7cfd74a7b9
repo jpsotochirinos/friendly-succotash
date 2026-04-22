@@ -1,0 +1,80 @@
+import { CellSelection } from 'prosemirror-tables';
+import { FlowBlock, Layout, Measure } from '@superdoc/contracts';
+/**
+ * Coordinate pair in overlay space (absolute positioning within the selection overlay container).
+ */
+type OverlayCoords = {
+    x: number;
+    y: number;
+};
+/**
+ * Dependencies required to render cell selection overlays.
+ *
+ * @remarks
+ * This type encapsulates all the state and helper functions needed to render visual highlights
+ * for selected table cells. The separation of concerns allows the rendering logic to remain
+ * pure and testable.
+ */
+export type RenderCellSelectionOverlayDeps = {
+    /** ProseMirror CellSelection instance representing the selected cells */
+    selection: CellSelection;
+    /** Current layout state containing pages, fragments, and geometry information */
+    layout: Layout;
+    /** DOM element where selection highlight rectangles will be appended */
+    localSelectionLayer: HTMLElement;
+    /** Array of layout blocks (tables, paragraphs, etc.) */
+    blocks: FlowBlock[];
+    /** Array of measurement data corresponding to blocks (for row heights, column widths) */
+    measures: Measure[];
+    /** Optional table block ID hint to optimize table lookup */
+    cellAnchorTableBlockId?: string | null;
+    /** Function to convert page-local coordinates to overlay-absolute coordinates */
+    convertPageLocalToOverlayCoords: (pageIndex: number, x: number, y: number) => OverlayCoords | null;
+};
+/**
+ * Renders visual highlighting for CellSelection (multiple table cells selected).
+ *
+ * This function creates semi-transparent blue overlay rectangles for each selected cell in a table,
+ * accurately positioning them based on layout measurements. It handles complex table structures
+ * including merged cells (colspan/rowspan), multi-page tables, and column boundary calculations.
+ *
+ * @param deps - Dependencies object containing selection state, layout data, and helper functions
+ *
+ * @remarks
+ * Implementation details:
+ * - Uses ProseMirror's TableMap to get accurate row/column positions for selected cells
+ * - Accounts for colspan when calculating cell widths (sums multiple column boundaries)
+ * - Accounts for rowspan when calculating cell heights (sums multiple row heights)
+ * - Handles tables split across multiple pages via table fragments
+ * - Uses table measures for precise row heights and column boundaries
+ * - Falls back to estimated heights if measure data is unavailable
+ * - Skips rendering cells on virtualized (unmounted) pages gracefully
+ *
+ * This function never throws; errors are caught and rendering gracefully degrades.
+ * Invalid inputs or missing data result in warnings and early returns.
+ *
+ * Cell highlight styling:
+ * - Position: absolute within localSelectionLayer
+ * - Background: rgba(51, 132, 255, 0.35) (blue with 35% opacity)
+ * - Pointer events: none (allows clicks to pass through)
+ * - Class: 'presentation-editor__cell-selection-rect'
+ *
+ * @example
+ * ```typescript
+ * // Called during selection rendering cycle
+ * if (selection instanceof CellSelection) {
+ *   renderCellSelectionOverlay({
+ *     selection,
+ *     layout,
+ *     localSelectionLayer,
+ *     blocks,
+ *     measures,
+ *     cellAnchorTableBlockId,
+ *     convertPageLocalToOverlayCoords
+ *   });
+ * }
+ * ```
+ */
+export declare function renderCellSelectionOverlay({ selection, layout, localSelectionLayer, blocks, measures, cellAnchorTableBlockId, convertPageLocalToOverlayCoords, }: RenderCellSelectionOverlayDeps): void;
+export {};
+//# sourceMappingURL=CellSelectionOverlay.d.ts.map

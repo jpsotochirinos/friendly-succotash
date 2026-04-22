@@ -1,0 +1,28 @@
+/**
+ * Minimal read-only Compound File Binary reader for password-protected OOXML.
+ *
+ * The encrypted DOCX path only needs to locate and read two streams from the
+ * root storage, so this implementation intentionally avoids the breadth of a
+ * general-purpose CFB library while still supporting the structures real Office
+ * files rely on:
+ * - FAT and DIFAT chains
+ * - directory entries
+ * - mini stream / MiniFAT storage for sub-4KB streams
+ */
+export interface CfbDirectoryEntry {
+    name: string;
+    objectType: number;
+    leftSiblingId: number;
+    rightSiblingId: number;
+    childId: number;
+    startSector: number;
+    streamSize: number;
+}
+export interface CfbReader {
+    getStream(path: string): Uint8Array | null;
+}
+/**
+ * Create a minimal read-only CFB reader for encrypted OOXML containers.
+ */
+export declare function createCfbReader(data: ArrayBuffer | Uint8Array | Buffer): CfbReader;
+//# sourceMappingURL=cfb-reader.d.ts.map

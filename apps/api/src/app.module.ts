@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
@@ -20,6 +22,20 @@ import { SearchModule } from './modules/search/search.module';
 import { ScrapingModule } from './modules/scraping/scraping.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { WorkflowTemplatesModule } from './modules/workflow-templates/workflow-templates.module';
+import { ClientsModule } from './modules/clients/clients.module';
+import { InvitationsModule } from './modules/invitations/invitations.module';
+import { LlmModule } from './modules/llm/llm.module';
+import { AssistantModule } from './modules/assistant/assistant.module';
+import { SinoeModule } from './modules/sinoe/sinoe.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
+import { RulesModule } from './modules/rules/rules.module';
+import { ImportModule } from './modules/import/import.module';
+import { MigrationModule } from './modules/migration/migration.module';
+import { BillingModule } from './modules/billing/billing.module';
+import { WorkflowDefinitionsModule } from './modules/workflow-definitions/workflow-definitions.module';
+import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
+import { FeedModule } from './modules/feed/feed.module';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
 import { ActivityLogInterceptor } from './common/interceptors/activity-log.interceptor';
 
@@ -41,13 +57,18 @@ import { ActivityLogInterceptor } from './common/interceptors/activity-log.inter
         entities: ['../../packages/db/dist/entities/**/*.js'],
         entitiesTs: ['../../packages/db/src/entities/**/*.ts'],
         metadataProvider: TsMorphMetadataProvider,
+        // TsMorph file cache (default ./temp/*.json) does not invalidate when entity columns change; stale cache produced invalid SELECTs after migrations (e.g. dropped workflow_items.status).
+        metadataCache: { enabled: config.get('NODE_ENV') !== 'development' },
         debug: config.get('NODE_ENV') === 'development',
       }),
     }),
+    ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot({ global: true, wildcard: false }),
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     AuthModule,
     WorkflowModule,
     TrackablesModule,
+    ClientsModule,
     WorkflowItemsModule,
     UsersModule,
     NotificationsModule,
@@ -60,6 +81,19 @@ import { ActivityLogInterceptor } from './common/interceptors/activity-log.inter
     ScrapingModule,
     OrganizationsModule,
     RolesModule,
+    WorkflowTemplatesModule,
+    InvitationsModule,
+    LlmModule,
+    AssistantModule,
+    SinoeModule,
+    CalendarModule,
+    RulesModule,
+    ImportModule,
+    MigrationModule,
+    BillingModule,
+    WorkflowDefinitionsModule,
+    WhatsAppModule,
+    FeedModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: TenantInterceptor },

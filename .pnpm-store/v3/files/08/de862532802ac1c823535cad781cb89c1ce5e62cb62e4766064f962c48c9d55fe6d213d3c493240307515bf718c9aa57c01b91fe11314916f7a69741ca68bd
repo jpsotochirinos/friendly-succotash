@@ -1,0 +1,13 @@
+export function replaceAroundStep({ state, tr, step, newTr, map, doc, user, date, originalStep, originalStepIndex, }: {
+    state: import('prosemirror-state').EditorState;
+    tr: import('prosemirror-state').Transaction;
+    step: import('prosemirror-transform').ReplaceAroundStep;
+    newTr: import('prosemirror-state').Transaction;
+    map: import('prosemirror-transform').Mapping;
+    doc: import('prosemirror-model').Node;
+    user: object;
+    date: string;
+    originalStep: import('prosemirror-transform').Step;
+    originalStepIndex: number;
+}): void;
+//# sourceMappingURL=replaceAroundStep.d.ts.map

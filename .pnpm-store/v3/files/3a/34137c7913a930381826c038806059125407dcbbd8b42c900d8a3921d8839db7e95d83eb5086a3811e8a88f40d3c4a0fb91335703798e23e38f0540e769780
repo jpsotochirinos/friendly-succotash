@@ -1,0 +1,34 @@
+export function resolveCommentIdentity(doc: import('prosemirror-model').Node, { commentId, importedId }: {
+    commentId?: string | undefined;
+    importedId?: string | undefined;
+}): {
+    status: "resolved";
+    strategy: "canonical" | "imported-fallback";
+    matchId: string;
+    canonicalId: string | null;
+    fallbackImportedId: string | null;
+} | {
+    status: "unresolved";
+    reason: "missing-identifiers" | "no-targets";
+} | {
+    status: "ambiguous";
+    reason: "multiple-comment-ids" | "canonical-mismatch";
+    matchId: string;
+};
+export function collectCommentMarkSegments(doc: import('prosemirror-model').Node, identity: ReturnType<typeof resolveCommentIdentity>): Array<{
+    from: number;
+    to: number;
+    attrs: Object;
+    mark: Object;
+}>;
+export function collectCommentAnchorNodes(doc: import('prosemirror-model').Node, identity: ReturnType<typeof resolveCommentIdentity>): Array<{
+    pos: number;
+    typeName: string;
+    attrs: Object;
+}>;
+export function collectCommentRangeAnchors(doc: import('prosemirror-model').Node, identity: ReturnType<typeof resolveCommentIdentity>): {
+    startPos: number;
+    endPos: number;
+    startAttrs: Object;
+} | null;
+//# sourceMappingURL=comment-target-resolver.d.ts.map

@@ -1,0 +1,14 @@
+import { StoredIssue, ProofingPaintSlice } from './types.js';
+/**
+ * Build non-overlapping paint slices from display-ready issues.
+ *
+ * Overlapping spelling ranges are unioned. Each slice carries a reference
+ * to the primary issue (first by PM position) for context-menu resolution.
+ */
+export declare function buildPaintSlices(issues: StoredIssue[]): ProofingPaintSlice[];
+/**
+ * Find the paint slice at a given PM position.
+ * Returns the slice and its primary issue, or null.
+ */
+export declare function findSliceAtPosition(slices: ProofingPaintSlice[], pmPos: number): ProofingPaintSlice | null;
+//# sourceMappingURL=proofing-ranges.d.ts.map

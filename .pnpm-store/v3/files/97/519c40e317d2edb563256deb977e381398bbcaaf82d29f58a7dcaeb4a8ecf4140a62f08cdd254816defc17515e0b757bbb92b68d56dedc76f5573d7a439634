@@ -1,0 +1,46 @@
+import { Editor } from '../../Editor.js';
+import { PartId } from '../types.js';
+interface SubEditor {
+    schema?: unknown;
+    getUpdatedJson?: () => unknown;
+    isDestroyed?: boolean;
+}
+/**
+ * Resolve a header/footer relationship ID (e.g., 'rId7') to its OOXML part path
+ * (e.g., 'word/header1.xml').
+ */
+export declare function resolvePartIdFromRefId(editor: Editor, headerFooterRefId: string): PartId | null;
+/** @deprecated Use `resolvePartIdFromRefId` — alias kept for backward compatibility. */
+export declare const resolvePartIdFromSectionId: typeof resolvePartIdFromRefId;
+/**
+ * Resolve a part path (e.g., 'word/header1.xml') to its relationship ID (e.g., 'rId7')
+ * by scanning a rels XML JSON structure.
+ *
+ * This is the reverse of `resolvePartIdFromRefId`.
+ */
+export declare function resolveRIdFromRelsData(relsData: unknown, partId: string): string | null;
+/**
+ * Resolve the relationship ID for a header/footer part, trying multiple sources.
+ *
+ * 1. `relsData` — pre-decoded rels XML JSON (e.g., from a Yjs parts map envelope)
+ * 2. Editor's converter `convertedXml` (local cache)
+ *
+ * Returns null if no matching relationship is found in either source.
+ */
+export declare function resolveHeaderFooterRId(partId: string, relsData: unknown | null, editor?: Editor): string | null;
+/**
+ * Export a sub-editor's current state to OOXML JSON and commit via mutatePart.
+ *
+ * Called on sub-editor blur. The parts publisher picks up the
+ * `partChanged` event and writes to Yjs automatically.
+ */
+export declare function exportSubEditorToPart(mainEditor: Editor, subEditor: SubEditor, headerFooterRefId: string, type: 'header' | 'footer'): boolean;
+/**
+ * Register descriptors for all existing header/footer parts in convertedXml.
+ *
+ * Called during editor initialization to ensure descriptors exist for
+ * all header/footer parts that were loaded from the document.
+ */
+export declare function registerExistingHeaderFooterDescriptors(editor: Editor): void;
+export {};
+//# sourceMappingURL=header-footer-sync.d.ts.map

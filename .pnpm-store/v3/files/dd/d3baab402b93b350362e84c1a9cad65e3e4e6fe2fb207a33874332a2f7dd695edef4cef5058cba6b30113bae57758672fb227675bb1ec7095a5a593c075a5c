@@ -1,0 +1,24 @@
+export function prepareCommentParaIds(comment: Object): Object;
+export function getCommentDefinition(comment: Object, commentId: string, allComments: any, editor: any): Object;
+export function getInitials(name: string): string | null;
+export function toIsoNoFractional(unixMillis: number): string;
+export function updateCommentsXml(commentDefs: Object[] | undefined, commentsXml: any): Object;
+export function determineExportStrategy(comments: Object[]): "word" | "google-docs" | "unknown";
+export function updateCommentsExtendedXml(comments: Object[] | undefined, commentsExtendedXml: Object, threadingProfile?: import('@superdoc/common').CommentThreadingProfile | "word" | "google-docs" | "unknown"): Object | null;
+export function updateCommentsIdsAndExtensible(comments: Object[] | undefined, commentsIds: Object | null, extensible: Object | null): Object;
+export function generateConvertedXmlWithCommentFiles(convertedXml: Object, fileSet?: null): Object;
+export function removeCommentsFilesFromConvertedXml(convertedXml: Object): Object;
+export function generateRelationship(target: string): Object;
+export function prepareCommentsXmlFilesForExport({ convertedXml, defs, commentsWithParaIds, exportType, threadingProfile, }: {
+    convertedXml: Object;
+    defs: Object[];
+    commentsWithParaIds: Object[];
+    exportType: "clean" | string;
+    threadingProfile: import('@superdoc/common').CommentThreadingProfile | null;
+}): {
+    documentXml: Object;
+    relationships: Object[];
+    removedTargets: string[];
+    warnings: string[];
+};
+//# sourceMappingURL=commentsExporter.d.ts.map

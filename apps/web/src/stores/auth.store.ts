@@ -2,23 +2,59 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { apiClient } from '../api/client';
 
-interface AuthUser {
+export interface AuthUser {
   id: string;
   email: string;
   firstName?: string;
   lastName?: string;
   organizationId: string;
+  /** Role display name from GET /auth/me */
+  roleName?: string | null;
   role?: string;
+  /** Permission codes for the current role (GET /auth/me) */
+  permissions?: string[];
+}
+
+export interface OrganizationSummary {
+  id: string;
+  name: string;
+  settings?: Record<string, unknown> | null;
+  onboardingState?: Record<string, unknown> | null;
+  featureFlags?: { useConfigurableWorkflows?: boolean } | null;
+  /** Overrides ActionType → workflow definition id */
+  workflowActionTypeDefaults?: Record<string, string> | null;
+  /** Presigned URL for display; set only by GET /organizations/me */
+  logoUrl?: string | null;
 }
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<AuthUser | null>(null);
+  const organization = ref<OrganizationSummary | null>(null);
   const accessToken = ref<string | null>(localStorage.getItem('accessToken'));
   const isAuthenticated = computed(() => !!accessToken.value);
+  const needsOnboarding = computed(() => {
+    if (!organization.value) return false;
+    return organization.value.settings?.onboardingCompleted !== true;
+  });
+
+  async function fetchMyOrganization() {
+    try {
+      const { data } = await apiClient.get<OrganizationSummary>('/organizations/me');
+      organization.value = data;
+    } catch (e) {
+      console.warn('Could not load organization', e);
+      organization.value = { id: '', name: '', settings: { onboardingCompleted: true } };
+    }
+  }
+
+  async function ensureOrganizationLoaded() {
+    if (organization.value) return;
+    await fetchMyOrganization();
+  }
 
   async function login(email: string, password: string) {
     const { data } = await apiClient.post('/auth/login', { email, password });
-    setAuth(data);
+    await setAuth(data);
   }
 
   async function register(payload: {
@@ -29,7 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
     organizationName: string;
   }) {
     const { data } = await apiClient.post('/auth/register', payload);
-    setAuth(data);
+    await setAuth(data);
   }
 
   async function requestMagicLink(email: string) {
@@ -38,13 +74,34 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function verifyMagicLink(token: string) {
     const { data } = await apiClient.get(`/auth/magic-link/verify?token=${token}`);
-    setAuth(data);
+    await setAuth(data);
+  }
+
+  async function previewInvitation(token: string) {
+    const { data } = await apiClient.get<{
+      email: string;
+      organizationName: string;
+      roleName: string;
+      expiresAt: string;
+    }>('/auth/invitations/preview', { params: { token } });
+    return data;
+  }
+
+  async function acceptInvitation(payload: {
+    token: string;
+    password: string;
+    firstName?: string;
+    lastName?: string;
+  }) {
+    const { data } = await apiClient.post('/auth/invitations/accept', payload);
+    await setAuth(data);
   }
 
   async function fetchMe() {
     try {
-      const { data } = await apiClient.get('/auth/me');
-      user.value = data;
+      const { data } = await apiClient.get<AuthUser & { permissions?: string[] }>('/auth/me');
+      user.value = data as AuthUser;
+      await fetchMyOrganization();
     } catch {
       logout();
     }
@@ -52,25 +109,26 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function refreshTokens() {
     try {
-      const { data } = await apiClient.post('/auth/refresh');
+      const { data } = await apiClient.post<{ accessToken: string }>('/auth/refresh');
       accessToken.value = data.accessToken;
       localStorage.setItem('accessToken', data.accessToken);
-      user.value = data.user;
+      await fetchMe();
     } catch {
       logout();
     }
   }
 
-  function setAuth(data: { accessToken: string; user: AuthUser }) {
+  async function setAuth(data: { accessToken: string; user?: AuthUser }) {
     accessToken.value = data.accessToken;
-    user.value = data.user;
     localStorage.setItem('accessToken', data.accessToken);
+    await fetchMe();
   }
 
   function logout() {
     apiClient.post('/auth/logout').catch(() => {});
     accessToken.value = null;
     user.value = null;
+    organization.value = null;
     localStorage.removeItem('accessToken');
     import('../router/index').then(({ router }) => router.push('/auth/login'));
   }
@@ -80,8 +138,22 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   return {
-    user, accessToken, isAuthenticated,
-    login, register, logout, fetchMe, refreshTokens,
-    requestMagicLink, verifyMagicLink, loginWithGoogle,
+    user,
+    organization,
+    accessToken,
+    isAuthenticated,
+    needsOnboarding,
+    login,
+    register,
+    logout,
+    fetchMe,
+    refreshTokens,
+    fetchMyOrganization,
+    ensureOrganizationLoaded,
+    requestMagicLink,
+    verifyMagicLink,
+    previewInvitation,
+    acceptInvitation,
+    loginWithGoogle,
   };
 });

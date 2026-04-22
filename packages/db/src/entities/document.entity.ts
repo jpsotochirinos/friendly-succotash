@@ -5,7 +5,6 @@ import {
   ManyToOne,
   OneToMany,
   Collection,
-  Index,
   OptionalProps,
 } from '@mikro-orm/core';
 import { TenantBaseEntity } from './tenant-base.entity';
@@ -13,6 +12,7 @@ import { DocumentReviewStatus } from '@tracker/shared';
 import type { Folder } from './folder.entity';
 import type { WorkflowItem } from './workflow-item.entity';
 import type { User } from './user.entity';
+import type { DocumentWorkflowParticipation } from './document-workflow-participation.entity';
 import type { DocumentVersion } from './document-version.entity';
 import type { DocumentChunk } from './document-chunk.entity';
 import type { Evaluation } from './evaluation.entity';
@@ -62,6 +62,9 @@ export class Document extends TenantBaseEntity {
 
   @ManyToOne('User', { nullable: true })
   uploadedBy?: User;
+
+  @OneToMany('DocumentWorkflowParticipation', 'document')
+  workflowParticipations = new Collection<DocumentWorkflowParticipation>(this);
 
   @OneToMany('DocumentVersion', 'document')
   versions = new Collection<DocumentVersion>(this);

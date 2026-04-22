@@ -1,0 +1,20 @@
+export const PERMISSIONS: Readonly<{
+    RESOLVE_OWN: "RESOLVE_OWN";
+    RESOLVE_OTHER: "RESOLVE_OTHER";
+    REJECT_OWN: "REJECT_OWN";
+    REJECT_OTHER: "REJECT_OTHER";
+    COMMENTS_OVERFLOW_OWN: "COMMENTS_OVERFLOW";
+    COMMENTS_OVERFLOW_OTHER: "COMMENTS_OVERFLOW_OTHER";
+    COMMENTS_DELETE_OWN: "COMMENTS_DELETE_OWN";
+    COMMENTS_DELETE_OTHER: "COMMENTS_DELETE_OTHER";
+    UPLOAD_VERSION: "UPLOAD_VERSION";
+    VERSION_HISTORY: "VERSION_HISTORY";
+}>;
+export function isAllowed(permission: string, role: string, isInternal: boolean, context?: {
+    comment?: Object | undefined;
+    superdoc?: Object | undefined;
+    currentUser?: Object | undefined;
+    permissionResolver?: Function | undefined;
+    trackedChange?: Object | undefined;
+}): boolean;
+//# sourceMappingURL=permissions.d.ts.map

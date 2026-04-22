@@ -1,0 +1,86 @@
+/**
+ * Recursively collects all paragraph nodes (w:p) from a text box content structure.
+ * This handles nested structures like w:sdt/w:sdtContent that wrap paragraphs.
+ *
+ * @param {Array<Object>} nodes - Array of XML element nodes to search
+ * @param {Array<Object>} [paragraphs=[]] - Accumulator array for found paragraphs
+ * @returns {Array<Object>} Array of w:p paragraph nodes found in the structure
+ *
+ * @example
+ * // Handles nested w:sdt structures:
+ * // <w:txbxContent>
+ * //   <w:sdt>
+ * //     <w:sdtContent>
+ * //       <w:p>...</w:p>
+ * //     </w:sdtContent>
+ * //   </w:sdt>
+ * // </w:txbxContent>
+ * const paragraphs = collectTextBoxParagraphs(textboxContent.elements);
+ */
+export function collectTextBoxParagraphs(nodes: Array<Object>, paragraphs?: Array<Object>): Array<Object>;
+/**
+ * Pre-processes text box content to handle field codes (PAGE, NUMPAGES, etc.).
+ * Creates a deep copy to avoid mutating the original content.
+ *
+ * For header/footer files, uses simplified page field processing.
+ * For body content, uses full field character processing.
+ *
+ * @param {Object} textBoxContent - The w:txbxContent element containing paragraphs
+ * @param {Object} [params={}] - Translator params
+ * @param {Object} [params.docx] - The parsed docx object
+ * @param {string} [params.filename] - The source filename (e.g., 'header1.xml', 'document.xml')
+ * @returns {Object} Processed text box content with field codes converted to sd:* nodes
+ */
+export function preProcessTextBoxContent(textBoxContent: Object, params?: {
+    docx?: Object | undefined;
+    filename?: string | undefined;
+}): Object;
+/**
+ * Converts half-points to pixels.
+ * OOXML font sizes are specified in half-points (1/144 inch).
+ * Formula: pixels = (halfPoints / 2) * (96 dpi / 72 points per inch)
+ *
+ * @param {number|string|null|undefined} halfPoints - Font size in half-points
+ * @returns {number|undefined} Font size in pixels, or undefined if invalid input
+ */
+export function halfPointsToPixels(halfPoints: number | string | null | undefined): number | undefined;
+/**
+ * Resolves a font family value to a CSS-compatible font family string.
+ *
+ * @param {string|Object|null|undefined} fontFamily - Font family from run properties
+ * @param {Object} [docx] - The parsed docx object for theme font resolution
+ * @returns {string|undefined} CSS font family string, or undefined if not resolvable
+ */
+export function resolveFontFamilyForTextBox(fontFamily: string | Object | null | undefined, docx?: Object): string | undefined;
+/**
+ * Resolves paragraph properties for a text box paragraph.
+ *
+ * @param {Object} paragraph - The w:p paragraph element
+ * @param {Object} params - Translator params containing docx and other context
+ * @returns {Object} Resolved paragraph properties
+ */
+export function resolveParagraphPropertiesForTextBox(paragraph: Object, params: Object): Object;
+/**
+ * Extracts formatting properties from a run's w:rPr element.
+ *
+ * @param {Object|null|undefined} rPr - The w:rPr element containing run properties
+ * @param {Object} paragraphProperties - Resolved paragraph properties for inheritance
+ * @param {Object} params - Translator params containing docx and other context
+ * @returns {Object} Formatting object with bold, italic, color, fontSize, fontFamily
+ */
+export function extractRunFormatting(rPr: Object | null | undefined, paragraphProperties: Object, params: Object): Object;
+/**
+ * Extracts horizontal alignment from paragraph properties.
+ *
+ * @param {Object} paragraph - The w:p paragraph element
+ * @returns {string|null} Alignment value ('left', 'center', 'right') or null if not found
+ */
+export function extractParagraphAlignment(paragraph: Object): string | null;
+/**
+ * Extracts text box body properties from wps:bodyPr element.
+ *
+ * @param {Object|null|undefined} bodyPr - The wps:bodyPr element
+ * @returns {Object} Object containing verticalAlign, insets, and wrap properties
+ */
+export function extractBodyPrProperties(bodyPr: Object | null | undefined): Object;
+//# sourceMappingURL=textbox-content-helpers.d.ts.map

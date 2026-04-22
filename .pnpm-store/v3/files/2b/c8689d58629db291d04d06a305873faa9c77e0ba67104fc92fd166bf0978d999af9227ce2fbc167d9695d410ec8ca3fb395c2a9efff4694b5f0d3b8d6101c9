@@ -1,0 +1,33 @@
+import { Editor } from '../../Editor.js';
+export interface CompoundMutationRequest {
+    editor: Editor;
+    source: string;
+    /**
+     * Part IDs that may be mutated during `execute()`. These `convertedXml`
+     * entries are snapshotted before execute runs and restored on failure.
+     *
+     * Converter-level metadata (numbering, translatedNumbering, revision,
+     * documentModified, documentGuid) is always snapshotted regardless of
+     * this list.
+     */
+    affectedParts?: string[];
+    /**
+     * Execute parts mutations and PM dispatch. Return `true` on success.
+     * If this returns `false` or throws, all state is rolled back.
+     */
+    execute: () => boolean;
+}
+export interface CompoundMutationResult {
+    success: boolean;
+}
+/**
+ * Execute parts mutations and a PM dispatch as one atomic unit.
+ *
+ * 1. Increment compound depth (publisher buffers instead of publishing)
+ * 2. Snapshot affected parts + converter metadata
+ * 3. Run `execute()` (which calls mutatePart + PM dispatch internally)
+ * 4. On failure (returns false or throws): restore snapshot, drop buffer
+ * 5. On success at depth 0: flush buffered events to Yjs
+ */
+export declare function compoundMutation(request: CompoundMutationRequest): CompoundMutationResult;
+//# sourceMappingURL=compound-mutation.d.ts.map

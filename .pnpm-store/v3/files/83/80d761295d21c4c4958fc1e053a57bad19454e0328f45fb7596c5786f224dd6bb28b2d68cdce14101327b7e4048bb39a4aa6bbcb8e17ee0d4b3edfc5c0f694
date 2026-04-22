@@ -1,0 +1,40 @@
+import { Extension } from '../../core/Extension.js';
+export const DEFAULT_SELECTION_STATE: Readonly<{
+    focused: false;
+    preservedSelection: null;
+    showVisualSelection: false;
+    skipFocusReset: false;
+}>;
+export { CustomSelectionPluginKey } from '../../core/selection-state.js';
+/**
+ * @module CustomSelection
+ * @sidebarTitle Custom Selection
+ * @snippetPath /snippets/extensions/custom-selection.mdx
+ */
+export const CustomSelection: Extension<Record<string, never>, Record<string, never>>;
+/**
+ * Selection state
+ */
+export type SelectionState = {
+    /**
+     * - Whether editor is focused
+     */
+    focused: boolean;
+    /**
+     * - Stored selection
+     */
+    preservedSelection: Object | null;
+    /**
+     * - Whether to show selection decoration
+     */
+    showVisualSelection: boolean;
+    /**
+     * - Whether to skip clearing selection on next focus
+     */
+    skipFocusReset: boolean;
+};
+/**
+ * Configuration options for CustomSelection
+ */
+export type CustomSelectionOptions = Object;
+//# sourceMappingURL=custom-selection.d.ts.map

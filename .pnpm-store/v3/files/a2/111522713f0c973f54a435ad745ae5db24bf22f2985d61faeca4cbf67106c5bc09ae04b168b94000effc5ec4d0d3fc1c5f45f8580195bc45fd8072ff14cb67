@@ -1,0 +1,11 @@
+import { Extension } from '../../core/Extension.js';
+export const CollaborationCursor: Extension<{
+    provider: null;
+    user: {
+        name: null;
+        color: null;
+    };
+}, {
+    users: never[];
+}>;
+//# sourceMappingURL=collaboration-cursor.d.ts.map

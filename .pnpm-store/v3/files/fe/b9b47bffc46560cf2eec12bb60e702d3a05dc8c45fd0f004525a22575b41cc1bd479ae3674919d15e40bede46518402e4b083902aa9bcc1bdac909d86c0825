@@ -1,0 +1,7 @@
+import { DiffAdapter } from '@superdoc/document-api';
+import { Editor } from '../core/Editor.js';
+/**
+ * Creates a DiffAdapter bound to the given editor instance.
+ */
+export declare function createDiffAdapter(editor: Editor): DiffAdapter;
+//# sourceMappingURL=diff-adapter.d.ts.map

@@ -1,0 +1,71 @@
+declare const _default: import('vue').DefineComponent<import('vue').ExtractPropTypes<{
+    documentId: {
+        type: StringConstructor;
+        required: false;
+    };
+    fileSource: {
+        type: ({
+            new (blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
+            prototype: Blob;
+        } | {
+            new (fileBits: BlobPart[], fileName: string, options?: FilePropertyBag): File;
+            prototype: File;
+        })[];
+        required: false;
+    };
+    state: {
+        type: ObjectConstructor;
+        required: false;
+        default: () => null;
+    };
+    options: {
+        type: ObjectConstructor;
+        required: false;
+        default: () => {};
+    };
+}>, {}, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {
+    "editor-ready": (...args: any[]) => void;
+    "editor-click": (...args: any[]) => void;
+    "editor-keydown": (...args: any[]) => void;
+    "comments-loaded": (...args: any[]) => void;
+    "selection-update": (...args: any[]) => void;
+}, string, import('vue').PublicProps, Readonly<import('vue').ExtractPropTypes<{
+    documentId: {
+        type: StringConstructor;
+        required: false;
+    };
+    fileSource: {
+        type: ({
+            new (blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
+            prototype: Blob;
+        } | {
+            new (fileBits: BlobPart[], fileName: string, options?: FilePropertyBag): File;
+            prototype: File;
+        })[];
+        required: false;
+    };
+    state: {
+        type: ObjectConstructor;
+        required: false;
+        default: () => null;
+    };
+    options: {
+        type: ObjectConstructor;
+        required: false;
+        default: () => {};
+    };
+}>> & Readonly<{
+    "onEditor-ready"?: ((...args: any[]) => any) | undefined;
+    "onEditor-click"?: ((...args: any[]) => any) | undefined;
+    "onEditor-keydown"?: ((...args: any[]) => any) | undefined;
+    "onComments-loaded"?: ((...args: any[]) => any) | undefined;
+    "onSelection-update"?: ((...args: any[]) => any) | undefined;
+}>, {
+    options: Record<string, any>;
+    state: Record<string, any>;
+}, {}, {}, {}, string, import('vue').ComponentProvideOptions, true, {
+    editorWrapper: HTMLDivElement;
+    editorElem: HTMLDivElement;
+}, HTMLDivElement>;
+export default _default;
+//# sourceMappingURL=SuperEditor.vue.d.ts.map

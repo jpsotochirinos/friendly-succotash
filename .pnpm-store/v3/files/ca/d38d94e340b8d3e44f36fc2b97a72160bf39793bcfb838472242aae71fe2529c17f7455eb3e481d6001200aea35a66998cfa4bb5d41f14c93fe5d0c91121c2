@@ -1,0 +1,2 @@
+export * from './personal-translator.js';
+//# sourceMappingURL=index.d.ts.map

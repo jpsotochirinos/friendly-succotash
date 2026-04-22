@@ -32,9 +32,12 @@ export const TrackableStateMachine = createStateMachine<TrackableStatus>([
   { from: TrackableStatus.COMPLETED, to: TrackableStatus.ACTIVE, requiredPermission: 'trackable:update', label: 'Reopen' },
 ]);
 
+/** @deprecated Prefer configurable workflows (`WorkflowDefinition` / `WorkflowEngineService`) when `useConfigurableWorkflows` is enabled. */
 export const WorkflowItemStateMachine = createStateMachine<WorkflowItemStatus>([
   { from: WorkflowItemStatus.PENDING, to: WorkflowItemStatus.ACTIVE, requiredPermission: 'workflow:update', label: 'Activate' },
   { from: WorkflowItemStatus.ACTIVE, to: WorkflowItemStatus.IN_PROGRESS, requiredPermission: 'workflow:update', label: 'Start' },
+  /** Allows submitting from ACTIVE without an explicit IN_PROGRESS step (e.g. rule-driven / short workflows). */
+  { from: WorkflowItemStatus.ACTIVE, to: WorkflowItemStatus.UNDER_REVIEW, requiredPermission: 'workflow:update', label: 'Submit for review' },
   { from: WorkflowItemStatus.IN_PROGRESS, to: WorkflowItemStatus.UNDER_REVIEW, requiredPermission: 'workflow:update', label: 'Submit for review' },
   { from: WorkflowItemStatus.UNDER_REVIEW, to: WorkflowItemStatus.VALIDATED, requiredPermission: 'workflow:review', label: 'Validate' },
   { from: WorkflowItemStatus.UNDER_REVIEW, to: WorkflowItemStatus.REJECTED, requiredPermission: 'workflow:review', label: 'Reject' },

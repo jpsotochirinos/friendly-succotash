@@ -1,0 +1,24 @@
+import { Editor } from '../../core/Editor.js';
+import { MutationOptions, ParagraphMutationResult, ParagraphsSetStyleInput, ParagraphsClearStyleInput, ParagraphsResetDirectFormattingInput, ParagraphsSetAlignmentInput, ParagraphsClearAlignmentInput, ParagraphsSetIndentationInput, ParagraphsClearIndentationInput, ParagraphsSetSpacingInput, ParagraphsClearSpacingInput, ParagraphsSetKeepOptionsInput, ParagraphsSetOutlineLevelInput, ParagraphsSetFlowOptionsInput, ParagraphsSetTabStopInput, ParagraphsClearTabStopInput, ParagraphsClearAllTabStopsInput, ParagraphsSetBorderInput, ParagraphsClearBorderInput, ParagraphsSetShadingInput, ParagraphsClearShadingInput, ParagraphsSetDirectionInput, ParagraphsClearDirectionInput } from '@superdoc/document-api';
+export declare function paragraphsSetStyleWrapper(editor: Editor, input: ParagraphsSetStyleInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsClearStyleWrapper(editor: Editor, input: ParagraphsClearStyleInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsResetDirectFormattingWrapper(editor: Editor, input: ParagraphsResetDirectFormattingInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetAlignmentWrapper(editor: Editor, input: ParagraphsSetAlignmentInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsClearAlignmentWrapper(editor: Editor, input: ParagraphsClearAlignmentInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetIndentationWrapper(editor: Editor, input: ParagraphsSetIndentationInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsClearIndentationWrapper(editor: Editor, input: ParagraphsClearIndentationInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetSpacingWrapper(editor: Editor, input: ParagraphsSetSpacingInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsClearSpacingWrapper(editor: Editor, input: ParagraphsClearSpacingInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetKeepOptionsWrapper(editor: Editor, input: ParagraphsSetKeepOptionsInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetOutlineLevelWrapper(editor: Editor, input: ParagraphsSetOutlineLevelInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetFlowOptionsWrapper(editor: Editor, input: ParagraphsSetFlowOptionsInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetTabStopWrapper(editor: Editor, input: ParagraphsSetTabStopInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsClearTabStopWrapper(editor: Editor, input: ParagraphsClearTabStopInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsClearAllTabStopsWrapper(editor: Editor, input: ParagraphsClearAllTabStopsInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetBorderWrapper(editor: Editor, input: ParagraphsSetBorderInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsClearBorderWrapper(editor: Editor, input: ParagraphsClearBorderInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetShadingWrapper(editor: Editor, input: ParagraphsSetShadingInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsClearShadingWrapper(editor: Editor, input: ParagraphsClearShadingInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsSetDirectionWrapper(editor: Editor, input: ParagraphsSetDirectionInput, options?: MutationOptions): ParagraphMutationResult;
+export declare function paragraphsClearDirectionWrapper(editor: Editor, input: ParagraphsClearDirectionInput, options?: MutationOptions): ParagraphMutationResult;
+//# sourceMappingURL=paragraphs-wrappers.d.ts.map

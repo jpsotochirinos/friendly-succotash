@@ -1,0 +1,6 @@
+import { StepExecutor } from './executor-registry.types.js';
+export declare function registerStepExecutor(opPrefix: string, executor: StepExecutor): void;
+export declare function getStepExecutor(op: string): StepExecutor | undefined;
+export declare function hasStepExecutor(op: string): boolean;
+export declare function clearExecutorRegistry(): void;
+//# sourceMappingURL=executor-registry.d.ts.map

@@ -1,0 +1,27 @@
+import { ProofingAnnotation } from '../types.js';
+/**
+ * A split instruction for a single span.
+ * Describes how to divide the span into sibling segments.
+ */
+export type SplitSegment = {
+    textStart: number;
+    textEnd: number;
+    pmStart: number;
+    pmEnd: number;
+    proofingClass: string | null;
+};
+/**
+ * Compute the split segments for a span that partially overlaps a proofing range.
+ */
+export declare function computeSplitSegments(spanPmStart: number, spanPmEnd: number, spanText: string, annotations: ProofingAnnotation[]): SplitSegment[];
+/**
+ * Replace a rendered span with proofing-aware sibling slices.
+ *
+ * The original span is hidden, not destroyed, so restoration is lossless.
+ */
+export declare function replaceSpanWithSiblings(originalSpan: HTMLElement, segments: SplitSegment[], spanText: string): HTMLElement[];
+/**
+ * Restore original spans by undoing sibling splits.
+ */
+export declare function restoreSplitSpans(container: HTMLElement): boolean;
+//# sourceMappingURL=span-split.d.ts.map

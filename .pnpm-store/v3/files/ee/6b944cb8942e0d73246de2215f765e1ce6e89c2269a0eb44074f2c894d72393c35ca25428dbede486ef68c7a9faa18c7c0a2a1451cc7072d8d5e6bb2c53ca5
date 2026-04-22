@@ -1,0 +1,375 @@
+import { t as require_lib } from "./xml-js-CqGKpaft.es.js";
+var import_lib = require_lib();
+var CRC32_TABLE = new Uint32Array(256);
+for (let i = 0; i < 256; i++) {
+	let c = i;
+	for (let j = 0; j < 8; j++) c = c & 1 ? 3988292384 ^ c >>> 1 : c >>> 1;
+	CRC32_TABLE[i] = c;
+}
+function computeCrc32Hex(data) {
+	let crc = 4294967295;
+	for (let i = 0; i < data.length; i++) crc = CRC32_TABLE[(crc ^ data[i]) & 255] ^ crc >>> 8;
+	return ((crc ^ 4294967295) >>> 0).toString(16).padStart(8, "0");
+}
+function base64ToUint8Array(base64) {
+	const binary = atob(base64);
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+	return bytes;
+}
+function dataUriToArrayBuffer(data) {
+	if (data instanceof ArrayBuffer) return data;
+	if (ArrayBuffer.isView(data)) return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+	if (typeof data !== "string") throw new Error("Unsupported data type for conversion to ArrayBuffer");
+	let base64 = data;
+	if (data.startsWith("data:")) {
+		const commaIndex = data.indexOf(",");
+		if (commaIndex === -1) throw new Error("Invalid data URI: missing base64 content");
+		base64 = data.substring(commaIndex + 1);
+	}
+	return base64ToUint8Array(base64).buffer;
+}
+function inchesToTwips(inches) {
+	if (inches == null) return;
+	if (typeof inches === "string") inches = parseFloat(inches);
+	return Math.round(Number(inches) * 1440);
+}
+function twipsToInches(twips) {
+	if (twips == null) return;
+	const value = Number(twips);
+	if (Number.isNaN(value)) return;
+	return value / 1440;
+}
+function twipsToPixels(twips) {
+	if (twips == null) return;
+	return inchesToPixels(twipsToInches(twips));
+}
+function pixelsToTwips(pixels) {
+	return inchesToTwips(pixelsToInches(pixels));
+}
+function inchesToPixels(inches) {
+	if (inches == null) return;
+	const pixels = inches * 96;
+	return Math.round(pixels * 1e3) / 1e3;
+}
+function pixelsToInches(pixels) {
+	if (pixels == null) return;
+	return Number(pixels) / 96;
+}
+function twipsToLines(twips) {
+	if (twips == null) return;
+	return twips / 240;
+}
+function linesToTwips(lines) {
+	if (lines == null) return;
+	return lines * 240;
+}
+function halfPointToPixels(halfPoints) {
+	if (halfPoints == null) return;
+	return Math.round(halfPoints * 96 / 72);
+}
+function halfPointToPoints(halfPoints) {
+	if (halfPoints == null) return;
+	return Math.round(halfPoints) / 2;
+}
+function emuToPixels(emu) {
+	if (emu == null) return;
+	if (typeof emu === "string") emu = parseFloat(emu);
+	const pixels = emu * 96 / 914400;
+	return Math.round(pixels);
+}
+function pixelsToEmu(px) {
+	if (px == null) return;
+	if (typeof px === "string") px = parseFloat(px);
+	return Math.round(px * 9525);
+}
+function eighthPointsToPixels(eighthPoints) {
+	if (eighthPoints == null) return;
+	return parseFloat(eighthPoints) / 8 * 1.3333;
+}
+function pointsToTwips(points) {
+	if (points == null) return;
+	return points * 20;
+}
+function twipsToPt(twips) {
+	if (twips == null) return;
+	return twips / 20;
+}
+function ptToTwips(pt) {
+	if (pt == null) return;
+	return pt * 20;
+}
+function rotToDegrees(rot) {
+	if (rot == null) return;
+	return rot / 6e4;
+}
+function degreesToRot(degrees) {
+	if (degrees == null) return;
+	return degrees * 6e4;
+}
+function pixelsToPolygonUnits(pixels) {
+	if (pixels == null) return;
+	const pu = pixels * 96;
+	return Math.round(pu);
+}
+function polygonUnitsToPixels(pu) {
+	if (pu == null) return;
+	const pixels = Number(pu) / 96;
+	return Math.round(pixels * 1e3) / 1e3;
+}
+function polygonToObj(polygonNode) {
+	if (!polygonNode) return null;
+	const points = [];
+	polygonNode.elements.forEach((element) => {
+		if (["wp:start", "wp:lineTo"].includes(element.name)) {
+			const { x, y } = element.attributes;
+			points.push([polygonUnitsToPixels(x), polygonUnitsToPixels(y)]);
+		}
+	});
+	if (points.length > 1) {
+		const firstPoint = points[0];
+		const lastPoint = points[points.length - 1];
+		if (firstPoint[0] === lastPoint[0] && firstPoint[1] === lastPoint[1]) points.pop();
+	}
+	return points;
+}
+function objToPolygon(points) {
+	if (!points || !Array.isArray(points)) return null;
+	const polygonNode = {
+		name: "wp:wrapPolygon",
+		type: "wp:wrapPolygon",
+		attributes: { edited: "0" },
+		elements: []
+	};
+	points.forEach((point, index) => {
+		const [x, y] = point;
+		const tagName = index === 0 ? "wp:start" : "wp:lineTo";
+		const pointNode = {
+			name: tagName,
+			type: tagName,
+			attributes: {
+				x: pixelsToPolygonUnits(x),
+				y: pixelsToPolygonUnits(y)
+			}
+		};
+		polygonNode.elements.push(pointNode);
+	});
+	if (points.length > 0) {
+		const [startX, startY] = points[0];
+		const closePointNode = {
+			name: "wp:lineTo",
+			type: "wp:lineTo",
+			attributes: {
+				x: pixelsToPolygonUnits(startX),
+				y: pixelsToPolygonUnits(startY)
+			}
+		};
+		polygonNode.elements.push(closePointNode);
+	}
+	return polygonNode;
+}
+var REMOTE_RESOURCE_PATTERN = /^https?:|^blob:|^file:/i;
+var DATA_URI_PATTERN = /^data:/i;
+var getArrayBufferFromUrl = async (input) => {
+	if (input == null) return /* @__PURE__ */ new ArrayBuffer(0);
+	if (input instanceof ArrayBuffer) return input;
+	if (ArrayBuffer.isView(input)) {
+		const view = input;
+		return view.buffer.slice(view.byteOffset, view.byteOffset + view.byteLength);
+	}
+	if (typeof Blob !== "undefined" && input instanceof Blob) return await input.arrayBuffer();
+	if (typeof input !== "string") throw new TypeError("Unsupported media input type");
+	const trimmed = input.trim();
+	const shouldFetchRemote = REMOTE_RESOURCE_PATTERN.test(trimmed);
+	const isDataUri = DATA_URI_PATTERN.test(trimmed);
+	if (shouldFetchRemote) {
+		if (typeof fetch !== "function") throw new Error(`Fetch API is not available to retrieve media: ${trimmed}`);
+		const response = await fetch(trimmed);
+		if (!response.ok) throw new Error(`Fetch failed: ${response.status} ${response.statusText}`);
+		return await response.arrayBuffer();
+	}
+	return base64ToUint8Array(isDataUri ? trimmed.split(",", 2)[1] : trimmed.replace(/\s/g, "")).buffer;
+};
+var getContentTypesFromXml = (contentTypesXml) => {
+	try {
+		return ((0, import_lib.xml2js)(contentTypesXml, { compact: false })?.elements?.[0]?.elements || []).filter((el) => el?.name === "Default").map((el) => el.attributes?.Extension).filter(Boolean);
+	} catch (err) {
+		console.warn("[super-editor] Failed to parse [Content_Types].xml", err);
+		return [];
+	}
+};
+var resolveOpcTargetPath = (target, baseDir = "word") => {
+	if (!target) return null;
+	if (target.includes("://")) return null;
+	if (target.startsWith("/")) return target.slice(1);
+	const segments = `${baseDir}/${target}`.split("/");
+	const resolved = [];
+	for (const seg of segments) if (seg === "..") resolved.pop();
+	else if (seg !== "." && seg !== "") resolved.push(seg);
+	return resolved.join("/");
+};
+var DOCX_HIGHLIGHT_KEYWORD_MAP = new Map([
+	["yellow", "FFFF00"],
+	["green", "00FF00"],
+	["blue", "0000FF"],
+	["cyan", "00FFFF"],
+	["magenta", "FF00FF"],
+	["red", "FF0000"],
+	["darkYellow", "808000"],
+	["darkGreen", "008000"],
+	["darkBlue", "000080"],
+	["darkCyan", "008080"],
+	["darkMagenta", "800080"],
+	["darkGray", "808080"],
+	["darkRed", "800000"],
+	["lightGray", "C0C0C0"],
+	["black", "000000"],
+	["white", "FFFFFF"]
+]);
+var normalizeHexColor = (hex) => {
+	if (!hex) return null;
+	let value = hex.replace("#", "").trim();
+	if (!value) return null;
+	value = value.toUpperCase();
+	if (value.length === 3) value = value.split("").map((c) => c + c).join("");
+	if (value.length === 8) value = value.slice(0, 6);
+	return value;
+};
+var getHexColorFromDocxSystem = (docxColor) => {
+	const hex = DOCX_HIGHLIGHT_KEYWORD_MAP.get(docxColor);
+	return hex ? `#${hex}` : null;
+};
+var getDocxHighlightKeywordFromHex = (hexColor) => {
+	if (!hexColor) return null;
+	if (DOCX_HIGHLIGHT_KEYWORD_MAP.has(hexColor)) return hexColor;
+	const normalized = normalizeHexColor(hexColor);
+	if (!normalized) return null;
+	for (const [keyword, hex] of DOCX_HIGHLIGHT_KEYWORD_MAP.entries()) if (hex === normalized) return keyword;
+	return null;
+};
+function isValidHexColor(color) {
+	if (!color || typeof color !== "string") return false;
+	switch (color.length) {
+		case 3: return /^[0-9A-F]{3}$/i.test(color);
+		case 6: return /^[0-9A-F]{6}$/i.test(color);
+		case 8: return /^[0-9A-F]{8}$/i.test(color);
+		default: return false;
+	}
+}
+var componentToHex = (val) => {
+	const a = Number(val).toString(16);
+	return a.length === 1 ? "0" + a : a;
+};
+var rgbToHex = (rgb) => {
+	return "#" + rgb.match(/\d+/g).map(componentToHex).join("");
+};
+var DEFAULT_SHADING_FOREGROUND_COLOR = "#000000";
+var hexToRgb = (hex) => {
+	const normalized = normalizeHexColor(hex);
+	if (!normalized) return null;
+	return {
+		r: Number.parseInt(normalized.slice(0, 2), 16),
+		g: Number.parseInt(normalized.slice(2, 4), 16),
+		b: Number.parseInt(normalized.slice(4, 6), 16)
+	};
+};
+var clamp01 = (value) => {
+	if (!Number.isFinite(value)) return 0;
+	return Math.min(1, Math.max(0, value));
+};
+var blendHexColors = (backgroundHex, foregroundHex, foregroundRatio) => {
+	const background = hexToRgb(backgroundHex);
+	const foreground = hexToRgb(foregroundHex);
+	if (!background || !foreground) return null;
+	const ratio = clamp01(foregroundRatio);
+	const r = Math.round(background.r * (1 - ratio) + foreground.r * ratio);
+	const g = Math.round(background.g * (1 - ratio) + foreground.g * ratio);
+	const b = Math.round(background.b * (1 - ratio) + foreground.b * ratio);
+	const toByte = (n) => n.toString(16).padStart(2, "0").toUpperCase();
+	return `${toByte(r)}${toByte(g)}${toByte(b)}`;
+};
+var resolveShadingFillColor = (shading) => {
+	if (!shading || typeof shading !== "object") return null;
+	const fill = normalizeHexColor(shading.fill);
+	if (!fill) return null;
+	const pctMatch = (typeof shading.val === "string" ? shading.val.trim().toLowerCase() : "").match(/^pct(\d{1,3})$/);
+	if (!pctMatch) return fill;
+	const pct = Number.parseInt(pctMatch[1], 10);
+	if (!Number.isFinite(pct) || pct < 0 || pct > 100) return fill;
+	return blendHexColors(fill, normalizeHexColor(shading.color) ?? DEFAULT_SHADING_FOREGROUND_COLOR, pct / 100) ?? fill;
+};
+var deobfuscateFont = (arrayBuffer, guidHex) => {
+	const dta = new Uint8Array(arrayBuffer);
+	const guidStr = guidHex.replace(/[-{}]/g, "");
+	if (guidStr.length !== 32) {
+		console.error("Invalid GUID");
+		return;
+	}
+	const guidBytes = new Uint8Array(16);
+	for (let i = 0, j = 0; i < 32; i += 2, j++) {
+		const hexByte = guidStr[i] + guidStr[i + 1];
+		guidBytes[j] = parseInt(hexByte, 16);
+	}
+	for (let i = 0; i < 32; i++) {
+		const gi = 15 - i % 16;
+		dta[i] ^= guidBytes[gi];
+	}
+	return dta.buffer;
+};
+function convertSizeToCSS(value, type) {
+	if (typeof value === "string" && value.endsWith("%")) type = "pct";
+	if (value === null || value === void 0) value = 0;
+	switch (type) {
+		case "dxa":
+		case null:
+		case void 0: return `${twipsToPixels(value)}px`;
+		case "nil": return "0";
+		case "auto": return null;
+		case "pct":
+			let percent;
+			if (typeof value === "number") percent = value * .02;
+			else if (value.endsWith("%")) percent = parseFloat(value.slice(0, -1));
+			else percent = parseFloat(value) * .02;
+			return `${percent}%`;
+		default: return null;
+	}
+}
+var detectImageType = (data) => {
+	let bytes;
+	if (typeof data === "string") try {
+		bytes = base64ToUint8Array(data);
+	} catch {
+		return null;
+	}
+	else if (data instanceof Uint8Array) bytes = data;
+	else return null;
+	if (bytes.length < 12) return null;
+	if (bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71 && bytes[4] === 13 && bytes[5] === 10 && bytes[6] === 26 && bytes[7] === 10) return "png";
+	if (bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return "jpeg";
+	if (bytes[0] === 71 && bytes[1] === 73 && bytes[2] === 70 && bytes[3] === 56) return "gif";
+	if (bytes[0] === 66 && bytes[1] === 77) return "bmp";
+	if (bytes[0] === 73 && bytes[1] === 73 && bytes[2] === 42 && bytes[3] === 0 || bytes[0] === 77 && bytes[1] === 77 && bytes[2] === 0 && bytes[3] === 42) return "tiff";
+	if (bytes.length >= 12 && bytes[0] === 82 && bytes[1] === 73 && bytes[2] === 70 && bytes[3] === 70 && bytes[8] === 87 && bytes[9] === 69 && bytes[10] === 66 && bytes[11] === 80) return "webp";
+	return null;
+};
+const HYPERLINK_RELATIONSHIP_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink";
+const HEADER_RELATIONSHIP_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/header";
+const FOOTER_RELATIONSHIP_TYPE = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer";
+const COMMENT_FILE_BASENAMES = [
+	"comments.xml",
+	"commentsExtended.xml",
+	"commentsIds.xml",
+	"commentsExtensible.xml"
+];
+const DEFAULT_XML_DECLARATION = Object.freeze({ attributes: Object.freeze({
+	version: "1.0",
+	encoding: "UTF-8",
+	standalone: "yes"
+}) });
+const COMMENT_RELATIONSHIP_TYPES = new Set([
+	"http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments",
+	"http://schemas.microsoft.com/office/2011/relationships/commentsExtended",
+	"http://schemas.microsoft.com/office/2016/09/relationships/commentsIds",
+	"http://schemas.microsoft.com/office/2018/08/relationships/commentsExtensible"
+]);
+export { pointsToTwips as A, twipsToPt as B, inchesToTwips as C, objToPolygon as D, normalizeHexColor as E, rgbToHex as F, rotToDegrees as I, twipsToInches as L, ptToTwips as M, resolveOpcTargetPath as N, pixelsToEmu as O, resolveShadingFillColor as P, twipsToLines as R, inchesToPixels as S, linesToTwips as T, getContentTypesFromXml as _, HEADER_RELATIONSHIP_TYPE as a, halfPointToPixels as b, computeCrc32Hex as c, degreesToRot as d, deobfuscateFont as f, getArrayBufferFromUrl as g, emuToPixels as h, FOOTER_RELATIONSHIP_TYPE as i, polygonToObj as j, pixelsToTwips as k, convertSizeToCSS as l, eighthPointsToPixels as m, COMMENT_RELATIONSHIP_TYPES as n, HYPERLINK_RELATIONSHIP_TYPE as o, detectImageType as p, DEFAULT_XML_DECLARATION as r, base64ToUint8Array as s, COMMENT_FILE_BASENAMES as t, dataUriToArrayBuffer as u, getDocxHighlightKeywordFromHex as v, isValidHexColor as w, halfPointToPoints as x, getHexColorFromDocxSystem as y, twipsToPixels as z };

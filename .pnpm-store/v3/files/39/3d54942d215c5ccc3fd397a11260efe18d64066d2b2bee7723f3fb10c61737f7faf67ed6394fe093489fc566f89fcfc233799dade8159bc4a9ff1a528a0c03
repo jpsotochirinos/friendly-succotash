@@ -1,0 +1,24 @@
+import { Editor } from '../core/Editor.js';
+/** Result returned by the mutation function passed to `executeOutOfBandMutation`. */
+export interface OutOfBandMutationResult<T> {
+    /** Whether the XML was actually changed (false = no-op, skip lifecycle side effects). */
+    changed: boolean;
+    /** The operation-specific payload (e.g., receipt data). */
+    payload: T;
+}
+/** Options passed to `executeOutOfBandMutation`. */
+export interface OutOfBandMutationOptions {
+    dryRun: boolean;
+    expectedRevision: string | undefined;
+}
+/**
+ * Executes a non-PM mutation with correct lifecycle ordering.
+ *
+ * @param editor      - The editor instance providing converter access.
+ * @param mutateFn    - The mutation function. Called with `dryRun` so it can
+ *                      skip writes when previewing. Must return `changed` flag.
+ * @param options     - dryRun and expectedRevision.
+ * @returns           - The payload from `mutateFn`.
+ */
+export declare function executeOutOfBandMutation<T>(editor: Editor, mutateFn: (dryRun: boolean) => OutOfBandMutationResult<T>, options: OutOfBandMutationOptions): T;
+//# sourceMappingURL=out-of-band-mutation.d.ts.map

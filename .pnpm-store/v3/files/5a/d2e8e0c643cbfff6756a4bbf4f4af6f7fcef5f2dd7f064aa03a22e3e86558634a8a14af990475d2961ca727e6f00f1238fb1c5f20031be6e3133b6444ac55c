@@ -1,0 +1,7 @@
+function ok() {}
+Object.defineProperty(exports, "ok", {
+	enumerable: true,
+	get: function() {
+		return ok;
+	}
+});

@@ -1,0 +1,8 @@
+import { Editor } from '../../core/Editor.js';
+import { CrossRefListInput, CrossRefGetInput, CrossRefInsertInput, CrossRefRebuildInput, CrossRefRemoveInput, CrossRefInfo, CrossRefMutationResult, MutationOptions } from '@superdoc/document-api';
+export declare function crossRefsListWrapper(editor: Editor, query?: CrossRefListInput): import('@superdoc/document-api').DiscoveryResult<import('@superdoc/document-api').DiscoveryItem<import('@superdoc/document-api').CrossRefDomain>, undefined>;
+export declare function crossRefsGetWrapper(editor: Editor, input: CrossRefGetInput): CrossRefInfo;
+export declare function crossRefsInsertWrapper(editor: Editor, input: CrossRefInsertInput, options?: MutationOptions): CrossRefMutationResult;
+export declare function crossRefsRebuildWrapper(editor: Editor, input: CrossRefRebuildInput, options?: MutationOptions): CrossRefMutationResult;
+export declare function crossRefsRemoveWrapper(editor: Editor, input: CrossRefRemoveInput, options?: MutationOptions): CrossRefMutationResult;
+//# sourceMappingURL=crossref-wrappers.d.ts.map

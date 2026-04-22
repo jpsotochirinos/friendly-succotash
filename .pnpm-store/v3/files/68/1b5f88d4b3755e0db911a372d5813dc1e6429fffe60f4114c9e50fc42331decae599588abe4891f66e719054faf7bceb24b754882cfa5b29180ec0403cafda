@@ -1,0 +1,9 @@
+/**
+ * Get menu sections based on context (trigger, selection, node, etc)
+ * @param {Object} context - { editor, selectedText, pos, node, event, trigger }
+ * @param {Array} customItems - Optional custom menu items from configuration
+ * @param {boolean} includeDefaultItems - Whether to include default items
+ * @returns {Array} Array of menu sections
+ */
+export function getItems(context: Object, customItems?: any[], includeDefaultItems?: boolean, ...args: any[]): any[];
+//# sourceMappingURL=menuItems.d.ts.map

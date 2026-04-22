@@ -1,0 +1,14 @@
+import { ProofingAnnotation } from '../proofing/types.js';
+/**
+ * Thin DOM-surface wrapper around the editor-owned proofing decoration pass.
+ *
+ * Proofing marks are still a post-paint compatibility layer today, but this
+ * wrapper keeps the mutation boundary inside super-editor and explicit.
+ */
+export declare class PresentationProofingDecorator {
+    #private;
+    setContainer(container: HTMLElement | null): void;
+    applyAnnotations(annotations: ProofingAnnotation[] | null | undefined): boolean;
+    clear(): boolean;
+}
+//# sourceMappingURL=PresentationProofingDecorator.d.ts.map

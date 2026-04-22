@@ -1,0 +1,12 @@
+import { PartId } from '../types.js';
+/** Mutation source tag for local header/footer sub-editor edits. */
+export declare const SOURCE_HEADER_FOOTER_LOCAL = "header-footer-sync:local";
+export declare function isHeaderPartId(partId: string): boolean;
+export declare function isFooterPartId(partId: string): boolean;
+export declare function isHeaderFooterPartId(partId: string): boolean;
+/**
+ * Create and register a descriptor for a header/footer part.
+ * No-op if the descriptor already exists for this partId.
+ */
+export declare function ensureHeaderFooterDescriptor(partId: PartId, sectionId: string): void;
+//# sourceMappingURL=header-footer-part-descriptor.d.ts.map

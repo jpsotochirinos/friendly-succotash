@@ -1,0 +1,28 @@
+/**
+ * Extracts runProperties from the cursor context.
+ * When the cursor is directly inside a paragraph (not inside a run), it
+ * looks at the node just before the cursor. For empty paragraphs, it falls
+ * back to `paragraphProperties.runProperties`.
+ *
+ * @param {import('prosemirror-model').ResolvedPos} $from
+ * @returns {Record<string, unknown> | null}
+ */
+export function getRunPropertiesAtCursor($from: import('prosemirror-model').ResolvedPos): Record<string, unknown> | null;
+/**
+ * Resolves the inline formatting source to carry onto a newly split paragraph.
+ * Explicit stored marks take precedence over inherited run-node formatting.
+ *
+ * @param {import('prosemirror-state').EditorState} state
+ * @param {import('prosemirror-model').ResolvedPos} $from
+ * @returns {Record<string, unknown> | null}
+ */
+export function getSplitRunProperties(state: import('prosemirror-state').EditorState, $from: import('prosemirror-model').ResolvedPos): Record<string, unknown> | null;
+/**
+ * Sync paragraph-level runProperties for a newly split paragraph.
+ *
+ * @param {Record<string, any>} attrs
+ * @param {Record<string, unknown> | null} runProperties
+ * @returns {Record<string, any>}
+ */
+export function syncSplitParagraphRunProperties(attrs: Record<string, any>, runProperties: Record<string, unknown> | null): Record<string, any>;
+//# sourceMappingURL=splitParagraphRunProperties.d.ts.map

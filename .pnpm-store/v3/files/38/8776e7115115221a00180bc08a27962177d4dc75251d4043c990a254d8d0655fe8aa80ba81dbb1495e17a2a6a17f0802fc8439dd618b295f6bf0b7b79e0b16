@@ -1,0 +1,159 @@
+import { Slice } from 'prosemirror-model';
+import { Plugin } from 'prosemirror-state';
+import { DecorationSet } from 'prosemirror-view';
+export function __searchTextContent(node: any): any;
+/**
+ * Options for setSearchState function.
+ */
+export type SetSearchStateOptions = {
+    /**
+     * - Whether to apply CSS classes for visual highlighting of search matches.
+     * When true, matches are decorated with 'ProseMirror-search-match' or 'ProseMirror-active-search-match' classes.
+     * When false, matches are tracked in decorations without visual styling classes.
+     */
+    highlight?: boolean | undefined;
+};
+export class SearchQuery {
+    /**
+      Create a query object.
+      */
+    constructor(config: any);
+    search: any;
+    caseSensitive: boolean;
+    literal: boolean;
+    regexp: boolean;
+    replace: any;
+    valid: boolean;
+    wholeWord: boolean;
+    filter: any;
+    impl: {
+        findNext(): null;
+        findPrev(): null;
+    } | RegExpQuery | StringQuery;
+    /**
+      Compare this query to another query.
+      */
+    eq(other: any): boolean;
+    /**
+      Find the next occurrence of this query in the given range.
+      */
+    findNext(state: any, from?: number, to?: any): any;
+    /**
+      Find the previous occurrence of this query in the given range.
+      Note that, if `to` is given, it should be _less_ than `from`.
+      */
+    findPrev(state: any, from?: any, to?: number): any;
+    /**
+      @internal
+      */
+    checkResult(state: any, result: any): any;
+    /**
+      @internal
+      */
+    unquote(string: any): any;
+    /**
+      Get the ranges that should be replaced for this result. This can
+      return multiple ranges when `this.replace` contains
+      `$1`/`$&`-style placeholders, in which case the preserved
+      content is skipped by the replacements.
+      
+      Ranges are sorted by position, and `from`/`to` positions all
+      refer to positions in `state.doc`. When applying these, you'll
+      want to either apply them from back to front, or map these
+      positions through your transaction's current mapping.
+      */
+    getReplacements(state: any, result: any): {
+        from: any;
+        to: any;
+        insert: Slice;
+    }[];
+}
+export function findNext(state: any, dispatch: any): boolean;
+export function findNextNoWrap(state: any, dispatch: any): boolean;
+export function findPrev(state: any, dispatch: any): boolean;
+export function findPrevNoWrap(state: any, dispatch: any): boolean;
+/**
+Access the decoration set holding the currently highlighted search
+matches in the document.
+*/
+export function getMatchHighlights(state: any): any;
+/**
+Get the current active search query and searched range. Will
+return `undefined` is the search plugin isn't active.
+*/
+export function getSearchState(state: any): any;
+/**
+Replace all instances of the search query.
+*/
+export function replaceAll(state: any, dispatch: any): boolean;
+export function replaceCurrent(state: any, dispatch: any): boolean;
+export function replaceNext(state: any, dispatch: any): boolean;
+export function replaceNextNoWrap(state: any, dispatch: any): boolean;
+/**
+Returns a plugin that stores a current search query and searched
+range, and highlights matches of the query.
+*/
+export function search(options?: {}): Plugin<SearchState>;
+/**
+ * Options for setSearchState function.
+ * @typedef {Object} SetSearchStateOptions
+ * @property {boolean} [highlight=true] - Whether to apply CSS classes for visual highlighting of search matches.
+ *   When true, matches are decorated with 'ProseMirror-search-match' or 'ProseMirror-active-search-match' classes.
+ *   When false, matches are tracked in decorations without visual styling classes.
+ */
+/**
+ * Add metadata to a transaction that updates the active search query
+ * and searched range, when dispatched.
+ *
+ * @param {Transaction} tr - The transaction to add metadata to
+ * @param {SearchQuery} query - The search query to set
+ * @param {{from: number, to: number}|null} [range=null] - Optional range to restrict search, or null for entire document
+ * @param {SetSearchStateOptions} [options={}] - Additional options for search behavior
+ * @returns {Transaction} The transaction with search metadata added
+ * @throws {TypeError} If options is not null/undefined and not an object
+ */
+export function setSearchState(tr: Transaction, query: SearchQuery, range?: {
+    from: number;
+    to: number;
+} | null, options?: SetSearchStateOptions): Transaction;
+declare class RegExpQuery {
+    constructor(query: any);
+    query: any;
+    regexp: RegExp;
+    findNext(state: any, from: any, to: any): any;
+    findPrev(state: any, from: any, to: any): any;
+}
+declare class StringQuery {
+    constructor(query: any);
+    query: any;
+    string: any;
+    findNext(state: any, from: any, to: any): any;
+    findPrev(state: any, from: any, to: any): any;
+}
+/**
+ * Represents the state of the search plugin, including the active query,
+ * search range, highlight setting, and decoration set for rendering matches.
+ */
+declare class SearchState {
+    /**
+     * Create a new SearchState instance.
+     *
+     * @param {SearchQuery} query - The search query to execute
+     * @param {{from: number, to: number}|null} range - Optional range to restrict search to, or null for entire document
+     * @param {boolean} highlight - Whether to apply CSS classes for visual highlighting of matches
+     * @param {DecorationSet} deco - The decoration set containing match highlights
+     */
+    constructor(query: SearchQuery, range: {
+        from: number;
+        to: number;
+    } | null, highlight: boolean, deco: DecorationSet);
+    query: SearchQuery;
+    range: {
+        from: number;
+        to: number;
+    } | null;
+    highlight: boolean;
+    deco: DecorationSet;
+}
+export {};
+//# sourceMappingURL=prosemirror-search-patched.d.ts.map

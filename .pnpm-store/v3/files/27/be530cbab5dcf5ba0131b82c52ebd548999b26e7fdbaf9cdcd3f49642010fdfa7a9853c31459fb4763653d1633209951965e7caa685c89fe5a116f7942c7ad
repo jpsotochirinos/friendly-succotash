@@ -1,0 +1,88 @@
+import { Node as ProseMirrorNode } from 'prosemirror-model';
+import { EditorState } from 'prosemirror-state';
+/**
+ * State tracking for rapid multi-click detection (double-click, triple-click, etc.).
+ * @property clickCount - The current sequential click count
+ * @property lastClickTime - Timestamp of the last registered click (in milliseconds)
+ * @property lastClickPosition - Pixel coordinates of the last registered click
+ */
+export type MultiClickState = {
+    clickCount: number;
+    lastClickTime: number;
+    lastClickPosition: {
+        x: number;
+        y: number;
+    };
+};
+/**
+ * Registers a pointer click event and determines the current click count based on
+ * time and distance thresholds.
+ *
+ * This function implements multi-click detection by tracking whether successive clicks
+ * occur within a specified time window and distance threshold. This enables features
+ * like double-click to select word and triple-click to select paragraph.
+ *
+ * @param event - The pointer event containing timestamp and position
+ * @param previous - The previous multi-click state
+ * @param options - Configuration for click detection
+ * @param options.timeThresholdMs - Maximum time between clicks to count as rapid (typically 500ms)
+ * @param options.distanceThresholdPx - Maximum pixel distance between clicks (typically 5px)
+ * @param options.maxClickCount - Maximum click count to track (e.g., 3 for triple-click)
+ * @returns Updated multi-click state with incremented count if thresholds are met, or reset to 1
+ *
+ * @remarks
+ * Click count increments only if both time and distance thresholds are satisfied.
+ * If either threshold is exceeded, the count resets to 1 (single click).
+ * The count is capped at maxClickCount to prevent unbounded increment.
+ */
+export declare function registerPointerClick(event: Pick<MouseEvent, 'timeStamp' | 'clientX' | 'clientY'>, previous: MultiClickState, options: {
+    timeThresholdMs: number;
+    distanceThresholdPx: number;
+    maxClickCount: number;
+}): MultiClickState;
+/**
+ * Finds the first valid text position in a ProseMirror document.
+ *
+ * @param doc - The ProseMirror document node to search
+ * @returns The position of the first textblock, or 1 as a fallback
+ */
+export declare function getFirstTextPosition(doc: ProseMirrorNode | null): number;
+/**
+ * Computes the selection range for a word at a given position.
+ *
+ * This function expands the selection to include the entire word at the cursor position,
+ * respecting word boundaries defined by the Unicode word character regex. It's used
+ * to implement double-click word selection.
+ *
+ * @param state - The current ProseMirror editor state
+ * @param pos - The position to expand from
+ * @returns Selection range from word start to word end, or null if no word found or position invalid
+ *
+ * @remarks
+ * - Word boundaries are determined by the isWordCharacter function, which handles Unicode properly
+ * - The function stops at paragraph boundaries to prevent cross-paragraph selection
+ * - Returns null if the position is on whitespace or punctuation between words
+ */
+export declare function computeWordSelectionRangeAt(state: EditorState, pos: number): {
+    from: number;
+    to: number;
+} | null;
+/**
+ * Computes the selection range for an entire paragraph at a given position.
+ *
+ * This function expands the selection to include the entire textblock (paragraph)
+ * containing the cursor position. It's used to implement triple-click paragraph selection.
+ *
+ * @param state - The current ProseMirror editor state
+ * @param pos - The position within the paragraph to select
+ * @returns Selection range from paragraph start to end, or null if position invalid
+ *
+ * @remarks
+ * Paragraph boundaries are determined by the ProseMirror document structure,
+ * specifically the nearest textblock node containing the position.
+ */
+export declare function computeParagraphSelectionRangeAt(state: EditorState, pos: number): {
+    from: number;
+    to: number;
+} | null;
+//# sourceMappingURL=ClickSelectionUtilities.d.ts.map

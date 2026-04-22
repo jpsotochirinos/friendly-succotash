@@ -1,0 +1,23 @@
+export function parseCellMargins(element: HTMLElement): CellMargins | null;
+/**
+ * Cell margins configuration in pixels.
+ */
+export type CellMargins = {
+    /**
+     * - Top margin in pixels
+     */
+    top?: number | undefined;
+    /**
+     * - Right margin in pixels
+     */
+    right?: number | undefined;
+    /**
+     * - Bottom margin in pixels
+     */
+    bottom?: number | undefined;
+    /**
+     * - Left margin in pixels
+     */
+    left?: number | undefined;
+};
+//# sourceMappingURL=parseCellMargins.d.ts.map

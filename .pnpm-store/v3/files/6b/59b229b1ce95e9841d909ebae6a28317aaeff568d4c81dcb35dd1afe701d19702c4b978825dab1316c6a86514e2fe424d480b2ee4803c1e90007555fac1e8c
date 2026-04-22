@@ -1,0 +1,17 @@
+import { SectionAddress, SectionMutationResult, MutationOptions } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+import { SectionProjection } from './sections-resolver.js';
+import { XmlElement } from './sections-xml.js';
+declare function toSectionFailure(code: 'NO_OP' | 'INVALID_TARGET' | 'CAPABILITY_UNAVAILABLE', message: string): SectionMutationResult;
+declare function toSectionSuccess(section: SectionAddress): SectionMutationResult;
+export declare function applySectPrToProjection(editor: Editor, projection: SectionProjection, sectPr: XmlElement): void;
+/**
+ * Generic sectPr mutation wrapper.
+ * Handles: tracked mode rejection, revision check, dry-run, NO_OP detection,
+ * applying changes to editor state, clearing index cache.
+ */
+export declare function sectionMutationBySectPr<TInput extends {
+    target: SectionAddress;
+}>(editor: Editor, input: TInput, options: MutationOptions | undefined, operationName: string, mutate: (sectPr: XmlElement, projection: SectionProjection, sections: SectionProjection[], dryRun: boolean) => SectionMutationResult | void): SectionMutationResult;
+export { toSectionFailure, toSectionSuccess };
+//# sourceMappingURL=section-mutation-wrapper.d.ts.map

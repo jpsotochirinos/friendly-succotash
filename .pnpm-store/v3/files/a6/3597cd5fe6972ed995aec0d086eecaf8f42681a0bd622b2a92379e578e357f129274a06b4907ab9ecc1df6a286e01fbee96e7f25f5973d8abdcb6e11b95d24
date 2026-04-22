@@ -1,0 +1,38 @@
+/**
+ * Walk a ProseMirror Slice JSON object and collect `editor.storage.image.media`
+ * entries for every image `attrs.src` in the slice. Needed for SuperDoc→SuperDoc
+ * paste: slice JSON only carries paths like `word/media/…`, not the bytes/URLs.
+ *
+ * @param {string} sliceJsonString
+ * @param {object} editor
+ * @returns {string} JSON string or '' if nothing to ship
+ */
+export function collectReferencedImageMediaForClipboard(sliceJsonString: string, editor: object): string;
+/**
+ * Read `SUPERDOC_MEDIA_MIME` from the clipboard, merge into `editor.storage.image.media` (and Yjs),
+ * and optionally rewrite `sliceJson` so `image` / `shapeGroup` src keys stay in sync.
+ *
+ * DOCX-style paths (`word/media/image1.png`) collide across documents; if the target already has
+ * different data at a path, pasted bytes go under a new `word/media/sd-paste-…` key instead.
+ *
+ * @param {object} editor
+ * @param {DataTransfer | null | undefined} clipboardData
+ * @param {string | null} [sliceJson] SuperDoc slice JSON string, if any
+ * @returns {string | null} slice JSON to paste (updated when paths were remapped), or `sliceJson` unchanged
+ */
+export function applySuperdocClipboardMedia(editor: object, clipboardData: DataTransfer | null | undefined, sliceJson?: string | null): string | null;
+export function bodySectPrShouldEmbed(bodySectPr: any): boolean;
+/** Embeds PM slice (base64 in element text) and optional body sectPr for multi-column paste. */
+export function embedSliceInHtml(html: any, sliceJson: any, bodySectPrJson?: string): any;
+/**
+ * Reads slice JSON from HTML produced by {@link embedSliceInHtml} (hidden div + base64 text).
+ */
+export function extractSliceFromHtml(html: any): string | null;
+export function stripSliceFromHtml(html: any): any;
+export function extractBodySectPrFromHtml(html: any): any;
+export const SUPERDOC_SLICE_MIME: "application/x-superdoc-slice";
+/** JSON map of package-relative image path → display URL (data URL, https, or blob URL). */
+export const SUPERDOC_MEDIA_MIME: "application/x-superdoc-media";
+export const SUPERDOC_SLICE_ATTR: "data-superdoc-slice";
+export const SUPERDOC_BODY_SECT_PR_ATTR: "data-sd-body-sect-pr";
+//# sourceMappingURL=superdocClipboardSlice.d.ts.map

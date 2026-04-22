@@ -1,0 +1,14 @@
+/**
+ * @typedef {import('../../../types.js').Editor} Editor
+ * @typedef {import('../../../types.js').ValidatorLogger} ValidatorLogger
+ */
+export function createNumberingValidator({ editor, logger }: {
+    editor: any;
+    logger: any;
+}): () => {
+    results: string[];
+    modified: boolean;
+};
+export type Editor = import('../../../types.js').Editor;
+export type ValidatorLogger = import('../../../types.js').ValidatorLogger;
+//# sourceMappingURL=numbering-validator.d.ts.map

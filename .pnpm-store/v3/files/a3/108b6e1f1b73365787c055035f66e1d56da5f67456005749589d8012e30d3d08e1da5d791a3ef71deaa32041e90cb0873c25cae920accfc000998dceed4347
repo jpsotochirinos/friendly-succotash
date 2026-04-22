@@ -1,0 +1,15 @@
+declare const _default: import('vue').DefineComponent<{}, {
+    $emit: (event: "resize-start" | "resize-move" | "resize-end" | "resize-success" | "resize-error", ...args: any[]) => void;
+    editor: Record<string, any>;
+    visible: boolean;
+    tableElement: Record<string, any>;
+    $props: {
+        readonly editor?: Record<string, any> | undefined;
+        readonly visible?: boolean | undefined;
+        readonly tableElement?: Record<string, any> | undefined;
+    };
+}, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, string, import('vue').PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import('vue').ComponentProvideOptions, true, {
+    overlayEl: HTMLDivElement;
+}, any>;
+export default _default;
+//# sourceMappingURL=TableResizeOverlay.vue.d.ts.map

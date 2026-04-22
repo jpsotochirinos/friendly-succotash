@@ -1,0 +1,50 @@
+import { Node as ProseMirrorNode } from 'prosemirror-model';
+import { TocSwitchConfig } from '@superdoc/document-api';
+export interface TocSource {
+    /** Display text for this entry. */
+    text: string;
+    /** TOC level (1-based). */
+    level: number;
+    /**
+     * sdBlockId of the source paragraph.
+     * For headings: the heading paragraph's sdBlockId.
+     * For TC fields: the containing paragraph's sdBlockId.
+     */
+    sdBlockId: string;
+    /** Source type for diagnostic purposes. */
+    kind: 'heading' | 'appliedOutline' | 'tcField';
+    /** Whether to omit the page number for this specific entry (TC \n switch). */
+    omitPageNumber?: boolean;
+}
+/**
+ * Collects all document nodes that qualify as TOC entry sources.
+ *
+ * Sources are collected based on the instruction's active switches:
+ * - \o (outlineLevels): heading nodes whose level falls within the range
+ * - \u (useAppliedOutlineLevel): paragraph nodes with explicit outlineLevel
+ * - \f (tcFieldIdentifier): TC field nodes with matching identifier
+ * - \l (tcFieldLevels): TC field nodes within the level range
+ *
+ * All sources are merged into a single list sorted by document position.
+ * No deduplication — TC fields and headings at the same position are both included.
+ */
+export declare function collectTocSources(doc: ProseMirrorNode, config: TocSwitchConfig): TocSource[];
+/** @deprecated Use `collectTocSources` instead. Kept for backward compatibility. */
+export declare const collectHeadingSources: typeof collectTocSources;
+export interface EntryParagraphJson {
+    type: 'paragraph';
+    attrs: Record<string, unknown>;
+    content: Array<Record<string, unknown>>;
+}
+/**
+ * Builds ProseMirror-compatible paragraph JSON nodes for TOC entries.
+ *
+ * Each entry gets:
+ * - Paragraph style: TOC{level}
+ * - tocSourceId paragraph attribute (source heading/TC field's sdBlockId)
+ * - Link mark with anchor pointing to a `_Toc`-prefixed bookmark name (when \h is set)
+ * - Page number placeholder "0" with tocPageNumber mark
+ * - Separator: custom (\p switch) or default tab
+ */
+export declare function buildTocEntryParagraphs(sources: TocSource[], config: TocSwitchConfig): EntryParagraphJson[];
+//# sourceMappingURL=toc-entry-builder.d.ts.map

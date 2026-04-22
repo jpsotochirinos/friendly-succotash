@@ -1,0 +1,3 @@
+import { default as Konva } from 'konva';
+export { Konva as WhiteboardRenderer };
+//# sourceMappingURL=WhiteboardRenderer.d.ts.map

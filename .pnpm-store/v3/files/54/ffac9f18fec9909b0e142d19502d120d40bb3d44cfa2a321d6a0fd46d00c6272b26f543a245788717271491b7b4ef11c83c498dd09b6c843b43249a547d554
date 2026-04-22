@@ -1,0 +1,9 @@
+/**
+ * Computes the Levenshtein edit distance between two strings.
+ *
+ * @param a First string.
+ * @param b Second string.
+ * @returns Minimum number of edits required to transform {@link a} into {@link b}.
+ */
+export declare function levenshteinDistance(a: string, b: string): number;
+//# sourceMappingURL=similarity.d.ts.map

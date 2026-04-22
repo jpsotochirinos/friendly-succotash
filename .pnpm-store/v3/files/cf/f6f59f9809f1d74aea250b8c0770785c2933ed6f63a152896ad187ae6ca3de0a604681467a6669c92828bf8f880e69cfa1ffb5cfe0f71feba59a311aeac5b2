@@ -1,0 +1,11 @@
+/**
+ * @param {Object} params - The parameters for translation.
+ * @returns {Object} The XML representation.
+ */
+export function translateContentBlock(params: Object): Object;
+/**
+ * @param {Object} params - The parameters for translation.
+ * @returns {Object} The XML representation.
+ */
+export function translateVRectContentBlock(params: Object): Object;
+//# sourceMappingURL=translate-content-block.d.ts.map

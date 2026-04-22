@@ -1,0 +1,112 @@
+/**
+ * Encodes image XML into Editor node.
+ *
+ * Parses WordprocessingML drawing elements (wp:anchor or wp:inline) and converts them
+ * into editor-compatible image, vectorShape, or shapeGroup nodes.
+ *
+ * @param {Object} node - The wp:anchor or wp:inline XML node
+ * @param {{ docx: Object, filename?: string }} params - Parameters containing the document context and relationships
+ * @param {boolean} isAnchor - Whether the image is anchored (true) or inline (false)
+ * @returns {{ type: string, attrs: Object }|null} An editor node (image, vectorShape, shapeGroup, or contentBlock) or null if parsing fails
+ */
+export function handleImageNode(node: Object, params: {
+    docx: Object;
+    filename?: string;
+}, isAnchor: boolean): {
+    type: string;
+    attrs: Object;
+} | null;
+/**
+ * Extracts vector shape data from OOXML drawing elements.
+ *
+ * Parses shape geometry, transformations, and styling information from WordprocessingML shape elements.
+ * This function handles the critical distinction between two different dimension specifications in OOXML:
+ *
+ * 1. **wp:extent** (anchor extent): The final displayed size of the shape in the document.
+ *    This is the authoritative size that Word displays the shape at, accounting for any
+ *    resizing or scaling applied by the user.
+ *
+ * 2. **a:xfrm/a:ext** (intrinsic dimensions): The shape's internal coordinate space dimensions.
+ *    These may differ from wp:extent when a shape has been resized non-uniformly.
+ *    For example, a picture marker shape may have intrinsic dimensions of 571500x161926 EMU (rectangular)
+ *    but be displayed at 150x150 pixels (square) as specified by wp:extent.
+ *
+ * **Why wp:extent is required:**
+ * Using a:xfrm/a:ext for dimensions would cause visual distortion because it doesn't account for
+ * how Word actually displays the shape. The wp:extent is the only reliable source for the final
+ * display dimensions. When combined with `preserveAspectRatio="none"` in SVG rendering, this
+ * allows us to match Word's exact rendering behavior for non-uniformly scaled shapes.
+ *
+ * @param {Object} options - Configuration object
+ * @param {{ nodes: Array<Object> }} options.params - Translator params containing the drawing node context
+ * @param {Object} options.node - The anchor/inline node (wp:anchor or wp:inline) containing wp:extent
+ * @param {Object} options.graphicData - The a:graphicData node containing wps:wsp shape elements
+ * @param {{ width?: number, height?: number }} options.size - Shape size from wp:extent (required, already converted to pixels).
+ *                                                              This represents the final displayed dimensions.
+ * @param {{ horizontal?: number, left?: number, top?: number }} options.marginOffset - Positioning offsets for anchored shapes (in pixels)
+ * @param {{ hRelativeFrom?: string, vRelativeFrom?: string, alignH?: string, alignV?: string }|null} options.anchorData - Anchor positioning data
+ * @param {{ type: string, attrs: Object }} options.wrap - Text wrapping configuration
+ * @param {boolean} options.isAnchor - Whether the shape is anchored (true) or inline (false)
+ *
+ * @returns {{ type: 'vectorShape', attrs: Object }|null} A vectorShape node with extracted attributes, or null if parsing fails
+ *
+ * @example
+ * // Extract a vector shape from OOXML
+ * const result = getVectorShape({
+ *   params: { nodes: [drawingNode] },
+ *   node: anchorNode,
+ *   graphicData: graphicDataNode,
+ *   size: { width: 150, height: 150 }, // From wp:extent, already in pixels
+ *   marginOffset: { horizontal: 10, top: 20 },
+ *   anchorData: { hRelativeFrom: 'column', vRelativeFrom: 'paragraph' },
+ *   wrap: { type: 'Square', attrs: {} },
+ *   isAnchor: true
+ * });
+ * // Returns:
+ * // {
+ * //   type: 'vectorShape',
+ * //   attrs: {
+ * //     kind: 'ellipse',
+ * //     width: 150,
+ * //     height: 150,
+ * //     rotation: 0,
+ * //     flipH: false,
+ * //     flipV: false,
+ * //     fillColor: '#70ad47',
+ * //     strokeColor: '#000000',
+ * //     strokeWidth: 1,
+ * //     ...
+ * //   }
+ * // }
+ */
+export function getVectorShape({ params, node, graphicData, size, marginOffset, anchorData, wrap, isAnchor, customGeometry, }: {
+    params: {
+        nodes: Array<Object>;
+    };
+    node: Object;
+    graphicData: Object;
+    size: {
+        width?: number;
+        height?: number;
+    };
+    marginOffset: {
+        horizontal?: number;
+        left?: number;
+        top?: number;
+    };
+    anchorData: {
+        hRelativeFrom?: string;
+        vRelativeFrom?: string;
+        alignH?: string;
+        alignV?: string;
+    } | null;
+    wrap: {
+        type: string;
+        attrs: Object;
+    };
+    isAnchor: boolean;
+}): {
+    type: "vectorShape";
+    attrs: Object;
+} | null;
+//# sourceMappingURL=encode-image-node-helpers.d.ts.map

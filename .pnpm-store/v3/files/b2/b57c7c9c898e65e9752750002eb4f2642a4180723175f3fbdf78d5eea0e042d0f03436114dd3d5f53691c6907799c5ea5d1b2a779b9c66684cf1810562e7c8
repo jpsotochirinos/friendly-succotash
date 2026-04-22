@@ -1,0 +1,28 @@
+import { Node as PMNode } from 'prosemirror-model';
+import { NumberingProperties, StylesDocumentProperties } from '@superdoc/style-engine/ooxml';
+import { CommentInput } from '../algorithm/comment-diffing';
+import { HeaderFooterState } from '../algorithm/header-footer-diffing';
+import { PartsState } from '../algorithm/parts-diffing';
+/** The canonical diffable state of one document. */
+export interface CanonicalDiffableState {
+    body: Record<string, unknown>;
+    comments: Record<string, unknown>[];
+    styles: Record<string, unknown> | null;
+    numbering: Record<string, unknown> | null;
+    headerFooters: HeaderFooterState | null;
+    partsState: PartsState | null;
+}
+/**
+ * Builds the canonical diffable state from raw editor data.
+ *
+ * This is the single source of truth for what parts of a document are
+ * considered during fingerprinting and diffing.
+ */
+export declare function buildCanonicalDiffableState(doc: PMNode, comments: CommentInput[], styles: StylesDocumentProperties | null | undefined, numbering: NumberingProperties | null | undefined, headerFooters: HeaderFooterState | null | undefined, partsState: PartsState | null | undefined): CanonicalDiffableState;
+/**
+ * Produces a stable JSON string from a canonical diffable state.
+ * Key ordering is recursively normalized so that equivalent states
+ * always produce identical strings regardless of insertion order.
+ */
+export declare function stableStringify(state: CanonicalDiffableState): string;
+//# sourceMappingURL=canonicalize.d.ts.map

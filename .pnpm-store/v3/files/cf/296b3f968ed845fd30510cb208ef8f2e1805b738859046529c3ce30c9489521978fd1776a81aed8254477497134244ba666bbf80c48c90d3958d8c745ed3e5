@@ -1,0 +1,2 @@
+export * from './headers-translator.js';
+//# sourceMappingURL=index.d.ts.map

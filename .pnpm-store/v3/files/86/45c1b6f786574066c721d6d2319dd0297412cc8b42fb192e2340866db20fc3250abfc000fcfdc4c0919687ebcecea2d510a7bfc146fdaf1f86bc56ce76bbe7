@@ -1,0 +1,8 @@
+import { Editor } from '../Editor.js';
+/** Mark a part's derived cache as stale after an afterCommit failure. */
+export declare function markPartCacheStale(editor: Editor, partId: string): void;
+/** Check whether a part's derived cache is stale. */
+export declare function isPartCacheStale(editor: Editor, partId: string): boolean;
+/** Clear the stale flag after a successful cache rebuild or afterCommit. */
+export declare function clearPartCacheStale(editor: Editor, partId: string): void;
+//# sourceMappingURL=cache-staleness.d.ts.map

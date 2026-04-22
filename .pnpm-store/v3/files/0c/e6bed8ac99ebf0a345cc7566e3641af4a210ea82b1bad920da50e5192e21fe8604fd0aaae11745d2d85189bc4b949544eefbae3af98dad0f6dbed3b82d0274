@@ -1,0 +1,2 @@
+export function createTableBorders(borderSpec?: import('../table.js').TableBorderSpec): import('../table.js').TableBorders;
+//# sourceMappingURL=createTableBorders.d.ts.map

@@ -1,0 +1,17 @@
+export function createPlaceholderCell(gridWidth: number, reason: string): {
+    type: "tableCell";
+    attrs: Object;
+    content: any[];
+};
+export function advancePastRowSpans(pendingRowSpans: number[], startIndex: number, totalColumns: number): number;
+export function fillPlaceholderColumns({ content, pendingRowSpans, currentIndex, targetIndex, totalColumns, gridColumnWidths, reason, }: {
+    content: any[];
+    pendingRowSpans: number[];
+    currentIndex: number;
+    targetIndex: number;
+    totalColumns: number;
+    gridColumnWidths?: number[] | undefined;
+    reason: string;
+}): number;
+export function isPlaceholderCell(cell: import('../../../node-translator/index.js').SCEncoderResult | undefined): boolean;
+//# sourceMappingURL=tr-helpers.d.ts.map

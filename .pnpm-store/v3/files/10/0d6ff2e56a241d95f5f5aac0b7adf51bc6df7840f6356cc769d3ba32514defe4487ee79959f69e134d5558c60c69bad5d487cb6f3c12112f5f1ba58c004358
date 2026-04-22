@@ -1,0 +1,2 @@
+export * from './em-translator.js';
+//# sourceMappingURL=index.d.ts.map

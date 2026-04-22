@@ -1,0 +1,21 @@
+/**
+ * Toggle header-row status on one or more table rows.
+ *
+ * This command sets **both** the cell node type (`tableHeader` ↔ `tableCell`)
+ * and the OOXML repeat-header flag (`tableRowProperties.repeatHeader`) in a
+ * single transaction so that undo reverts both changes atomically.
+ *
+ * ### Three distinct header concepts (do not conflate):
+ * - **Repeat Header Row** — `tableRowProperties.repeatHeader` (OOXML `w:tblHeader`).
+ *   Controls whether the row repeats on continuation pages during pagination.
+ * - **First Row Style Option** — `tableProperties.tblLook.firstRow`.
+ *   Controls conditional formatting from the table style. NOT set by this command.
+ * - **Header Cell (`<th>`)** — `tableHeader` node type. HTML semantics only;
+ *   does not imply repeat-header on its own.
+ *
+ * @param {import('prosemirror-state').EditorState} state
+ * @param {((tr: import('prosemirror-state').Transaction) => void)} [dispatch]
+ * @returns {boolean} `true` if the command can (or did) execute, `false` otherwise.
+ */
+export function toggleHeaderRow(state: import('prosemirror-state').EditorState, dispatch?: ((tr: import('prosemirror-state').Transaction) => void)): boolean;
+//# sourceMappingURL=toggleHeaderRow.d.ts.map

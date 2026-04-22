@@ -1,0 +1,2 @@
+export function isInTable(state: Object): boolean;
+//# sourceMappingURL=isInTable.d.ts.map

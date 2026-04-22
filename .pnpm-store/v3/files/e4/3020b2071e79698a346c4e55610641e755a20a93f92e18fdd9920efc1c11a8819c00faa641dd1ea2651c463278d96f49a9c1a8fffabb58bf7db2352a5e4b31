@@ -1,0 +1,37 @@
+import { Editor } from '../../core/Editor.js';
+import { FootnoteListInput, FootnotesListResult, FootnoteGetInput, FootnoteInfo, FootnoteInsertInput, FootnoteUpdateInput, FootnoteRemoveInput, FootnoteMutationResult, FootnoteConfigureInput, FootnoteConfigResult, MutationOptions } from '@superdoc/document-api';
+export declare function footnotesListWrapper(editor: Editor, query?: FootnoteListInput): FootnotesListResult;
+export declare function footnotesGetWrapper(editor: Editor, input: FootnoteGetInput): FootnoteInfo;
+/**
+ * Insert a new footnote/endnote.
+ *
+ * Uses `compoundMutation` because it touches both:
+ * 1. The OOXML notes part (add <w:footnote> element)
+ * 2. The PM document (insert footnoteReference/endnoteReference node)
+ */
+export declare function footnotesInsertWrapper(editor: Editor, input: FootnoteInsertInput, options?: MutationOptions): FootnoteMutationResult;
+/**
+ * Update footnote/endnote content.
+ *
+ * Uses `mutatePart` directly — only the OOXML notes part is modified.
+ * The derived cache is rebuilt by the `afterCommit` hook.
+ */
+export declare function footnotesUpdateWrapper(editor: Editor, input: FootnoteUpdateInput, options?: MutationOptions): FootnoteMutationResult;
+/**
+ * Remove a footnote/endnote.
+ *
+ * Uses `compoundMutation` because it touches both:
+ * 1. The PM document (delete the footnoteReference/endnoteReference node)
+ * 2. The OOXML notes part (remove <w:footnote> element if no more references)
+ */
+export declare function footnotesRemoveWrapper(editor: Editor, input: FootnoteRemoveInput, options?: MutationOptions): FootnoteMutationResult;
+/**
+ * Configure footnote/endnote numbering and placement.
+ *
+ * Document-wide settings are written to `word/settings.xml` through the
+ * parts system. Section-scoped settings that belong in `sectPr` go through
+ * the document mutation path (not yet implemented — falls back to converter
+ * cache for backward compatibility).
+ */
+export declare function footnotesConfigureWrapper(editor: Editor, input: FootnoteConfigureInput, options?: MutationOptions): FootnoteConfigResult;
+//# sourceMappingURL=footnote-wrappers.d.ts.map

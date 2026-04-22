@@ -1,0 +1,7 @@
+import { Editor } from '../core/Editor.js';
+import { FormatBoldInput, FormatItalicInput, FormatUnderlineInput, FormatStrikethroughInput, MutationOptions, TextMutationReceipt } from '@superdoc/document-api';
+export declare function formatBoldAdapter(editor: Editor, input: FormatBoldInput, options?: MutationOptions): TextMutationReceipt;
+export declare function formatItalicAdapter(editor: Editor, input: FormatItalicInput, options?: MutationOptions): TextMutationReceipt;
+export declare function formatUnderlineAdapter(editor: Editor, input: FormatUnderlineInput, options?: MutationOptions): TextMutationReceipt;
+export declare function formatStrikethroughAdapter(editor: Editor, input: FormatStrikethroughInput, options?: MutationOptions): TextMutationReceipt;
+//# sourceMappingURL=format-adapter.d.ts.map

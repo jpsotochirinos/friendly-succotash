@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { EntityManager } from '@mikro-orm/postgresql';
@@ -17,6 +17,16 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
+  /** Public signup flow: whether this email can register (not already in use). */
+  async checkEmailAvailability(email: string): Promise<{ available: boolean }> {
+    const trimmed = email?.trim();
+    if (!trimmed) {
+      throw new BadRequestException('Email is required');
+    }
+    const existing = await this.em.findOne(User, { email: trimmed }, { filters: false });
+    return { available: !existing };
+  }
+
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
     const existing = await this.em.findOne(User, { email: dto.email }, { filters: false });
     if (existing) {
@@ -26,6 +36,7 @@ export class AuthService {
     const org = this.em.create(Organization, {
       name: dto.organizationName,
       planTier: PlanTier.FREE,
+      featureFlags: { useConfigurableWorkflows: true },
     });
 
     const allPermissions = await this.em.findAll(Permission);
@@ -100,6 +111,7 @@ export class AuthService {
       const org = this.em.create(Organization, {
         name: `${googleProfile.firstName || googleProfile.email}'s Organization`,
         planTier: PlanTier.FREE,
+        featureFlags: { useConfigurableWorkflows: true },
       });
 
       const allPermissions = await this.em.findAll(Permission);
@@ -213,6 +225,19 @@ export class AuthService {
       user.refreshToken = undefined;
       await this.em.flush();
     }
+  }
+
+  /** Issue tokens after invitation accept or similar server-side user creation. */
+  async issueAuthResponse(userId: string): Promise<AuthResponseDto> {
+    const user = await this.em.findOne(
+      User,
+      { id: userId },
+      { populate: ['organization', 'role'] as any, filters: false },
+    );
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('User not found or inactive');
+    }
+    return this.generateAuthResponse(user);
   }
 
   private async generateAuthResponse(user: User): Promise<AuthResponseDto> {

@@ -11,6 +11,11 @@
     "migrate": "mikro-orm migration:up",
     "migrate:create": "mikro-orm migration:create",
     "seed": "ts-node src/seeds/run.ts",
+    "seed:templates": "ts-node src/seeds/run-templates.ts",
+    "seed:workflows": "ts-node src/seeds/run-workflows.ts",
+    "migrate:data:workflows": "ts-node src/seeds/migrate-data-workflows.ts",
+    "validate:workflow-readiness": "ts-node src/seeds/validate-workflow-readiness.ts",
+    "diagnose:workflows": "ts-node src/seeds/diagnose-workflows.ts",
     "seed:full": "ts-node src/seeds/seed-data.ts"
   },
   "mikro-orm": {

@@ -1,0 +1,33 @@
+var ZIP_MAGIC = [
+	80,
+	75,
+	3,
+	4
+];
+var CFB_MAGIC = [
+	208,
+	207,
+	17,
+	224,
+	161,
+	177,
+	26,
+	225
+];
+function matchesMagic(bytes, magic) {
+	if (bytes.length < magic.length) return false;
+	for (let i = 0; i < magic.length; i++) if (bytes[i] !== magic[i]) return false;
+	return true;
+}
+function detectContainerType(data) {
+	const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+	if (matchesMagic(bytes, ZIP_MAGIC)) return "zip";
+	if (matchesMagic(bytes, CFB_MAGIC)) return "cfb";
+	return "unknown";
+}
+Object.defineProperty(exports, "detectContainerType", {
+	enumerable: true,
+	get: function() {
+		return detectContainerType;
+	}
+});

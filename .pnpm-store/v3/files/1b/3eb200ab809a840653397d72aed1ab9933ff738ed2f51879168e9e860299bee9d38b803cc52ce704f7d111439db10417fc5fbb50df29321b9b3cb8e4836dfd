@@ -1,0 +1,14 @@
+import { FootnoteStoryLocator, EndnoteStoryLocator } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+import { StoryRuntime } from './story-types.js';
+type NoteStoryLocator = FootnoteStoryLocator | EndnoteStoryLocator;
+/**
+ * Resolves a footnote or endnote locator to a StoryRuntime.
+ *
+ * Note content is extracted from the converter's derived cache (the PM JSON
+ * representation of the note's body paragraphs). If the converter cannot
+ * provide PM JSON for the note, falls back to extracting from the OOXML part.
+ */
+export declare function resolveNoteRuntime(hostEditor: Editor, locator: NoteStoryLocator): StoryRuntime;
+export {};
+//# sourceMappingURL=note-story-runtime.d.ts.map

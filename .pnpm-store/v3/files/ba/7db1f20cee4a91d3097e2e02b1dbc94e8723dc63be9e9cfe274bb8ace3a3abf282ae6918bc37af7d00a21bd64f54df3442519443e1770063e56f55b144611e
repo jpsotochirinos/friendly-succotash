@@ -1,0 +1,41 @@
+export function createEmptyBibliographyPart(): {
+    sources: never[];
+    partPath: null;
+    itemPropsPath: null;
+    itemRelsPath: null;
+    selectedStyle: null;
+    styleName: null;
+    version: null;
+};
+export function loadBibliographyPartFromPackage(convertedXml: any): {
+    sources: never[];
+    partPath: null;
+    itemPropsPath: null;
+    itemRelsPath: null;
+    selectedStyle: null;
+    styleName: null;
+    version: null;
+};
+export function syncBibliographyPartToPackage(convertedXml: any, bibliographyPart: any): {
+    sources: never[];
+    partPath: null;
+    itemPropsPath: null;
+    itemRelsPath: null;
+    selectedStyle: null;
+    styleName: null;
+    version: null;
+} | {
+    sources: any[];
+    partPath: any;
+    itemPropsPath: string;
+    itemRelsPath: string;
+    selectedStyle: any;
+    styleName: any;
+    version: any;
+};
+export function getBibliographyPartExportPaths(bibliographyPart: any): any[];
+export const BIBLIOGRAPHY_NAMESPACE_URI: "http://schemas.openxmlformats.org/officeDocument/2006/bibliography";
+export const CUSTOM_XML_RELATIONSHIP_TYPE: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml";
+export const CUSTOM_XML_PROPS_RELATIONSHIP_TYPE: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXmlProps";
+export const CUSTOM_XML_PROPS_CONTENT_TYPE: "application/vnd.openxmlformats-officedocument.customXmlProperties+xml";
+//# sourceMappingURL=citation-sources.d.ts.map

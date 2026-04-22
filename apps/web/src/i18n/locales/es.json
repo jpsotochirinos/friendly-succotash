@@ -1,21 +1,14 @@
 {
-  "app": {
-    "name": "Alega",
-    "loading": "Cargando..."
+  "_comment": "Referencia paralela; mensajes activos en src/i18n/index.ts",
+  "nav": {
+    "trackables": "Expedientes",
+    "flowTemplates": "Plantillas de flujo",
+    "templates": "Plantillas (docs)"
   },
-  "auth": {
-    "login": "Iniciar sesión",
-    "register": "Registrarse",
-    "logout": "Cerrar sesión"
-  },
-  "common": {
-    "save": "Guardar",
-    "cancel": "Cancelar",
-    "delete": "Eliminar",
-    "edit": "Editar",
-    "create": "Crear",
-    "search": "Buscar",
-    "filter": "Filtrar",
-    "actions": "Acciones"
+  "legal": {
+    "expediente": "Expediente",
+    "actuacion": "Actuación",
+    "diligencia": "Diligencia",
+    "plazoLegal": "Plazo legal"
   }
 }

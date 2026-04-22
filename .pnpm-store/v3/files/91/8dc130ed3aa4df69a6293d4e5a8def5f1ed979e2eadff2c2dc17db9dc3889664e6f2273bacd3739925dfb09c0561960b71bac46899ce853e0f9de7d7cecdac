@@ -1,0 +1,5 @@
+/**
+ * @type {import("docxImporter").NodeHandlerEntry}
+ */
+export const documentStatFieldHandlerEntity: any;
+//# sourceMappingURL=documentStatFieldImporter.d.ts.map

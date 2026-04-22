@@ -1,0 +1,2 @@
+export function normalizeCommentEventPayload({ conversation, editorOptions, fallbackCommentId, fallbackInternal }: Object): Object;
+//# sourceMappingURL=normalize-comment-event-payload.d.ts.map

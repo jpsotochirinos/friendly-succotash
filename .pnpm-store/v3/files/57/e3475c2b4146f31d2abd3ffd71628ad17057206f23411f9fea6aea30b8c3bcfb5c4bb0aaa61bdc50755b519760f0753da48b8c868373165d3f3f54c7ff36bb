@@ -1,0 +1,124 @@
+import { Plugin, PluginKey, EditorState, Selection, SelectionBookmark, Transaction } from 'prosemirror-state';
+/**
+ * Plugin key for the custom selection management plugin.
+ *
+ * Previously defined in `extensions/custom-selection/custom-selection.js`.
+ * Moved here so that adapter code and other extensions can reference it
+ * without importing from the extension module.
+ */
+export declare const CustomSelectionPluginKey: PluginKey<any>;
+/**
+ * Reads the transaction-mapped preserved selection from the custom-selection
+ * PM plugin state.
+ *
+ * Returns `null` when:
+ * - the plugin is not registered (headless mode, minimal configs, tests)
+ * - the plugin has no preserved selection
+ *
+ * This is the only safe source of preserved selection for the selection
+ * bridge. `editor.options.preservedSelection` and `editor.options.lastSelection`
+ * are raw snapshots that are never transaction-mapped — do not use them.
+ */
+export declare function getPreservedSelection(state: EditorState): Selection | null;
+/**
+ * Accessor interface for resolving and releasing handles against the editor
+ * that owns them. This avoids a direct import of `Editor` (which would
+ * create a circular dependency) while still binding each handle to its
+ * specific editor instance.
+ */
+export interface SelectionHandleOwner {
+    readonly state: EditorState;
+    dispatch(tr: Transaction): void;
+}
+/**
+ * Returns the bookmark representation used by tracked selection handles and
+ * preserved selection remapping.
+ *
+ * Non-empty TextSelections use an inclusive bookmark so inserts at either
+ * edge remain inside the tracked range. Other selection kinds use ProseMirror's
+ * built-in bookmark implementation to preserve their native semantics.
+ */
+export declare function createSelectionTrackingBookmark(selection: Selection): SelectionBookmark;
+/**
+ * An opaque, session-local handle representing a captured editor selection.
+ *
+ * The handle stores a `SelectionBookmark` that is automatically mapped through
+ * every transaction in the owning editor's plugin state. When you're ready
+ * to act on it, call `editor.resolveSelectionHandle(handle)` or
+ * `presentationEditor.resolveSelectionHandle(handle)` to get a fresh
+ * `ResolveRangeOutput` / `SelectionCommandContext`.
+ *
+ * Handles are the correct abstraction for deferred UI command flows (AI,
+ * confirmation dialogs, async toolbar chains) where a delay exists between
+ * selection capture and mutation.
+ *
+ * For immediate mutations (toolbar click → instant command), use the snapshot
+ * convenience methods (`getCurrentSelectionRange` / `getEffectiveSelectionRange`)
+ * which capture and resolve in one call.
+ *
+ * **Important**: the handle is bound to the specific editor instance that
+ * captured it. In layout mode, switching header/footer sessions does not
+ * invalidate existing handles — they continue to resolve against their
+ * owning editor. The `surface` label is stored for context construction only.
+ */
+export type SelectionHandle = {
+    /** Opaque identifier for this handle. */
+    readonly id: number;
+    /** Which editing surface the selection was captured on. */
+    readonly surface: 'body' | 'header' | 'footer';
+    /** Whether the original captured selection was non-empty. */
+    readonly wasNonEmpty: boolean;
+    /**
+     * The editor instance that owns this handle's bookmark.
+     * Opaque to callers — used internally by resolve/release.
+     * @internal
+     */
+    readonly _owner: SelectionHandleOwner;
+};
+/** Internal entry stored in the plugin state. Not exported. */
+type HandleEntry = {
+    id: number;
+    bookmark: SelectionBookmark;
+    wasNonEmpty: boolean;
+};
+type HandlePluginState = {
+    entries: Map<number, HandleEntry>;
+};
+export declare const SelectionHandlePluginKey: PluginKey<HandlePluginState>;
+/**
+ * Creates the tracked selection handle plugin.
+ *
+ * On every transaction, all stored bookmarks are mapped through the transform
+ * so handle positions stay current. This is the same mechanism ProseMirror's
+ * history uses to track selections across edits.
+ */
+export declare function createSelectionHandlePlugin(): Plugin<HandlePluginState>;
+/**
+ * Captures a PM selection as a tracked handle, stored in the owner's
+ * plugin state.
+ *
+ * The returned handle is permanently bound to `owner` — resolving and
+ * releasing always go through that specific editor instance, even if the
+ * active header/footer session changes.
+ */
+export declare function captureSelectionHandle(owner: SelectionHandleOwner, selection: Selection, surface: 'body' | 'header' | 'footer'): SelectionHandle;
+/**
+ * Resolves a tracked handle back into a live PM selection by reading from
+ * the owning editor's plugin state.
+ *
+ * Returns `null` when:
+ * - the handle has been released
+ * - the plugin is not registered
+ * - a previously non-empty selection collapsed to empty (content was deleted)
+ */
+export declare function resolveHandleToSelection(handle: SelectionHandle): Selection | null;
+/**
+ * Releases a tracked handle, removing it from the owning editor's plugin state.
+ *
+ * Always release handles when done to avoid unbounded accumulation.
+ */
+export declare function releaseSelectionHandle(handle: SelectionHandle): void;
+/** Resets the handle ID counter. Only for tests. */
+export declare function _resetHandleIdCounter(): void;
+export {};
+//# sourceMappingURL=selection-state.d.ts.map

@@ -1,0 +1,27 @@
+export type { EditorCommands, CommandProps, Command, ChainedCommand, ChainableCommandObject, CanCommand, CanObject, CoreCommands, ExtensionCommands, CoreCommandMap, ExtensionCommandMap, } from './core/types/ChainedCommands.js';
+export type { NodeAttributesMap, NodeName, NodeAttrs, TypedNode } from './core/types/NodeAttributesMap.js';
+export { isNodeType, assertNodeType } from './core/types/NodeAttributesMap.js';
+export type { MarkAttributesMap, MarkName, MarkAttrs, TypedMark } from './core/types/MarkAttributesMap.js';
+export { isMarkType } from './core/types/MarkAttributesMap.js';
+export type { BlockNodeAttributes, OxmlNodeAttributes, TableNodeAttributes, TextContainerAttributes, InlineNodeAttributes, ShapeNodeAttributes, } from './core/types/NodeCategories.js';
+export type { ParagraphAttrs, ParagraphProperties, NumberingProperties, IndentationProperties, SpacingProperties, ListRendering, SectionMargins, } from './extensions/types/node-attributes.js';
+export type { TableAttrs, TableRowAttrs, TableCellAttrs, TableHeaderAttrs, TableProperties, TableRowProperties, TableCellProperties, TableMeasurement, TableBorders, TableLook, TableGrid, CellMargins, BorderSpec, ShadingProperties, ThemeColor, } from './extensions/types/node-attributes.js';
+export type { ImageAttrs, ImageSize, ImagePadding, ImageWrap, ImageTransformData, } from './extensions/types/node-attributes.js';
+export type { RunAttrs, RunProperties } from './extensions/types/node-attributes.js';
+export type { DocumentAttrs, TextAttrs, LineBreakAttrs, HardBreakAttrs, StructuredContentAttrs, DocumentSectionAttrs, } from './extensions/types/node-attributes.js';
+export type { TabAttrs, BookmarkStartAttrs, BookmarkEndAttrs } from './extensions/types/node-attributes.js';
+export type { ShapeContainerAttrs, ShapeGroupAttrs, ShapeGroupSize, ShapeGroupPadding, ShapeGroupMarginOffset, ShapeTextboxAttrs, VectorShapeAttrs, VectorShapeTextInsets, } from './extensions/types/node-attributes.js';
+export type { MentionAttrs, PageReferenceAttrs, PageNumberAttrs, TotalPageCountAttrs, } from './extensions/types/node-attributes.js';
+export type { FieldAnnotationAttrs, FieldAnnotationSize } from './extensions/types/node-attributes.js';
+export type { ContentBlockAttrs, ContentBlockSize, ContentBlockMarginOffset, TableOfContentsAttrs, StructuredContentBlockAttrs, DocumentPartObjectAttrs, } from './extensions/types/node-attributes.js';
+export type { PassthroughBlockAttrs, PassthroughInlineAttrs } from './extensions/types/node-attributes.js';
+export type { PermStartAttrs, PermEndAttrs } from './extensions/types/node-attributes.js';
+export type { CommentRangeStartAttrs, CommentRangeEndAttrs, CommentReferenceAttrs, } from './extensions/types/node-attributes.js';
+export type { BoldAttrs, ItalicAttrs, UnderlineAttrs, UnderlineStyle, StrikeAttrs, LinkAttrs, TargetFrameOption, HighlightAttrs, HighlightColor, TextStyleAttrs, TrackInsertAttrs, TrackDeleteAttrs, TrackFormatEntry, TrackFormatAttrs, CommentMarkAttrs, } from './extensions/types/mark-attributes.js';
+export { defineNode } from './core/defineNode.js';
+export { defineMark } from './core/defineMark.js';
+export type { NodeConfig } from './core/Node.js';
+export type { MarkConfig } from './core/Mark.js';
+export type { OxmlNodeConfig } from './core/OxmlNode.js';
+export type { ProseMirrorJSON, ProseMirrorJSONNode, ProseMirrorJSONMark } from './core/types/EditorTypes.js';
+//# sourceMappingURL=types.d.ts.map

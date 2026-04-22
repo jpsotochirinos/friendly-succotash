@@ -1,0 +1,23 @@
+import { Editor } from '../core/Editor.js';
+import { FindOutput, Query, SDFindInput, SDFindResult } from '@superdoc/document-api';
+/**
+ * Executes a document query against the editor's current state.
+ *
+ * Returns a standardized `FindOutput` discovery envelope with per-item
+ * domain fields (`address`, `node`, `context`) and a real `evaluatedRevision`.
+ */
+export declare function findLegacyAdapter(editor: Editor, query: Query): FindOutput;
+/**
+ * Executes an SDM/1 find operation against the editor's current state.
+ *
+ * Translates SDFindInput → internal Query, runs existing strategy code,
+ * then projects results into SDNodeResult items.
+ *
+ * @param input.options - SDReadOptions controlling result depth.
+ *   Currently accepted but reserved for future use:
+ *   - `includeResolved` — include resolved style values per node
+ *   - `includeProvenance` — include source provenance metadata
+ *   - `includeContext` — include parent/sibling context in each SDNodeResult
+ */
+export declare function sdFindAdapter(editor: Editor, input: SDFindInput): SDFindResult;
+//# sourceMappingURL=find-adapter.d.ts.map

@@ -1,0 +1,58 @@
+# Fase 3A: falla el job si quedan hojas sin workflow_id/current_state_id (strict).
+# Requiere Postgres con schema migrado; en PR suele ejecutarse tras migrate en el mismo job o en imagen pre-built.
+name: Workflow data readiness
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: tracker_user
+          POSTGRES_PASSWORD: tracker_pass
+          POSTGRES_DB: tracker_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tracker_user -d tracker_db"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_HOST: localhost
+      DATABASE_PORT: "5432"
+      DATABASE_NAME: tracker_db
+      DATABASE_USER: tracker_user
+      DATABASE_PASSWORD: tracker_pass
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      - name: Seed system workflows (definitions + states)
+        run: pnpm --filter @tracker/db seed:workflows
+
+      - name: Validate workflow readiness (strict)
+        run: pnpm --filter @tracker/db validate:workflow-readiness -- --strict

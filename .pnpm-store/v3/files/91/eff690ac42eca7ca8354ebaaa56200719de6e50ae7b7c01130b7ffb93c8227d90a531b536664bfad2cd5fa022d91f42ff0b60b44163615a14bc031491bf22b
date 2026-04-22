@@ -1,0 +1,7 @@
+import { DiffResult } from '../computeDiff';
+import { DiffSummary } from '@superdoc/document-api';
+/**
+ * Builds a coarse-grained summary from raw diff results.
+ */
+export declare function buildDiffSummary(diff: DiffResult): DiffSummary;
+//# sourceMappingURL=summary.d.ts.map

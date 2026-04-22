@@ -1,0 +1,25 @@
+import { Extension } from '../../core/Extension.js';
+/**
+ * Meta key set by permissionRanges.create / remove / updatePrincipal adapters
+ * to signal intentional mutations that should bypass the repair appendTransaction.
+ */
+export const PERMISSION_MUTATION_META: "permissionRangeMutation";
+/**
+ * @module PermissionRanges
+ * Extension that manages permission range editability.
+ *
+ * When read-only protection is runtime-enforced, content within allowed
+ * permission ranges (matching the current user) becomes editable.
+ * When protection is not enforced, permission ranges are preserved but inactive.
+ */
+export const PermissionRanges: Extension<Record<string, never>, {
+    /** @type {Array} All permission ranges in the document (unfiltered). Used by document-api adapters. */
+    allRanges: any[];
+    /** @type {Array} Ranges allowed for the current user when protection is enforced. Used by edit enforcement. */
+    allowedRanges: any[];
+    /** Whether allowedRanges is non-empty. */
+    hasAllowedRanges: boolean;
+    /** @deprecated Legacy alias for allowedRanges. */
+    ranges: never[];
+}>;
+//# sourceMappingURL=permission-ranges.d.ts.map

@@ -1,0 +1,13 @@
+import { ProofingIssue, OffsetSlice } from './types.js';
+/** Issue with resolved PM positions, before lifecycle state is assigned by the caller. */
+export type ResolvedIssue = ProofingIssue & {
+    pmFrom: number;
+    pmTo: number;
+};
+/**
+ * Resolve an issue's text offsets into PM positions using pre-computed offset slices.
+ * Returns the issue with pmFrom/pmTo, or null if the range can't be mapped.
+ * The caller assigns `state`, `recheckId`, and `word` to produce a full StoredIssue.
+ */
+export declare function resolveIssuePmRangeFromSlices(issue: ProofingIssue, slices: OffsetSlice[]): ResolvedIssue | null;
+//# sourceMappingURL=range-map.d.ts.map

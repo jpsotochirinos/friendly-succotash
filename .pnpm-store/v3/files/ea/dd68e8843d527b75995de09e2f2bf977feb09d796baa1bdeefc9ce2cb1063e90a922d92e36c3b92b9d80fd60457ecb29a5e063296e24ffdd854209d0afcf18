@@ -1,0 +1,9 @@
+/**
+ * @type {import("./docxImporter").NodeHandlerEntry}
+ */
+export const indexHandlerEntity: import('./docxImporter').NodeHandlerEntry;
+/**
+ * @type {import("./docxImporter").NodeHandlerEntry}
+ */
+export const indexEntryHandlerEntity: import('./docxImporter').NodeHandlerEntry;
+//# sourceMappingURL=indexImporter.d.ts.map

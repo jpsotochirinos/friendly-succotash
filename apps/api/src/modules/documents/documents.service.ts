@@ -1,16 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Queue } from 'bullmq';
-import { Document, DocumentVersion, Evaluation } from '@tracker/db';
+import {
+  ActivityLog,
+  Document,
+  DocumentVersion,
+  DocumentWorkflowParticipation,
+  Evaluation,
+  Folder,
+  Organization,
+  WorkflowItem,
+} from '@tracker/db';
 import {
   DocumentReviewStatus,
   checkSpelling,
   validateCitations,
   analyzeCoherence,
   validateReferences,
+  normalizeDocumentTrashRetentionDays,
+  DomainEvents,
 } from '@tracker/shared';
 import { StorageService } from '../storage/storage.service';
+import { LlmService } from '../llm/llm.service';
+import { SearchService } from '../search/search.service';
 import { BaseCrudService } from '../../common/services/base-crud.service';
+import {
+  plainTextOrMarkdownToHtml,
+  renderHtmlAsDocx,
+  stripHtmlToPlain,
+} from './docx-renderer.util';
 
 export interface EvalLogStep {
   name: string;
@@ -21,6 +40,11 @@ export interface EvalLogStep {
   details: Record<string, unknown>;
 }
 
+/** Compartir por WA: binario en MinIO o render DOCX on-the-fly desde `contentText`. */
+export type WhatsAppShareMetadata =
+  | { kind: 'minio'; minioKey: string; filename: string; mimeType: string; bytes: number }
+  | { kind: 'rendered'; filename: string; mimeType: string; bytes: number };
+
 @Injectable()
 export class DocumentsService extends BaseCrudService<Document> {
   private readonly evaluationQueue: Queue;
@@ -28,6 +52,9 @@ export class DocumentsService extends BaseCrudService<Document> {
   constructor(
     em: EntityManager,
     private readonly storage: StorageService,
+    private readonly llm: LlmService,
+    private readonly search: SearchService,
+    private readonly eventEmitter: EventEmitter2,
   ) {
     super(em, Document);
     this.evaluationQueue = new Queue('document-evaluation', {
@@ -82,6 +109,16 @@ export class DocumentsService extends BaseCrudService<Document> {
     } as any);
 
     await this.em.flush();
+    if (data.workflowItemId) {
+      await this.appendParticipationForNewLink(doc.id, data.workflowItemId, data.organizationId, doc.currentVersion);
+    }
+    this.emitDocumentEvent(DomainEvents.DOCUMENT_CREATED, {
+      documentId: doc.id,
+      organizationId: data.organizationId,
+      trackableId: data.trackableId,
+      workflowItemId: data.workflowItemId ?? null,
+      userId: data.userId,
+    });
     return doc;
   }
 
@@ -91,7 +128,7 @@ export class DocumentsService extends BaseCrudService<Document> {
     userId: string,
     organizationId: string,
   ): Promise<DocumentVersion> {
-    const doc = await this.findOne(documentId, { populate: ['folder', 'folder.trackable'] as any });
+    const doc = await this.findOne(documentId, { populate: ['folder', 'folder.trackable', 'workflowItem'] as any });
     const nextVersion = doc.currentVersion + 1;
 
     const key = this.storage.buildKey(
@@ -116,6 +153,17 @@ export class DocumentsService extends BaseCrudService<Document> {
     } as any);
 
     await this.em.flush();
+    const trackableId = (doc.folder as any)?.trackable?.id as string | undefined;
+    const wi = doc.workflowItem as WorkflowItem | undefined;
+    const workflowItemId =
+      wi && typeof wi === 'object' && 'id' in wi ? (wi as WorkflowItem).id : ((doc as any).workflowItem as string | undefined) ?? null;
+    this.emitDocumentEvent(DomainEvents.DOCUMENT_UPLOADED, {
+      documentId: doc.id,
+      organizationId,
+      trackableId,
+      workflowItemId,
+      userId,
+    });
     return version;
   }
 
@@ -136,6 +184,54 @@ export class DocumentsService extends BaseCrudService<Document> {
   async downloadDocumentBuffer(documentId: string): Promise<Buffer> {
     const doc = await this.findOne(documentId);
     return this.storage.download(doc.minioKey!);
+  }
+
+  /** Metadatos para compartir por WhatsApp (tamaño vía MinIO, o render DOCX si solo hay `contentText`). */
+  async getShareMetadataForWhatsApp(
+    documentId: string,
+    organizationId: string,
+  ): Promise<WhatsAppShareMetadata | null> {
+    const fork = this.em.fork();
+    fork.setFilterParams('tenant', { organizationId });
+    const doc = await fork.findOne(Document, { id: documentId });
+    if (!doc) return null;
+
+    if (doc.minioKey) {
+      const ver = await fork.findOne(DocumentVersion, {
+        document: documentId,
+        versionNumber: doc.currentVersion,
+      });
+      let bytes = ver?.fileSize != null ? Number(ver.fileSize) : NaN;
+      if (!Number.isFinite(bytes) || bytes < 0) {
+        const stat = await this.storage.statObject(doc.minioKey);
+        bytes = stat.size;
+      }
+      return {
+        kind: 'minio',
+        minioKey: doc.minioKey,
+        filename: doc.filename || doc.title || 'document',
+        mimeType: doc.mimeType || 'application/octet-stream',
+        bytes,
+      };
+    }
+
+    const raw = doc.contentText?.trim();
+    if (!raw) return null;
+
+    const buffer = await renderHtmlAsDocx(
+      plainTextOrMarkdownToHtml(doc.contentText ?? ''),
+      doc.title || 'Documento',
+    );
+    const base = (doc.title || 'documento')
+      .replace(/[/\\?%*:|"<>]/g, '-')
+      .trim()
+      .slice(0, 180) || 'documento';
+    return {
+      kind: 'rendered',
+      filename: `${base}.docx`,
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      bytes: buffer.length,
+    };
   }
 
   async getVersions(documentId: string): Promise<DocumentVersion[]> {
@@ -188,6 +284,16 @@ export class DocumentsService extends BaseCrudService<Document> {
     } as any);
 
     await this.em.flush();
+    if (targetWorkflowItemId) {
+      await this.appendParticipationForNewLink(newDoc.id, targetWorkflowItemId, organizationId, newDoc.currentVersion);
+    }
+    this.emitDocumentEvent(DomainEvents.DOCUMENT_CREATED, {
+      documentId: newDoc.id,
+      organizationId,
+      trackableId,
+      workflowItemId: targetWorkflowItemId ?? null,
+      userId,
+    });
     return newDoc;
   }
 
@@ -197,7 +303,9 @@ export class DocumentsService extends BaseCrudService<Document> {
     userId: string,
     organizationId: string,
   ): Promise<Document> {
-    const doc = await this.findOne(documentId, { populate: ['folder', 'folder.trackable'] as any });
+    const doc = await this.findOne(documentId, { populate: ['folder', 'folder.trackable', 'workflowItem'] as any });
+
+    const prevLen = doc.contentText?.length ?? 0;
 
     const jsonBuffer = Buffer.from(JSON.stringify(dto.editorContent));
     const editorKey = this.storage.buildKey(
@@ -224,13 +332,215 @@ export class DocumentsService extends BaseCrudService<Document> {
     } as any);
 
     await this.em.flush();
+    const newLen = doc.contentText?.length ?? 0;
+    const trackableId = (doc.folder as any)?.trackable?.id as string | undefined;
+    const wi = doc.workflowItem as WorkflowItem | undefined;
+    const workflowItemId =
+      wi && typeof wi === 'object' && 'id' in wi ? (wi as WorkflowItem).id : ((doc as any).workflowItem as string | undefined) ?? null;
+    this.emitDocumentEvent(DomainEvents.DOCUMENT_UPDATED, {
+      documentId: doc.id,
+      organizationId,
+      trackableId,
+      workflowItemId,
+      userId,
+      contentLengthDelta: Math.max(0, newLen - prevLen),
+    });
     return doc;
   }
 
-  async submitForReview(documentId: string): Promise<{ message: string; documentId: string }> {
-    const doc = await this.findOne(documentId);
+  /**
+   * Patch document fields including optional workflow link (validates same trackable / org).
+   */
+  async patchDocument(
+    id: string,
+    dto: {
+      title?: string;
+      reviewStatus?: string;
+      isTemplate?: boolean;
+      tags?: string[];
+      workflowItemId?: string | null;
+    },
+    organizationId: string,
+  ): Promise<Document> {
+    const doc = await this.findOne(id, { populate: ['folder', 'folder.trackable', 'workflowItem'] as any });
+    if ((doc as any).organization?.id && (doc as any).organization.id !== organizationId) {
+      throw new NotFoundException('Document not found');
+    }
+
+    if ('workflowItemId' in dto) {
+      const nextWi = dto.workflowItemId ?? null;
+      const wiRaw = (doc as any).workflowItem;
+      let curWi: string | null = null;
+      if (wiRaw != null) {
+        curWi = typeof wiRaw === 'string' ? wiRaw : (wiRaw as WorkflowItem).id;
+      }
+      if (nextWi !== curWi) {
+        await this.applyWorkflowItemLink(doc, nextWi, organizationId);
+      }
+    }
+    if (dto.title !== undefined) (doc as any).title = dto.title;
+    if (dto.reviewStatus !== undefined) (doc as any).reviewStatus = dto.reviewStatus;
+    if (dto.isTemplate !== undefined) (doc as any).isTemplate = dto.isTemplate;
+    if (dto.tags !== undefined) (doc as any).tags = dto.tags;
+
+    await this.em.flush();
+    const refreshed = await this.findOne(id, { populate: ['folder', 'folder.trackable', 'workflowItem'] as any });
+    const trackableId = (refreshed.folder as any)?.trackable?.id as string | undefined;
+    const wi = refreshed.workflowItem as WorkflowItem | undefined;
+    const workflowItemId =
+      wi && typeof wi === 'object' && 'id' in wi
+        ? (wi as WorkflowItem).id
+        : ((refreshed as any).workflowItem as string | undefined) ?? null;
+    this.emitDocumentEvent(DomainEvents.DOCUMENT_UPDATED, {
+      documentId: refreshed.id,
+      organizationId,
+      trackableId,
+      workflowItemId,
+      contentLengthDelta: 0,
+      patchedFields: Object.keys(dto).filter((k) => (dto as any)[k] !== undefined),
+    });
+    return refreshed;
+  }
+
+  async linkWorkflowItem(
+    documentId: string,
+    workflowItemId: string | null,
+    organizationId: string,
+  ): Promise<Document> {
+    return this.patchDocument(documentId, { workflowItemId }, organizationId);
+  }
+
+  async getWorkflowHistory(documentId: string, organizationId: string) {
+    const doc = await this.em.findOne(Document, { id: documentId, organization: organizationId } as any);
+    if (!doc) {
+      throw new NotFoundException('Document not found');
+    }
+
+    const rows = await this.em.find(
+      DocumentWorkflowParticipation,
+      { document: documentId, organization: organizationId } as any,
+      {
+        orderBy: { startedAt: 'DESC' } as any,
+        populate: ['workflowItem'] as any,
+      },
+    );
+
+    const wis = rows.map((r) => r.workflowItem).filter(Boolean) as WorkflowItem[];
+    if (wis.length) await this.em.populate(wis, ['currentState'] as any);
+
+    return rows.map((row) => {
+      const wi = row.workflowItem as WorkflowItem | undefined;
+      const stateKey = (wi?.currentState as { key?: string } | undefined)?.key ?? null;
+      return {
+        id: row.id,
+        startedAt: row.startedAt,
+        endedAt: row.endedAt ?? null,
+        versionAtStart: row.versionAtStart ?? null,
+        workflowItem: wi
+          ? {
+              id: wi.id,
+              title: wi.title,
+              kind: wi.kind ?? null,
+              status: stateKey,
+              startDate: wi.startDate ?? null,
+              dueDate: wi.dueDate ?? null,
+            }
+          : null,
+      };
+    });
+  }
+
+  private async applyWorkflowItemLink(
+    doc: Document,
+    workflowItemId: string | null,
+    organizationId: string,
+  ): Promise<void> {
+    await this.closeOpenParticipations(doc.id, organizationId);
+
+    if (!workflowItemId) {
+      (doc as any).workflowItem = undefined;
+      return;
+    }
+
+    const wi = await this.em.findOne(
+      WorkflowItem,
+      { id: workflowItemId, organization: organizationId } as any,
+      { populate: ['trackable'] as any },
+    );
+    if (!wi) {
+      throw new BadRequestException('La actividad no existe o no pertenece a la organización.');
+    }
+
+    const folder = doc.folder as { trackable?: { id: string } } | undefined;
+    const trackableId = folder?.trackable?.id;
+    const wiTrackableId = (wi as any).trackable?.id ?? (wi as any).trackable;
+    if (folder && trackableId && wiTrackableId && trackableId !== wiTrackableId) {
+      throw new BadRequestException('La actividad debe pertenecer al mismo expediente que la carpeta del documento.');
+    }
+
+    (doc as any).workflowItem = wi;
+    this.em.create(DocumentWorkflowParticipation, {
+      document: doc,
+      workflowItem: wi,
+      startedAt: new Date(),
+      endedAt: null,
+      versionAtStart: doc.currentVersion,
+      organization: organizationId,
+    } as any);
+  }
+
+  private async closeOpenParticipations(documentId: string, organizationId: string): Promise<void> {
+    const open = await this.em.find(DocumentWorkflowParticipation, {
+      document: documentId,
+      organization: organizationId,
+      endedAt: null,
+    } as any);
+    const now = new Date();
+    for (const row of open) {
+      row.endedAt = now;
+    }
+  }
+
+  private async appendParticipationForNewLink(
+    documentId: string,
+    workflowItemId: string,
+    organizationId: string,
+    versionAtStart: number,
+  ): Promise<void> {
+    const wi = await this.em.findOne(WorkflowItem, { id: workflowItemId, organization: organizationId } as any);
+    if (!wi) return;
+
+    this.em.create(DocumentWorkflowParticipation, {
+      document: documentId,
+      workflowItem: workflowItemId,
+      startedAt: new Date(),
+      endedAt: null,
+      versionAtStart,
+      organization: organizationId,
+    } as any);
+    await this.em.flush();
+  }
+
+  async submitForReview(
+    documentId: string,
+    organizationId: string,
+    userId: string,
+  ): Promise<{ message: string; documentId: string }> {
+    const doc = await this.findOne(documentId, { populate: ['folder', 'folder.trackable', 'workflowItem'] as any });
     doc.reviewStatus = DocumentReviewStatus.SUBMITTED;
     await this.em.flush();
+
+    const trackableId = (doc.folder as any)?.trackable?.id as string | undefined;
+    const wi = doc.workflowItem as WorkflowItem | undefined;
+    const workflowItemId =
+      wi && typeof wi === 'object' && 'id' in wi ? (wi as WorkflowItem).id : ((doc as any).workflowItem as string | undefined) ?? null;
+    this.emitDocumentEvent(DomainEvents.DOCUMENT_SUBMITTED, {
+      documentId: doc.id,
+      organizationId,
+      trackableId,
+      workflowItemId,
+      userId,
+    });
 
     const config = {
       spellCheckEnabled: true,
@@ -518,6 +828,149 @@ export class DocumentsService extends BaseCrudService<Document> {
     };
   }
 
+  /**
+   * Create a document with a real DOCX in MinIO so SuperDoc opens with visible body text.
+   */
+  async createDocumentFromHtml(data: {
+    title: string;
+    html: string;
+    folderId: string;
+    trackableId: string;
+    workflowItemId?: string;
+    organizationId: string;
+    userId: string;
+    /** If set, used as indexed contentText instead of stripping HTML */
+    contentTextOverride?: string;
+    assistantDraft?: { mode: string; extra?: Record<string, unknown> };
+  }): Promise<Document> {
+    const safeTitle = data.title.trim() || 'Documento';
+    const buf = await renderHtmlAsDocx(data.html, safeTitle);
+    const filename = `${safeTitle.replace(/[/\\?%*:|"<>]/g, '_').slice(0, 120) || 'documento'}.docx`;
+
+    const key = this.storage.buildKey(
+      data.organizationId,
+      data.trackableId,
+      `folder-${data.folderId}`,
+      `${Date.now()}-${filename}`,
+    );
+
+    await this.storage.upload(
+      key,
+      buf,
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    );
+
+    const contentText =
+      data.contentTextOverride?.slice(0, 500_000) ?? stripHtmlToPlain(data.html).slice(0, 500_000);
+
+    const doc = this.em.create(Document, {
+      title: safeTitle,
+      filename,
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      minioKey: key,
+      currentVersion: 1,
+      reviewStatus: DocumentReviewStatus.DRAFT,
+      isTemplate: false,
+      folder: data.folderId,
+      workflowItem: data.workflowItemId || undefined,
+      uploadedBy: data.userId,
+      organization: data.organizationId,
+      contentText,
+    } as any);
+
+    const version = this.em.create(DocumentVersion, {
+      document: doc,
+      versionNumber: 1,
+      minioKey: key,
+      fileSize: buf.length,
+      createdBy: data.userId,
+    } as any);
+
+    await this.em.flush();
+
+    if (data.workflowItemId) {
+      await this.appendParticipationForNewLink(doc.id, data.workflowItemId, data.organizationId, doc.currentVersion);
+    }
+
+    this.emitDocumentEvent(DomainEvents.DOCUMENT_CREATED, {
+      documentId: doc.id,
+      organizationId: data.organizationId,
+      trackableId: data.trackableId,
+      workflowItemId: data.workflowItemId ?? null,
+      userId: data.userId,
+    });
+
+    if (data.assistantDraft) {
+      await this.logAssistantDraftDocument({
+        organizationId: data.organizationId,
+        userId: data.userId,
+        trackableId: data.trackableId,
+        documentId: doc.id,
+        mode: data.assistantDraft.mode,
+        extra: data.assistantDraft.extra,
+      });
+    }
+
+    return doc;
+  }
+
+  /** Top document snippets from org search (KB v1: indexed firm documents). */
+  async retrieveOrgKnowledge(
+    organizationId: string,
+    query: string,
+    opts?: { trackableId?: string; limit?: number },
+  ): Promise<Array<{ documentId: string; title: string; snippet: string; score: number }>> {
+    const raw = query.trim();
+    if (!raw) return [];
+    const limit = Math.min(Math.max(opts?.limit ?? 5, 1), 20);
+    const { data } = await this.search.searchDocuments({
+      query: raw,
+      organizationId,
+      trackableId: opts?.trackableId,
+      isTemplate: false,
+      limit,
+    });
+    const out: Array<{ documentId: string; title: string; snippet: string; score: number }> = [];
+    for (const row of data) {
+      const loaded = await this.findOne(row.id);
+      const full = String((loaded as any).contentText ?? '');
+      let snippet = String(row.headline ?? '')
+        .replace(/<mark>/gi, '')
+        .replace(/<\/mark>/gi, '');
+      if (snippet.length < 80 && full) {
+        snippet = full.slice(0, 500);
+      }
+      snippet = stripHtmlToPlain(snippet).slice(0, 800);
+      out.push({
+        documentId: row.id,
+        title: row.title,
+        snippet,
+        score: row.rank,
+      });
+    }
+    return out;
+  }
+
+  private async logAssistantDraftDocument(params: {
+    organizationId: string;
+    userId: string;
+    trackableId: string;
+    documentId: string;
+    mode: string;
+    extra?: Record<string, unknown>;
+  }): Promise<void> {
+    this.em.create(ActivityLog, {
+      organization: params.organizationId as any,
+      trackable: params.trackableId as any,
+      entityType: 'document',
+      entityId: params.documentId,
+      user: params.userId as any,
+      action: 'assistant_draft_brief',
+      details: { source: 'assistant', mode: params.mode, ...params.extra },
+    } as any);
+    await this.em.flush();
+  }
+
   async createBlankDocument(data: {
     title: string;
     folderId: string;
@@ -525,7 +978,24 @@ export class DocumentsService extends BaseCrudService<Document> {
     workflowItemId?: string;
     organizationId: string;
     userId: string;
+    /** Initial plain text / markdown stored for search & assistant */
+    initialContentText?: string;
   }): Promise<Document> {
+    const text = data.initialContentText?.trim();
+    if (text) {
+      const html = plainTextOrMarkdownToHtml(text);
+      return this.createDocumentFromHtml({
+        title: data.title,
+        html,
+        folderId: data.folderId,
+        trackableId: data.trackableId,
+        workflowItemId: data.workflowItemId,
+        organizationId: data.organizationId,
+        userId: data.userId,
+        contentTextOverride: text,
+      });
+    }
+
     const doc = this.em.create(Document, {
       title: data.title,
       filename: `${data.title}.docx`,
@@ -537,10 +1007,80 @@ export class DocumentsService extends BaseCrudService<Document> {
       workflowItem: data.workflowItemId || undefined,
       uploadedBy: data.userId,
       organization: data.organizationId,
+      contentText: undefined,
     } as any);
 
     await this.em.flush();
+    if (data.workflowItemId) {
+      await this.appendParticipationForNewLink(doc.id, data.workflowItemId, data.organizationId, doc.currentVersion);
+    }
+    this.emitDocumentEvent(DomainEvents.DOCUMENT_CREATED, {
+      documentId: doc.id,
+      organizationId: data.organizationId,
+      trackableId: data.trackableId,
+      workflowItemId: data.workflowItemId ?? null,
+      userId: data.userId,
+    });
     return doc;
+  }
+
+  /** Update indexed text for assistant / search (does not patch binary). */
+  async updateDocumentContentText(
+    documentId: string,
+    organizationId: string,
+    dto: { contentText: string; mode: 'replace' | 'append' },
+  ): Promise<Document> {
+    const doc = await this.findOne(documentId, { populate: ['folder'] as any });
+    if ((doc as any).organization?.id && (doc as any).organization.id !== organizationId) {
+      throw new NotFoundException('Document not found');
+    }
+    const prev = (doc as any).contentText as string | undefined;
+    const next =
+      dto.mode === 'append'
+        ? [prev?.trim(), dto.contentText.trim()].filter(Boolean).join('\n\n')
+        : dto.contentText;
+    (doc as any).contentText = next;
+    await this.em.flush();
+    return doc;
+  }
+
+  /** Move document to another folder within the same trackable. */
+  async moveDocumentToFolder(
+    documentId: string,
+    targetFolderId: string,
+    organizationId: string,
+  ): Promise<Document> {
+    const doc = await this.findOne(documentId, { populate: ['folder', 'folder.trackable'] as any });
+    if ((doc as any).organization?.id && (doc as any).organization.id !== organizationId) {
+      throw new NotFoundException('Document not found');
+    }
+    const target = await this.em.findOne(Folder, { id: targetFolderId, organization: organizationId } as any, {
+      populate: ['trackable'] as any,
+    });
+    if (!target) throw new NotFoundException('Carpeta destino no encontrada');
+    const curTid = (doc.folder as any)?.trackable?.id;
+    const tgtTid = (target as any).trackable?.id ?? (target as any).trackable;
+    if (curTid && tgtTid && String(curTid) !== String(tgtTid)) {
+      throw new BadRequestException('La carpeta destino debe ser del mismo expediente');
+    }
+    (doc as any).folder = target.id;
+    await this.em.flush();
+    return this.findOne(documentId, { populate: ['folder', 'folder.trackable', 'workflowItem'] as any });
+  }
+
+  private emitDocumentEvent(
+    event: (typeof DomainEvents)[keyof typeof DomainEvents],
+    payload: {
+      documentId: string;
+      organizationId: string;
+      trackableId?: string;
+      workflowItemId?: string | null;
+      userId?: string;
+      contentLengthDelta?: number;
+      patchedFields?: string[];
+    },
+  ): void {
+    this.eventEmitter.emit(event, payload);
   }
 
   async softRemove(id: string): Promise<void> {
@@ -562,6 +1102,30 @@ export class DocumentsService extends BaseCrudService<Document> {
     });
   }
 
+  async resolveTrashRetentionDays(organizationId: string): Promise<number> {
+    const org = await this.em.findOne(
+      Organization,
+      { id: organizationId },
+      { fields: ['settings'] as any, filters: false },
+    );
+    return normalizeDocumentTrashRetentionDays(org?.settings?.documentTrashRetentionDays);
+  }
+
+  async purgeExpiredTrashedDocuments(organizationId: string, retentionDays: number): Promise<void> {
+    const cutoff = new Date();
+    cutoff.setTime(cutoff.getTime() - retentionDays * 24 * 60 * 60 * 1000);
+    const docs = await this.em.find(
+      Document,
+      { organization: organizationId, deletedAt: { $lt: cutoff } } as any,
+    );
+    for (const doc of docs) {
+      this.em.remove(doc);
+    }
+    if (docs.length) {
+      await this.em.flush();
+    }
+  }
+
   async permanentRemove(id: string): Promise<void> {
     const doc = await this.em.findOneOrFail(Document, { id, deletedAt: { $ne: null } } as any);
     this.em.remove(doc);
@@ -572,77 +1136,6 @@ export class DocumentsService extends BaseCrudService<Document> {
     body: { messages: unknown[]; stream?: boolean; options?: Record<string, unknown> },
     res: import('express').Response,
   ): Promise<void> {
-    const { messages, stream = false, options = {} } = body;
-
-    const providers = [
-      {
-        url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
-        apiKey: process.env.GEMINI_API_KEY,
-        model: (options.model as string) || 'gemini-2.5-flash',
-      },
-      {
-        url: 'https://api.deepseek.com/v1/chat/completions',
-        apiKey: process.env.DEEPSEEK_API_KEY,
-        model: 'deepseek-chat',
-      },
-    ].filter((p) => p.apiKey);
-
-    for (const provider of providers) {
-      try {
-        const response = await fetch(provider.url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${provider.apiKey}`,
-          },
-          body: JSON.stringify({
-            model: provider.model,
-            messages,
-            stream,
-            temperature: (options.temperature as number) ?? 0.7,
-            max_tokens: (options.maxTokens as number) ?? 2000,
-          }),
-        });
-
-        if (!response.ok) {
-          const errText = await response.text();
-          console.error(`[AI] ${provider.url} failed ${response.status}: ${errText}`);
-          throw new Error(`${provider.url} returned ${response.status}`);
-        }
-
-        if (stream) {
-          res.setHeader('Content-Type', 'text/event-stream');
-          res.setHeader('Cache-Control', 'no-cache');
-          res.setHeader('Connection', 'keep-alive');
-          const reader = (response.body as any).getReader();
-          const decoder = new TextDecoder();
-          let done = false;
-          while (!done) {
-            const { value, done: d } = await reader.read();
-            done = d;
-            if (value) res.write(decoder.decode(value, { stream: true }));
-          }
-          res.end();
-          return;
-        }
-
-        const data = await response.json() as any;
-        if (data.choices?.[0]?.message?.content) {
-          data.choices[0].message.content = stripMarkdownCodeBlock(data.choices[0].message.content);
-        }
-        res.json(data);
-        return;
-      } catch (err) {
-        console.error(`[AI] provider ${provider.url} error:`, (err as Error).message);
-        // try next provider
-      }
-    }
-
-    console.error('[AI] All providers failed or unconfigured');
-    res.status(503).json({ error: 'No AI providers configured or available' });
+    return this.llm.aiComplete(body, res);
   }
-}
-
-function stripMarkdownCodeBlock(content: string): string {
-  return content.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
 }

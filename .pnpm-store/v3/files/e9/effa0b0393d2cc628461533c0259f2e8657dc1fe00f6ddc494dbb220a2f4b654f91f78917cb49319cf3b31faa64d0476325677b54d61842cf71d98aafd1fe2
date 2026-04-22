@@ -1,0 +1,5 @@
+export function setTextSelection({ from, to }: {
+    from?: number;
+    to?: number;
+}): import('./types/index.js').Command;
+//# sourceMappingURL=setTextSelection.d.ts.map

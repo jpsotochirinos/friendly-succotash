@@ -1,0 +1,22 @@
+/**
+ * Read intrinsic image dimensions from raw binary headers.
+ * Supports PNG, JPEG, GIF, BMP, and WEBP.
+ *
+ * @param {Uint8Array} bytes - Raw image bytes
+ * @returns {{ width: number, height: number } | null} Dimensions or null if unreadable
+ */
+export function readImageDimensions(bytes: Uint8Array): {
+    width: number;
+    height: number;
+} | null;
+/**
+ * Extract dimensions from a data URI's base64 payload.
+ *
+ * @param {string} dataUri - A data URI (e.g. "data:image/png;base64,...")
+ * @returns {{ width: number, height: number } | null} Dimensions or null
+ */
+export function readImageDimensionsFromDataUri(dataUri: string): {
+    width: number;
+    height: number;
+} | null;
+//# sourceMappingURL=image-dimensions.d.ts.map

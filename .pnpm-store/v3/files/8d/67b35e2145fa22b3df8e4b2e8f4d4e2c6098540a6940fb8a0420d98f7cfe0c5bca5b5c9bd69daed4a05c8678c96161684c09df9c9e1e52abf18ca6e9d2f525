@@ -1,0 +1,42 @@
+/**
+ * ProseMirror node view that renders paragraphs, including special handling for
+ * numbered/bulleted lists so marker/separator elements stay in sync with docx
+ * layout expectations.
+ */
+export class ParagraphNodeView {
+    /**
+     * @param {import('prosemirror-model').Node} node Current paragraph node.
+     * @param {import('../../core/Editor').Editor} editor Editor instance providing schema/helpers.
+     * @param {() => number} getPos Position getter provided by ProseMirror.
+     * @param {import('prosemirror-view').Decoration[]} decorations Decorations applied to this node.
+     * @param {Record<string, unknown>} extensionAttrs Extra attributes declared by the paragraph extension.
+     */
+    constructor(node: import('prosemirror-model').Node, editor: import('../../core/Editor').Editor, getPos: () => number, decorations: import('prosemirror-view').Decoration[], extensionAttrs: Record<string, unknown>);
+    node: import('prosemirror-model').Node;
+    editor: import('../../../../../../superdoc/src/index.js').Editor;
+    getPos: () => number;
+    decorations: import('prosemirror-view').Decoration[];
+    extensionAttrs: Record<string, unknown>;
+    _animationFrameRequest: any;
+    surroundingContext: {};
+    dom: HTMLParagraphElement;
+    contentDOM: HTMLSpanElement;
+    /**
+     * @param {import('prosemirror-model').Node} node
+     * @param {import('prosemirror-view').Decoration[]} decorations
+     * @param {import('prosemirror-view').Decoration[]} innerDecorations
+     * @param {boolean} [forceUpdate=false]
+     * @returns {boolean}
+     */
+    update(node: import('prosemirror-model').Node, decorations: import('prosemirror-view').Decoration[], innerDecorations: import('prosemirror-view').Decoration[], forceUpdate?: boolean): boolean;
+    innerDecorations: import('prosemirror-view').Decoration[] | undefined;
+    /**
+     * @param {MutationRecord} mutation
+     */
+    ignoreMutation(mutation: MutationRecord): boolean;
+    marker: HTMLSpanElement | null | undefined;
+    separator: Text | HTMLSpanElement | null | undefined;
+    destroy(): void;
+    #private;
+}
+//# sourceMappingURL=ParagraphNodeView.d.ts.map

@@ -1,0 +1,1356 @@
+import { SuperDoc, Editor as Editor$1 } from 'superdoc';
+export { SuperDoc } from 'superdoc';
+import { Mark, Node } from 'prosemirror-model';
+import { EditorState } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
+
+/**
+ * Provider type definitions and configurations
+ * @module providers/types
+ */
+
+type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+interface ProviderRequestContext {
+    messages: AIMessage[];
+    options?: CompletionOptions;
+    stream: boolean;
+}
+interface ProviderDefaults {
+    temperature?: number;
+    maxTokens?: number;
+    stop?: string[];
+    streamResults?: boolean;
+}
+interface HttpProviderConfig extends ProviderDefaults {
+    type: 'http';
+    url: string;
+    streamUrl?: string;
+    headers?: Record<string, string>;
+    method?: string;
+    fetch?: FetchLike;
+    buildRequestBody?: (context: ProviderRequestContext) => Record<string, unknown>;
+    parseCompletion?: (payload: unknown) => string;
+    parseStreamChunk?: (payload: unknown) => string | undefined;
+}
+interface OpenAIProviderConfig extends ProviderDefaults {
+    type: 'openai';
+    apiKey: string;
+    model: string;
+    baseURL?: string;
+    organizationId?: string;
+    headers?: Record<string, string>;
+    completionPath?: string;
+    requestOptions?: Record<string, unknown>;
+    fetch?: FetchLike;
+}
+interface AnthropicProviderConfig extends ProviderDefaults {
+    type: 'anthropic';
+    apiKey: string;
+    model: string;
+    baseURL?: string;
+    apiVersion?: string;
+    headers?: Record<string, string>;
+    requestOptions?: Record<string, unknown>;
+    fetch?: FetchLike;
+}
+type AIProviderInput = AIProvider | OpenAIProviderConfig | AnthropicProviderConfig | HttpProviderConfig;
+
+/**
+ * Provider factory functions
+ * @module providers/factory
+ */
+
+/**
+ * Entry point for consumers. Accepts either an already-instantiated provider
+ * (anything that satisfies the `AIProvider` interface) or a configuration object
+ * describing one of the supported backends. The helper returns a normalized
+ * provider that SuperDoc AI can call without knowing the underlying vendor.
+ *
+ * @param config - Provider instance or configuration object.
+ * @returns An `AIProvider` ready for use by SuperDoc AI.
+ * @throws Error when an unsupported provider type is supplied.
+ *
+ * @example
+ * ```typescript
+ * const provider = createAIProvider({
+ *   type: 'openai',
+ *   apiKey: process.env.OPENAI_API_KEY,
+ *   model: 'gpt-4'
+ * });
+ * ```
+ */
+declare function createAIProvider(config: AIProviderInput): AIProvider;
+
+/**
+ * Tool system types for AIPlanner
+ * @module tools/types
+ */
+
+/**
+ * Safe record type for tool arguments
+ */
+type SafeRecord$1 = Record<string, unknown>;
+/**
+ * Built-in tool names available in AIPlanner
+ */
+type AIToolBuiltin = 'findAll' | 'highlight' | 'replaceAll' | 'literalReplace' | 'insertTrackedChanges' | 'insertComments' | 'literalInsertComment' | 'summarize' | 'insertContent' | 'respond';
+/**
+ * Tool name type that allows built-in names plus custom tool names
+ */
+type AIToolName = AIToolBuiltin | (string & {});
+/**
+ * Represents a single step in an execution plan
+ */
+interface AIPlanStep {
+    id?: string;
+    tool: AIToolName;
+    instruction: string;
+    args?: SafeRecord$1;
+}
+/**
+ * Actions interface available to tool handlers
+ */
+interface AIToolActions$1 {
+    findAll: (instruction: string) => Promise<Result>;
+    highlight: (instruction: string, color?: string) => Promise<Result>;
+    replaceAll: (instruction: string) => Promise<Result>;
+    literalReplace: (findText: string, replaceText: string, options?: {
+        caseSensitive?: boolean;
+        trackChanges?: boolean;
+    }) => Promise<Result>;
+    insertTrackedChanges: (instruction: string) => Promise<Result>;
+    insertComments: (instruction: string) => Promise<Result>;
+    literalInsertComment: (findText: string, commentText: string, options?: {
+        caseSensitive?: boolean;
+    }) => Promise<Result>;
+    summarize: (instruction: string) => Promise<Result>;
+    insertContent: (instruction: string, options?: {
+        position?: 'before' | 'after' | 'replace';
+    }) => Promise<Result>;
+}
+/**
+ * Context provided to tool handlers
+ */
+interface AIToolHandlerContext {
+    editor: Editor;
+    actions: AIToolActions$1;
+}
+/**
+ * Result from a previous step in the plan
+ */
+interface PreviousStepResult {
+    stepId?: string;
+    tool: AIToolName;
+    result: AIToolHandlerResult;
+}
+/**
+ * Payload passed to tool handlers
+ */
+interface AIToolHandlerPayload {
+    instruction: string;
+    step: AIPlanStep;
+    context: AIToolHandlerContext;
+    previousResults?: PreviousStepResult[];
+}
+/**
+ * Result returned from tool handlers
+ */
+interface AIToolHandlerResult {
+    success: boolean;
+    message?: string;
+    data?: Result | SafeRecord$1 | null;
+}
+/**
+ * Tool definition including metadata and handler
+ */
+interface AIToolDefinition {
+    name: AIToolName;
+    description: string;
+    handler: (payload: AIToolHandlerPayload) => Promise<AIToolHandlerResult> | AIToolHandlerResult;
+}
+/**
+ * Progress event types for AIPlanner execution
+ */
+type AIPlannerProgressEvent = {
+    type: 'planning';
+    message: string;
+} | {
+    type: 'plan_ready';
+    plan: unknown;
+} | {
+    type: 'tool_start';
+    tool: string;
+    instruction: string;
+    stepIndex: number;
+    totalSteps: number;
+} | {
+    type: 'tool_complete';
+    tool: string;
+    stepIndex: number;
+    totalSteps: number;
+} | {
+    type: 'complete';
+    success: boolean;
+};
+/**
+ * Callback function for progress updates
+ */
+type AIPlannerProgressCallback = (event: AIPlannerProgressEvent) => void;
+
+/**
+ * Tool registry for managing built-in and custom tools
+ * @module tools/registry
+ */
+
+/**
+ * Creates a tool registry with built-in and optional custom tools
+ * Custom tools can override built-in ones
+ *
+ * @param actions - AI actions service instance
+ * @param customTools - Optional array of custom tool definitions
+ * @returns Map of tool names to their definitions
+ */
+declare function createToolRegistry(actions: AIToolActions$1, customTools?: AIToolDefinition[]): Map<AIToolName, AIToolDefinition>;
+/**
+ * Gets an array of tool descriptions for use in system prompts
+ *
+ * @param toolRegistry - Map of registered tools
+ * @returns Formatted string of tool descriptions
+ */
+declare function getToolDescriptions(toolRegistry: Map<AIToolName, AIToolDefinition>): string;
+/**
+ * Validates a tool definition
+ *
+ * @param tool - Tool definition to validate
+ * @returns True if valid, false otherwise
+ */
+declare function isValidTool(tool: unknown): tool is AIToolDefinition;
+
+interface AIPlan {
+    reasoning?: string;
+    steps: AIPlanStep[];
+}
+interface AIPlannerConfig {
+    editor?: Editor;
+    aiActions?: AIActions;
+    superdoc?: SuperDocInstance;
+    user?: AIUser;
+    provider: AIProviderInput;
+    enableLogging?: boolean;
+    /** Maximum document context length in characters (not tokens). */
+    maxContextLength?: number;
+    documentContextProvider?: () => string;
+    tools?: AIToolDefinition[];
+    onProgress?: AIPlannerProgressCallback;
+    onReady?: AIActionsCallbacks['onReady'];
+    onStreamingStart?: AIActionsCallbacks['onStreamingStart'];
+    onStreamingPartialResult?: AIActionsCallbacks['onStreamingPartialResult'];
+    onStreamingEnd?: AIActionsCallbacks['onStreamingEnd'];
+    onError?: AIActionsCallbacks['onError'];
+}
+interface AIPlannerExecutionResult {
+    success: boolean;
+    executedTools: string[];
+    reasoning?: string;
+    response?: string;
+    plan?: AIPlan;
+    rawPlan?: string;
+    error?: string;
+    warnings?: string[];
+}
+declare class AIPlanner {
+    private readonly editor;
+    private readonly provider;
+    private readonly enableLogging;
+    private readonly logger;
+    private readonly maxContextLength;
+    private readonly documentContextProvider;
+    private readonly tools;
+    private readonly aiActionsInstance;
+    private readonly actions;
+    private readonly onProgress?;
+    private selectionSnapshot;
+    /**
+     * Creates a new AIPlanner instance
+     *
+     * @param config - Planner configuration
+     * @throws {Error} If configuration is invalid
+     *
+     * @remarks
+     * The recommended way to use AIPlanner is through the `ai.planner` property
+     * of an AIActions instance. Direct instantiation is mainly for advanced use cases.
+     *
+     * @example
+     * ```typescript
+     * // RECOMMENDED: Use planner from AIActions instance
+     * const ai = new AIActions(superdoc, {
+     *   user: { displayName: 'AI', userId: 'ai-1' },
+     *   provider: { type: 'openai', apiKey: '...', model: 'gpt-4o' },
+     *   planner: {
+     *     maxContextLength: 8000,
+     *     onProgress: (event) => console.log(event)
+     *   }
+     * });
+     * const result = await ai.planner.execute('Fix grammar issues');
+     *
+     * // ALTERNATIVE: Direct instantiation with AIActions
+     * const ai = new AIActions(superdoc, { user: {...}, provider: {...} });
+     * const planner = new AIPlanner({
+     *   editor: editor,
+     *   aiActions: ai,
+     *   provider: ai.config.provider, // or pass provider config
+     *   enableLogging: true
+     * });
+     *
+     * // ALTERNATIVE: Direct instantiation with SuperDoc + user
+     * const planner = new AIPlanner({
+     *   superdoc: superdocInstance,
+     *   user: { displayName: 'AI', userId: 'ai-1' },
+     *   provider: { type: 'openai', apiKey: '...', model: 'gpt-4o' },
+     *   enableLogging: true,
+     *   onProgress: (event) => console.log(event)
+     * });
+     * ```
+     */
+    constructor(config: AIPlannerConfig);
+    /**
+     * Executes a user instruction end-to-end:
+     * 1. Validates input and builds a plan using the configured provider
+     * 2. Runs each planned tool sequentially while preserving formatting
+     * 3. Returns execution metadata plus any assistant response
+     *
+     * @param prompt - User instruction to execute
+     * @param options - Optional completion configuration for the AI provider
+     * @returns Execution result with success status, executed tools, and optional response
+     * @throws {Error} If prompt is empty or exceeds maximum length
+     *
+     * @example
+     * ```typescript
+     * const result = await planner.execute('Fix grammar issues in the selected text');
+     * if (result.success) {
+     *   console.log('Executed tools:', result.executedTools);
+     *   console.log('AI response:', result.response);
+     * }
+     * ```
+     */
+    execute(prompt: string, options?: CompletionOptions): Promise<AIPlannerExecutionResult>;
+    /**
+     * Builds an execution plan from a user prompt using the AI provider
+     * @private
+     * @param prompt - User instruction
+     * @param options - Optional completion configuration
+     * @returns Plan result with steps, warnings, and potential errors
+     */
+    private buildPlan;
+    /**
+     * Extracts the JSON plan payload from various response formats
+     * @private
+     * @param response - Raw response from AI provider
+     * @returns Extracted JSON string
+     */
+    private extractPlanPayload;
+    /**
+     * Normalizes and validates a plan step from AI response
+     * @private
+     * @param step - Raw plan step from AI response
+     * @returns Normalized step or null if invalid
+     */
+    private normalizeStep;
+    /**
+     * Builds the system prompt with available tools and guidelines
+     * Uses the centralized prompt template from prompts module
+     * @private
+     * @returns System prompt string
+     */
+    private buildSystemPrompt;
+    /**
+     * Builds the user prompt with context information
+     * @private
+     * @param prompt - User's request
+     * @param snapshot - Context snapshot with document and selection text
+     * @returns Formatted user prompt
+     */
+    private buildUserPrompt;
+    /**
+     * Collects a snapshot of document and selection context for planning
+     * @private
+     * @param selectionSnapshot - Existing selection snapshot or null
+     * @returns Context snapshot with document and selection text
+     */
+    private collectPlannerSnapshot;
+    /**
+     * Captures the current editor selection as a snapshot
+     * @private
+     * @returns Selection snapshot or null if no selection exists
+     */
+    private captureSelectionSnapshot;
+    /**
+     * Truncates document text to fit within context length limits
+     * Uses character count (not tokens).
+     * @private
+     * @param text - Text to truncate
+     * @returns Truncated text with head and tail preserved
+     */
+    private truncateForPlanner;
+    /**
+     * Gets full document context using the configured provider
+     * Falls back to reading from editor if provider fails
+     * @private
+     * @returns Document context string
+     */
+    private getFullDocumentContext;
+    /**
+     * Reads document context directly from the editor
+     * Prioritizes selection snapshot, then current selection, then full document
+     * @private
+     * @returns Document context string
+     */
+    private readDocumentContextFromEditor;
+}
+
+type MarkType = Mark;
+type NodeType = Node;
+type Editor = InstanceType<typeof Editor$1> & {
+    view?: EditorView;
+    state?: EditorState;
+};
+type SuperDocInstance = typeof SuperDoc | SuperDoc;
+/**
+ * Represents a position range in the document
+ */
+interface DocumentPosition {
+    from: number;
+    to: number;
+}
+/**
+ * Represents a match found by AI operations
+ */
+interface FoundMatch {
+    originalText?: string | null | undefined;
+    suggestedText?: string | null | undefined;
+    positions?: DocumentPosition[];
+    changeId?: string;
+}
+/**
+ * Standard result structure for AI operations
+ */
+interface Result {
+    success: boolean;
+    results: FoundMatch[];
+}
+/**
+ * Message format for AI chat interactions
+ */
+type AIMessage = {
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+};
+/**
+ * Options for streaming AI completions
+ */
+type StreamOptions = {
+    temperature?: number;
+    maxTokens?: number;
+    stop?: string[];
+    model?: string;
+    signal?: AbortSignal;
+    metadata?: Record<string, unknown>;
+    providerOptions?: Record<string, unknown>;
+    documentId?: string;
+    stream?: boolean;
+};
+/**
+ * Options for non-streaming completions (extends StreamOptions)
+ */
+type CompletionOptions = StreamOptions;
+/**
+ * Interface that all AI providers must implement
+ */
+type AIProvider = {
+    streamResults?: boolean;
+    streamCompletion(messages: AIMessage[], options?: StreamOptions): AsyncGenerator<string, void, unknown>;
+    getCompletion(messages: AIMessage[], options?: CompletionOptions): Promise<string>;
+};
+/**
+ * User information for AI-generated changes
+ */
+type AIUser = {
+    displayName: string;
+    profileUrl?: string;
+    userId?: string;
+};
+/**
+ * Configuration for the AIActions service
+ */
+type AIActionsConfig = {
+    provider: AIProvider;
+    user: AIUser;
+    systemPrompt?: string;
+    enableLogging?: boolean;
+    /** Maximum document context length in characters (not tokens). Default: 8,000 characters */
+    maxContextLength?: number;
+};
+/**
+ * Lifecycle callbacks for AIActions events
+ */
+type AIActionsCallbacks = {
+    onReady?: (context: {
+        aiActions: unknown;
+    }) => void;
+    onStreamingStart?: () => void;
+    onStreamingPartialResult?: (context: {
+        partialResult: string;
+    }) => void;
+    onStreamingEnd?: (context: {
+        fullResult: unknown;
+    }) => void;
+    onError?: (error: Error) => void;
+};
+/**
+ * Planner-specific configuration options
+ */
+type PlannerOptions = {
+    /** Maximum document context length in characters (not tokens). Default: 8,000 characters */
+    maxContextLength?: number;
+    documentContextProvider?: () => string;
+    tools?: AIToolDefinition[];
+    onProgress?: (event: unknown) => void;
+};
+/**
+ * Complete options for AIActions constructor
+ */
+type AIActionsOptions = AIActionsConfig & AIActionsCallbacks & {
+    planner?: PlannerOptions;
+};
+/**
+ * Record type with string keys and unknown values for maximum type safety
+ */
+type SafeRecord = Record<string, unknown>;
+/**
+ * Interface for tool handler actions that can be either AIActionsService or AIActions.action
+ */
+interface AIToolActions {
+    findAll: (instruction: string) => Promise<Result>;
+    highlight: (instruction: string, color?: string) => Promise<Result>;
+    replaceAll: (instruction: string) => Promise<Result>;
+    literalReplace: (findText: string, replaceText: string, options?: {
+        caseSensitive?: boolean;
+        trackChanges?: boolean;
+    }) => Promise<Result>;
+    insertTrackedChanges: (instruction: string) => Promise<Result>;
+    insertComments: (instruction: string) => Promise<Result>;
+    summarize: (instruction: string) => Promise<Result>;
+    insertContent: (instruction: string, options?: {
+        position?: 'before' | 'after' | 'replace';
+    }) => Promise<Result>;
+}
+/**
+ * Selection range for literalReplace operations
+ */
+interface SelectionRange {
+    from: number;
+    to: number;
+    text: string;
+}
+/**
+ * Internal snapshot of editor selection state
+ */
+interface SelectionSnapshot {
+    from: number;
+    to: number;
+    text: string;
+}
+/**
+ * Context snapshot passed to the planner
+ */
+interface PlannerContextSnapshot {
+    documentText: string;
+    selectionText: string;
+}
+/**
+ * Internal result from plan building
+ */
+interface BuilderPlanResult {
+    plan?: AIPlan;
+    raw: string;
+    warnings: string[];
+    error?: string;
+}
+
+/**
+ * Constants and configuration values for the AI package
+ * @module constants
+ */
+/**
+ * Default maximum length of document context sent to AI provider (in characters, not tokens).
+ */
+declare const DEFAULT_CONTEXT_LENGTH = 8000;
+/**
+ * Ratio of context to use for the beginning of truncated text (0.0 - 1.0)
+ * Remaining ratio is used for the end of the text
+ */
+declare const TRUNCATION_HEAD_RATIO = 0.6;
+/**
+ * Maximum number of steps allowed in an execution plan
+ * Prevents infinite loops or extremely long-running operations
+ */
+declare const MAX_PLAN_STEPS = 50;
+/**
+ * Maximum length for user prompts (in characters)
+ */
+declare const MAX_PROMPT_LENGTH = 10000;
+/**
+ * Maximum length for tool instructions (in characters)
+ */
+declare const MAX_INSTRUCTION_LENGTH = 5000;
+/**
+ * Maximum number of iterations for streaming reader (safety limit)
+ * Prevents infinite loops if stream never closes properly
+ */
+declare const MAX_STREAM_ITERATIONS = 100000;
+/**
+ * Maximum timeout for streaming operations (in milliseconds)
+ * Default: 5 minutes
+ */
+declare const MAX_STREAM_TIMEOUT_MS: number;
+/**
+ * Error message constants
+ */
+declare const ERROR_MESSAGES: {
+    readonly NO_SUPERDOC_OR_EDITOR: "AIPlanner requires either \"superdoc\" or \"editor\" configuration";
+    readonly NO_USER_CONFIG: "When using \"superdoc\", you must provide either \"user\" config or a pre-built \"aiActions\" instance";
+    readonly NO_ACTIVE_EDITOR: "AIPlanner requires an active SuperDoc editor instance";
+    readonly NO_PROVIDER: "AI provider is required";
+    readonly NO_EDITOR_FOR_ACTION: "No active SuperDoc editor available for AI actions";
+    readonly EMPTY_PROMPT: "AIPlanner requires a non-empty prompt";
+    readonly PROMPT_TOO_LONG: "Prompt exceeds maximum length of 10000 characters";
+    readonly TOO_MANY_STEPS: "Plan exceeds maximum of 50 steps";
+    readonly ACTION_NOT_AVAILABLE: (actionName: string) => string;
+    readonly TOOL_NOT_FOUND: (toolName: string) => string;
+    readonly TOOL_NO_INSTRUCTION: (stepId: string) => string;
+    readonly TOOL_EXECUTION_FAILED: (toolName: string) => string;
+    readonly TOOL_THREW_ERROR: (toolName: string, detail: string) => string;
+    readonly TOOL_NO_RESULTS: (toolName: string) => string;
+    readonly NO_ACTIONABLE_STEPS: "Plan did not contain actionable steps";
+    readonly INVALID_PLAN_RESPONSE: "Plan response did not contain valid steps";
+    readonly LITERAL_REPLACE_NO_FIND: "literalReplace requires a non-empty \"find\" argument";
+    readonly LITERAL_REPLACE_NO_REPLACE: "literalReplace requires a \"replace\" argument (use an empty string to delete)";
+    readonly LITERAL_REPLACE_NO_MATCHES: (findText: string) => string;
+    readonly INSERT_CONTENT_FAILED: "insertContent could not complete the request";
+    readonly NOT_READY: "AIActions is not ready yet. Call waitUntilReady() first";
+    readonly EDITOR_REQUIRED: "AIActions requires an active editor before initialization";
+    readonly CONTEXT_PROVIDER_FAILED: "Document context provider failed";
+};
+/**
+ * Logging prefixes for different components
+ */
+declare const LOG_PREFIXES: {
+    readonly PLANNER: "[AIPlanner]";
+    readonly ACTIONS: "[AIActions]";
+    readonly SERVICE: "[AIActionsService]";
+    readonly PROVIDER: "[AIProvider]";
+};
+/**
+ * Progress message templates
+ */
+declare const PROGRESS_MESSAGES: {
+    readonly PLANNING: "Analyzing your request and creating a plan...";
+};
+
+/**
+ * Validates that an input string is non-empty after trimming
+ * @param input - String to validate
+ * @returns True if valid, false otherwise
+ */
+declare function validateInput(input: string): boolean;
+/**
+ * Safely parses JSON with fallback
+ * Handles markdown code blocks and various JSON formats
+ * @param response - JSON string to parse (may contain markdown)
+ * @param fallback - Fallback value if parsing fails
+ * @param enableLogging - Whether to log parsing errors
+ * @returns Parsed object or fallback
+ */
+declare function parseJSON<T>(response: string, fallback: T, enableLogging?: boolean): T;
+/**
+ * Sanitizes user input for use in AI prompts to prevent prompt injection attacks.
+ * Escapes special characters that could break prompt structure or inject malicious content.
+ * @param input - User input string to sanitize
+ * @returns Sanitized string safe for use in prompts
+ */
+declare function sanitizePromptInput(input: string): string;
+/**
+ * Removes markdown code block syntax from a string
+ * Handles various markdown formats like ```json, ```javascript, etc.
+ * @param text - Text potentially wrapped in code blocks
+ * @returns Cleaned text without markdown syntax
+ */
+declare function removeMarkdownCodeBlocks(text: string): string;
+/**
+ * Generates a unique ID with a prefix
+ * @param prefix - Prefix for the ID
+ * @returns Unique ID string
+ */
+declare function generateId(prefix: string): string;
+/**
+ * Safely extracts text content from a ProseMirror document
+ * @param doc - ProseMirror document
+ * @param from - Start position
+ * @param to - End position
+ * @param separator - Text separator (default: single space)
+ * @returns Extracted text or empty string on error
+ */
+declare function safeTextBetween(doc: {
+    textBetween?: (from: number, to: number, separator?: string) => string;
+} | null | undefined, from: number, to: number, separator?: string): string;
+/**
+ * Extracts error message from various error types
+ * @param error - Error object or value
+ * @returns Error message string
+ */
+declare function getErrorMessage(error: unknown): string;
+/**
+ * Creates a debounced function that delays execution
+ * @param fn - Function to debounce
+ * @param delay - Delay in milliseconds
+ * @returns Debounced function
+ */
+declare function debounce<T extends (...args: unknown[]) => unknown>(fn: T, delay: number): (...args: Parameters<T>) => void;
+/**
+ * Checks if a value is a plain object
+ * @param value - Value to check
+ * @returns True if plain object, false otherwise
+ */
+declare function isPlainObject(value: unknown): value is Record<string, unknown>;
+/**
+ * Removes common list numbering/bullet prefixes from a string.
+ * Examples removed: "1. ", "1.2. ", "- ", "• "
+ *
+ * @param text - Text potentially starting with numbering
+ * @returns Text without leading list prefix
+ */
+declare function stripListPrefix(text: string): string;
+
+/**
+ * Primary entry point for SuperDoc AI capabilities. Wraps a SuperDoc instance,
+ * manages provider lifecycle, and exposes high-level document actions.
+ *
+ * @template TSuperdoc - Type of the SuperDoc instance being wrapped
+ *
+ * @example
+ * ```typescript
+ * // With provider config (recommended)
+ * const ai = new AIActions(superdoc, {
+ *   user: { display_name: 'Bot', user_id: 'bot-123' },
+ *   provider: {
+ *     type: 'openai',
+ *     apiKey: process.env.OPENAI_API_KEY,
+ *     model: 'gpt-4'
+ *   }
+ * });
+ *
+ * // With existing provider instance
+ * const provider = createAIProvider({ type: 'openai', ... });
+ * const ai = new AIActions(superdoc, {
+ *   user: { display_name: 'Bot' },
+ *   provider
+ * });
+ * ```
+ */
+declare class AIActions {
+    private readonly superdoc;
+    private readonly config;
+    private callbacks;
+    private isReady;
+    private initializationPromise;
+    private readonly commands;
+    private selectionContextOverride;
+    private plannerInstance;
+    private readonly plannerOptions?;
+    private readonly logger;
+    readonly action: {
+        find: (instruction: string) => Promise<Result>;
+        findAll: (instruction: string) => Promise<Result>;
+        highlight: (instruction: string, color?: string) => Promise<Result>;
+        replace: (instruction: string) => Promise<Result>;
+        replaceAll: (instruction: string) => Promise<Result>;
+        literalReplace: (findText: string, replaceText: string, options?: {
+            caseSensitive?: boolean;
+            trackChanges?: boolean;
+        }) => Promise<Result>;
+        insertTrackedChange: (instruction: string) => Promise<Result>;
+        insertTrackedChanges: (instruction: string) => Promise<Result>;
+        insertComment: (instruction: string) => Promise<Result>;
+        insertComments: (instruction: string) => Promise<Result>;
+        literalInsertComment: (findText: string, commentText: string, options?: {
+            caseSensitive?: boolean;
+        }) => Promise<Result>;
+        summarize: (instruction: string) => Promise<Result>;
+        insertContent: (instruction: string, options?: {
+            position?: "before" | "after" | "replace";
+        }) => Promise<Result>;
+    };
+    /**
+     * Creates a new AIActions instance.
+     *
+     * @param superdoc - SuperDoc instance to wrap
+     * @param options - Configuration including provider, user, and callbacks
+     * @throws {Error} If SuperDoc instance is invalid or editor is not available
+     *
+     * @example
+     * ```typescript
+     * const ai = new AIActions(superdoc, {
+     *   user: { displayName: 'AI Assistant', userId: 'ai-1' },
+     *   provider: { type: 'openai', apiKey: '...', model: 'gpt-4' },
+     *   enableLogging: true,
+     *   onReady: () => console.log('AI ready'),
+     *   onError: (error) => console.error('AI error:', error)
+     * });
+     * ```
+     */
+    constructor(superdoc: SuperDocInstance, options: AIActionsOptions);
+    /**
+     * Initializes the AI system and triggers onReady callback.
+     * @private
+     */
+    private initialize;
+    /**
+     * Validates that a provider is configured
+     * @private
+     * @throws {Error} If no provider is present
+     */
+    private isProviderAvailable;
+    /**
+     * Executes an action with full callback lifecycle support
+     * @private
+     * @param fn - Function that executes the action
+     * @returns Promise resolving to the action result
+     * @throws {Error} If editor is not available or action fails
+     */
+    private executeActionWithCallbacks;
+    /**
+     * Gets the default system prompt
+     * @private
+     * @returns Default system prompt string
+     */
+    private getDefaultSystemPrompt;
+    /**
+     * Validates a prompt for completion requests
+     * @private
+     * @param prompt - Prompt to validate
+     * @throws {Error} If prompt is invalid
+     */
+    private validatePrompt;
+    /**
+     * Builds messages array for AI completion
+     * @private
+     * @param prompt - User prompt
+     * @returns Array of messages for AI provider
+     */
+    private buildMessages;
+    /**
+     * Waits for initialization to complete before allowing operations.
+     * Useful when you need to ensure the AI is ready before performing actions.
+     *
+     * @returns Promise that resolves when initialization is complete
+     */
+    waitUntilReady(): Promise<void>;
+    /**
+     * Checks if the AI is ready to process requests.
+     *
+     * @returns True if ready, false otherwise
+     */
+    getIsReady(): boolean;
+    /**
+     * Streams AI completion with real-time updates via callbacks
+     * Includes document context automatically
+     *
+     * @param prompt - User prompt
+     * @param options - Optional completion configuration
+     * @returns Promise resolving to complete response
+     * @throws {Error} If not ready, prompt is invalid, or streaming fails
+     *
+     * @example
+     * ```typescript
+     * const response = await ai.streamCompletion('Explain this section');
+     * console.log(response);
+     * ```
+     */
+    streamCompletion(prompt: string, options?: StreamOptions): Promise<string>;
+    /**
+     * Gets a complete AI response (non-streaming)
+     * Includes document context automatically
+     *
+     * @param prompt - User prompt
+     * @param options - Optional completion configuration
+     * @returns Promise resolving to complete response
+     * @throws {Error} If not ready, prompt is invalid, or completion fails
+     *
+     * @example
+     * ```typescript
+     * const response = await ai.getCompletion('Summarize this document');
+     * console.log(response);
+     * ```
+     */
+    getCompletion(prompt: string, options?: CompletionOptions): Promise<string>;
+    /**
+     * Retrieves the current document context for AI processing.
+     * Priority: override > selection > full document
+     *
+     * @returns Document context string
+     *
+     * @example
+     * ```typescript
+     * const context = ai.getDocumentContext();
+     * console.log('Current context:', context);
+     * ```
+     */
+    getDocumentContext(): string;
+    /**
+     * Freezes the current editor selection as the context override until cleared.
+     * Useful when you need to preserve selection state across multiple operations.
+     *
+     * @example
+     * ```typescript
+     * ai.preserveCurrentSelectionContext();
+     * // Selection is now preserved even if user changes selection
+     * await ai.action.summarize('Summarize');
+     * ai.clearSelectionContextOverride();
+     * ```
+     */
+    preserveCurrentSelectionContext(): void;
+    /**
+     * Clears any preserved selection context override.
+     * After this, AI will use the current editor selection/document.
+     *
+     * @example
+     * ```typescript
+     * ai.clearSelectionContextOverride();
+     * // AI now uses current selection again
+     * ```
+     */
+    clearSelectionContextOverride(): void;
+    /**
+     * Handles errors by logging and invoking error callback
+     * @private
+     * @param error - Error to handle
+     */
+    private handleError;
+    /**
+     * Gets the active editor from the SuperDoc instance
+     * @private
+     * @returns Editor instance or null
+     */
+    private getEditor;
+    /**
+     * Gets the AIPlanner instance for this AIActions.
+     * The planner is lazily initialized on first access and reuses all configuration
+     * from this AIActions instance (provider, user, callbacks, etc.).
+     *
+     * @returns The AIPlanner instance
+     * @throws {Error} If editor is not available
+     *
+     * @example
+     * ```typescript
+     * const ai = new AIActions(superdoc, {
+     *   user: { displayName: 'AI', userId: 'ai-1' },
+     *   provider: { type: 'openai', apiKey: '...', model: 'gpt-4o' },
+     *   planner: {
+     *     maxContextLength: 8000,
+     *     onProgress: (event) => console.log(event)
+     *   }
+     * });
+     *
+     * // Use the planner directly from AIActions
+     * const result = await ai.planner.execute('Fix grammar issues in the selected text');
+     * ```
+     */
+    get planner(): AIPlanner;
+}
+
+/**
+ * AI-powered document actions
+ * All methods are pure - they receive dependencies and return results
+ */
+declare class AIActionsService {
+    private provider;
+    private editor;
+    private documentContextProvider;
+    private enableLogging;
+    private onStreamChunk?;
+    private readonly streamPreference?;
+    private readonly adapter;
+    private readonly logger;
+    constructor(provider: AIProvider, editor: Editor | null, documentContextProvider: () => string, enableLogging?: boolean, onStreamChunk?: ((partialResult: string) => void) | undefined, streamPreference?: boolean | undefined);
+    private getDocumentContext;
+    /**
+     * Executes a find query and resolves editor positions for matches.
+     *
+     * @param query - Natural language description of content to find
+     * @param findAll - Whether to find all occurrences or just the first
+     * @returns Result with found locations enriched with editor positions
+     * @throws Error if query is empty
+     * @private
+     */
+    private executeFindQuery;
+    /**
+     * Finds the first occurrence of content matching the query and resolves concrete positions via the editor adapter.
+     * Automatically scrolls to bring the found text into view.
+     *
+     * @param query - Natural language description of content to find
+     * @returns Result with found locations enriched with editor positions
+     * @throws Error if query is empty
+     */
+    find(query: string): Promise<Result>;
+    /**
+     * Finds all occurrences of content matching the query.
+     *
+     * @param query - Natural language description of content to find
+     * @returns Result with all found locations
+     * @throws Error if query is empty
+     */
+    findAll(query: string): Promise<Result>;
+    /**
+     * Finds and highlights content in the document.
+     * Automatically scrolls to bring the highlighted content into view.
+     *
+     * @param query - Natural language description of content to highlight
+     * @param color - Hex color for the highlight (default: #6CA0DC)
+     * @returns Result with highlight ID if successful
+     * @throws Error if query is empty or content not found
+     */
+    highlight(query: string, color?: string): Promise<Result>;
+    /**
+     * Fetches AI-generated replacements based on the query.
+     *
+     * @param query - Natural language query describing what to replace
+     * @param multiple - Whether to find all occurrences or just the first
+     * @param isComment - Whether this is for comments (uses different prompt)
+     * @returns Array of FoundMatch results from AI, or empty array if no context or results
+     * @private
+     */
+    private fetchAIReplacements;
+    /**
+     * Executes a single operation on the first valid match found.
+     *
+     * @param searchResults - Array of search results with positions
+     * @param operationFn - Function to execute the specific operation
+     * @returns Array with the processed result, or empty array if no valid result
+     * @throws Error if operation execution fails
+     * @private
+     */
+    private executeSingleOperation;
+    /**
+     * Executes an operation that may need to find locations first (like comments).
+     *
+     * @param query - Natural language query describing where to add comments
+     * @param multiple - Whether to find all occurrences or just the first
+     * @param operationFn - Function to execute the specific operation
+     * @param isComment - Whether this is for comments (uses different prompt)
+     * @returns Array of processed results
+     * @private
+     */
+    private executeOperationWithLocationFinding;
+    /**
+     * Collects all operations from search results into a flat array.
+     * Creates immutable copies of positions to prevent mutation.
+     *
+     * @param searchResults - Array of search results with positions
+     * @returns Array of operations with positions and associated results
+     * @private
+     */
+    private collectOperationsFromResults;
+    /**
+     * Checks if a position overlaps with any of the processed ranges.
+     *
+     * @param position - Position to check for overlap
+     * @param processedRanges - Array of already processed ranges
+     * @returns True if position overlaps with any processed range
+     * @private
+     */
+    private hasOverlap;
+    /**
+     * Executes multiple operations, handling overlaps and processing in reverse order.
+     * Processes positions from end to beginning to prevent position drift.
+     *
+     * @param allOperations - Array of all operations to process
+     * @param operationFn - Function to execute the specific operation
+     * @returns Array of successfully processed results
+     * @throws Error if any operation execution fails
+     * @private
+     */
+    private executeMultipleOperations;
+    /**
+     * Core logic for all document operations (replace, tracked changes, comments).
+     * Finds matching content and applies the operation function to each match.
+     *
+     * @param query - Natural language query to find content
+     * @param multiple - Whether to apply to all occurrences or just the first
+     * @param operationFn - Function to execute the specific operation on each match
+     * @returns Array of matches with IDs of created items
+     * @throws Error if query is empty
+     * @private
+     */
+    private executeOperation;
+    /**
+     * Finds and replaces the first occurrence of content with AI-generated alternative.
+     * Uses intelligent mark preservation to maintain formatting.
+     *
+     * @param query - Natural language query describing what to replace and how
+     * @returns Result with original and suggested text for the replacement
+     * @throws Error if query is empty
+     */
+    replace(query: string): Promise<Result>;
+    /**
+     * Finds and replaces all occurrences with AI-generated alternatives.
+     * Uses intelligent mark preservation to maintain formatting for each replacement.
+     *
+     * @param query - Natural language query describing what to replace and how
+     * @returns Result with all replacements made
+     * @throws Error if query is empty
+     */
+    replaceAll(query: string): Promise<Result>;
+    /**
+     * Performs a deterministic literal find-and-replace using editor search commands (no AI).
+     *
+     * @param findText - Literal text to locate
+     * @param replacementText - Text that should replace each match (empty string deletes the match)
+     * @param options - Additional options such as case sensitivity
+     */
+    literalReplace(findText: string, replacementText: string, options?: {
+        caseSensitive?: boolean;
+        trackChanges?: boolean;
+    }): Promise<Result>;
+    /**
+     * Insert a single tracked change
+     */
+    insertTrackedChange(query: string): Promise<Result>;
+    /**
+     * Insert multiple tracked changes
+     */
+    insertTrackedChanges(query: string): Promise<Result>;
+    /**
+     * Insert a single comment
+     */
+    insertComment(query: string): Promise<Result>;
+    /**
+     * Insert multiple comments
+     */
+    insertComments(query: string): Promise<Result>;
+    /**
+     * Performs a deterministic literal find-and-add-comment operation (no AI).
+     * Finds all occurrences of the find text and adds the specified comment at each location.
+     * Uses maxPasses loop to handle cases where comment text might contain the search term.
+     *
+     * @param findText - Literal text to locate
+     * @param commentText - Comment text to add at each match location
+     * @param options - Additional options such as case sensitivity
+     */
+    literalInsertComment(findText: string, commentText: string, options?: {
+        caseSensitive?: boolean;
+    }): Promise<Result>;
+    /**
+     * Generates a summary of the document.
+     */
+    summarize(query: string): Promise<Result>;
+    /**
+     * Inserts new content into the document.
+     * @param query - Natural language query for content generation
+     * @param options - in reference to the current document position, where to insert the content.
+     * @returns Result with inserted content location
+     */
+    insertContent(query: string, options?: {
+        position?: 'before' | 'after' | 'replace';
+    }): Promise<Result>;
+    private sanitizeMatches;
+    private runCompletion;
+}
+
+/**
+ * Adapter for SuperDoc editor operations
+ * Encapsulates all editor-specific API calls
+ */
+declare class EditorAdapter {
+    private editor;
+    constructor(editor: Editor);
+    /**
+     * Finds document positions for all search match results.
+     * Maps abstract search results to concrete editor positions using the search command.
+     *
+     * @param results - Array of found matches with originalText to search for
+     * @param options - Additional options
+     * @param options.highlight - Whether to apply visual highlights while searching
+     * @returns Array of matches enriched with position data, filtered to only matches with positions
+     */
+    findResults(results: FoundMatch[], options?: {
+        highlight?: boolean;
+    }): FoundMatch[];
+    /**
+     * Performs a literal text search across the entire document without mutating editor state.
+     * The search works across text nodes with different marks/formatting, as the underlying
+     * search implementation extracts text content regardless of formatting.
+     *
+     * @param query - Exact text to find
+     * @param caseSensitive - Whether the search should be case sensitive
+     */
+    findLiteralMatches(query: string, caseSensitive?: boolean): Array<{
+        from: number;
+        to: number;
+        text: string;
+    }>;
+    /**
+     * Escapes special regex characters in a string for use in a RegExp
+     */
+    private escapeRegex;
+    /**
+     * Creates a highlight mark at the specified document range.
+     * Automatically scrolls to bring the highlighted range into view.
+     *
+     * @param from - Start position of the highlight
+     * @param to - End position of the highlight
+     * @param inlineColor - Hex color for the highlight (default: #6CA0DC)
+     */
+    createHighlight(from: number, to: number, inlineColor?: string): void;
+    /**
+     * Scrolls the editor view to bring a specific position range into view.
+     *
+     * @param from - Start position to scroll to
+     */
+    scrollToPosition(from: number): void;
+    /**
+     * Gets the current selection range from the editor state.
+     *
+     * @returns Selection range with from/to positions, or null if no valid state
+     * @private
+     */
+    private getSelectionRange;
+    /**
+     * Collects text segments with their marks from a document range.
+     * Handles text nodes that partially overlap with the specified range by computing
+     * the intersection and extracting only the overlapping portion with its marks.
+     *
+     * @param from - Start position (validated against doc boundaries)
+     * @param to - End position (validated against doc boundaries)
+     * @returns Array of segments with length and marks, or empty array if invalid positions
+     * @private
+     */
+    private collectTextSegments;
+    /**
+     * Gets the marks that should be applied at a specific position.
+     * Checks stored marks first, then resolves marks from the document position.
+     *
+     * @param position - Document position to get marks from
+     * @returns Array of marks at the position, or empty array if invalid position
+     * @private
+     */
+    private getMarksAtPosition;
+    /**
+     * Builds an array of ProseMirror text nodes with preserved marks.
+     * Distributes the suggested text across segments, applying each segment's marks
+     * to the corresponding portion of text. If text extends beyond segments, uses
+     * the last segment's marks for the overflow.
+     *
+     * @param from - Original range start (used if segments not provided)
+     * @param to - Original range end (used if segments not provided)
+     * @param suggestedText - The text to split into marked nodes
+     * @param segments - Optional pre-collected segments (will collect if not provided)
+     * @returns Array of text nodes with marks applied
+     * @private
+     */
+    private buildTextNodes;
+    /**
+     * Resolves positions that land on transparent inline node boundaries by
+     * walking into the node content until a text node is reached.
+     *
+     * This is needed because search results frequently point to inline wrapper
+     * nodes (e.g. tracked change spans) rather than directly to their text.
+     * Attempting to apply ProseMirror transactions at those boundaries causes
+     * the delete/insert operations to no-op.
+     *
+     * @param position - The document position to resolve
+     * @param direction - Direction to walk the boundary ('forward' for starts, 'backward' for ends)
+     * @returns Position that points inside actual text content when possible
+     * @private
+     */
+    private resolveInlineTextPosition;
+    /**
+     * Maps a character offset within extracted text to the corresponding document position.
+     * Also handles edge cases where positions point to node boundaries instead of text content.
+     *
+     * This unified method:
+     * - Resolves positions at transparent inline node boundaries (when charOffset is 0)
+     * - Maps character offsets to document positions using binary search (when charOffset > 0)
+     * - Handles node boundaries where character count doesn't equal position offset
+     *
+     * @param from - Starting document position
+     * @param to - Ending document position (exclusive)
+     * @param charOffset - Number of characters to advance from the start (0 = resolve position only)
+     * @returns Document position corresponding to the character offset, resolved to point to text content
+     * @private
+     */
+    private mapCharOffsetToPosition;
+    /**
+     * Computes the range of actual changes between original and suggested text.
+     * Uses a diff algorithm to find common prefix and suffix, minimizing the
+     * region that needs to be replaced in the document.
+     *
+     * @param original - Original text string
+     * @param suggested - Suggested replacement text string
+     * @returns Object with prefix length, suffix length, and whether any change exists
+     * @private
+     */
+    private computeChangeRange;
+    /**
+     * Applies a text replacement patch to the document.
+     * Uses intelligent diffing to replace only the changed portion while preserving marks.
+     * Validates position boundaries before making changes.
+     *
+     * @param from - Start position of the replacement range
+     * @param to - End position of the replacement range
+     * @param suggestedText - The text to insert
+     * @private
+     */
+    private applyPatch;
+    /**
+     * Replaces text in the document while intelligently preserving ProseMirror marks.
+     * Uses a diffing algorithm to minimize document changes by only replacing changed portions.
+     * Validates position boundaries and silently ignores invalid positions.
+     *
+     * @param from - Start position (must be >= 0 and < doc size)
+     * @param to - End position (must be <= doc size and >= from)
+     * @param suggestedText - The replacement text to insert
+     */
+    replaceText(from: number, to: number, suggestedText: string): void;
+    /**
+     * Creates a tracked change for the specified replacement.
+     * Temporarily enables track changes mode, applies the replacement, then disables tracking.
+     *
+     * @param from - Start position of the change
+     * @param to - End position of the change
+     * @param suggestedText - The suggested replacement text
+     * @returns Generated ID for the tracked change
+     */
+    createTrackedChange(from: number, to: number, suggestedText: string): string;
+    /**
+     * Creates a comment at the specified document range.
+     * Enables track changes during comment insertion to maintain editing context.
+     *
+     * @param from - Start position of the comment anchor
+     * @param to - End position of the comment anchor
+     * @param text - The comment text content
+     * @returns Promise resolving to the generated ID for the comment
+     */
+    createComment(from: number, to: number, text: string): Promise<string>;
+    /**
+     * Inserts text at the current editor selection.
+     * Preserves marks from the surrounding context at the insertion point.
+     *
+     * @param suggestedText - The text to insert
+     * @param options
+     */
+    insertText(suggestedText: string, options?: {
+        position?: 'before' | 'after' | 'replace';
+    }): void;
+}
+
+export { AIActions, type AIActionsCallbacks, type AIActionsConfig, type AIActionsOptions, AIActionsService, type AIMessage, type AIPlan, type AIPlannerConfig, type AIPlannerExecutionResult, type AIProvider, type AIProviderInput, type AIToolActions, type AIUser, type AnthropicProviderConfig, type BuilderPlanResult, type CompletionOptions, DEFAULT_CONTEXT_LENGTH, type DocumentPosition, ERROR_MESSAGES, type Editor, EditorAdapter, type FetchLike, type FoundMatch, type HttpProviderConfig, LOG_PREFIXES, MAX_INSTRUCTION_LENGTH, MAX_PLAN_STEPS, MAX_PROMPT_LENGTH, MAX_STREAM_ITERATIONS, MAX_STREAM_TIMEOUT_MS, type MarkType, type NodeType, type OpenAIProviderConfig, PROGRESS_MESSAGES, type PlannerContextSnapshot, type PlannerOptions, type ProviderRequestContext, type Result, type SafeRecord, type SelectionRange, type SelectionSnapshot, type StreamOptions, type SuperDocInstance, TRUNCATION_HEAD_RATIO, createAIProvider, createToolRegistry, debounce, generateId, getErrorMessage, getToolDescriptions, isPlainObject, isValidTool, parseJSON, removeMarkdownCodeBlocks, safeTextBetween, sanitizePromptInput, stripListPrefix, validateInput };

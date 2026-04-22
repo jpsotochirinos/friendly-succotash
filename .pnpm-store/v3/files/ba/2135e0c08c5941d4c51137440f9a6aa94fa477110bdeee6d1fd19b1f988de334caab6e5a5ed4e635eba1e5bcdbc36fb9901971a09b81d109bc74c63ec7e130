@@ -1,0 +1,12 @@
+export type CommandServiceOptions = import('../../types/ChainedCommands.js').CommandServiceOptions;
+export type CoreCommands = import('../../types/ChainedCommands.js').CoreCommands;
+export type ExtensionCommands = import('../../types/ChainedCommands.js').ExtensionCommands;
+export type EditorCommands = import('../../types/ChainedCommands.js').EditorCommands;
+export type ChainedCommand = import('../../types/ChainedCommands.js').ChainedCommand;
+export type ChainableCommandObject = import('../../types/ChainedCommands.js').ChainableCommandObject;
+export type CanCommand = import('../../types/ChainedCommands.js').CanCommand;
+export type CanCommands = import('../../types/ChainedCommands.js').CanCommands;
+export type CanObject = import('../../types/ChainedCommands.js').CanObject;
+export type CommandProps = import('../../types/ChainedCommands.js').CommandProps;
+export type Command = import('../../types/ChainedCommands.js').Command;
+//# sourceMappingURL=index.d.ts.map

@@ -1,0 +1,101 @@
+import { baseOrderedListDef, baseBulletList } from './baseListDefinitions';
+export function generateNewListDefinition({ numId, listType, level, start, text, fmt, editor, markerFontFamily }: {
+    numId: number;
+    listType: Object;
+    level?: number | undefined;
+    start?: string | undefined;
+    text?: string | undefined;
+    fmt?: string | undefined;
+    markerFontFamily?: string | undefined;
+    editor: import('../Editor').Editor;
+}): Object;
+export function changeNumIdSameAbstract(numId: number, level: number, listType: import('prosemirror-model').NodeType, editor: import('../Editor').Editor): number;
+export function getBasicNumIdTag(numId: number, abstractId: number): Object;
+export function getNewListId(editor: import('../Editor').Editor, grouping?: string): number;
+export function createListIdAllocator(editor: import('../Editor').Editor): () => number;
+export function getListDefinitionDetails({ numId, level, listType, editor, tries }: {
+    numId: any;
+    level: any;
+    listType?: undefined;
+    editor: any;
+    tries?: number | undefined;
+}): any;
+export function hasListDefinition(editor: any, numId: any, ilvl: any): boolean;
+export function getAllListDefinitions(editor: any): {};
+export function removeListDefinitions(listId: string, editor: import('../Editor').Editor): void;
+export function createListItemNodeJSON({ level, numId, contentNode }: {
+    level: any;
+    numId: any;
+    contentNode: any;
+}): {
+    type: string;
+    attrs: {
+        paragraphProperties: {
+            numberingProperties: {
+                numId: number;
+                ilvl: number;
+            };
+        };
+        numberingProperties: {
+            numId: number;
+            ilvl: number;
+        };
+    };
+    content: any[];
+};
+export function createSchemaOrderedListNode({ level, numId, editor, contentNode }: {
+    level: any;
+    numId: any;
+    editor: any;
+    contentNode: any;
+}): any;
+export function createNewList({ listType, tr, editor }: {
+    listType: string | Object;
+    editor: import('../Editor').Editor;
+    tr: import('prosemirror-state').Transaction;
+}): boolean;
+export function replaceListWithNode({ tr, from, to, newNode }: {
+    tr: any;
+    from: any;
+    to: any;
+    newNode: any;
+}): void;
+export function setLvlOverride(editor: import('../Editor').Editor, numId: number, ilvl: number, overrides: {
+    startOverride?: number;
+    lvlRestart?: number | null;
+}): void;
+export function removeLvlOverride(editor: import('../Editor').Editor, numId: number, ilvl: number): void;
+export function rebuildRawNumberingFromTranslated(editor: import('../Editor').Editor): {
+    updated: boolean;
+    skipped: number;
+};
+export function createNumDefinition(editor: import('../Editor').Editor, abstractNumId: number, options?: {
+    copyOverridesFrom?: number;
+}): {
+    numId: number;
+    numDef: Object;
+};
+export function setLvlRestartOnAbstract(editor: import('../Editor').Editor, abstractNumId: number, ilvl: number, restartAfterLevel: number | null): void;
+export namespace ListHelpers {
+    export { replaceListWithNode };
+    export { getListDefinitionDetails };
+    export { getAllListDefinitions };
+    export { generateNewListDefinition };
+    export { getBasicNumIdTag };
+    export { getNewListId };
+    export { createListIdAllocator };
+    export { hasListDefinition };
+    export { removeListDefinitions };
+    export { setLvlOverride };
+    export { removeLvlOverride };
+    export { createNumDefinition };
+    export { setLvlRestartOnAbstract };
+    export { rebuildRawNumberingFromTranslated };
+    export { createNewList };
+    export { createSchemaOrderedListNode };
+    export { createListItemNodeJSON };
+    export { changeNumIdSameAbstract };
+    export { baseOrderedListDef };
+    export { baseBulletList };
+}
+//# sourceMappingURL=list-numbering-helpers.d.ts.map

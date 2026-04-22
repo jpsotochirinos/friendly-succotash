@@ -1,0 +1,22 @@
+import { Layout, FlowBlock, Measure } from '@superdoc/contracts';
+import { Point, PositionHit, PageGeometryHelper } from '@superdoc/layout-bridge';
+/**
+ * Full pointer-hit resolution: DOM-first with geometry fallback.
+ *
+ * 1. If DOM args provided, tries DOM-based mapping.
+ * 2. If DOM mapping succeeds, enriches the position into a PositionHit.
+ * 3. If DOM mapping fails, computes a page hint from the DOM and falls back
+ *    to geometry-only hit testing.
+ * 4. If no DOM args provided, runs pure geometry hit testing.
+ */
+export declare function resolvePointerPositionHit(options: {
+    layout: Layout;
+    blocks: FlowBlock[];
+    measures: Measure[];
+    containerPoint: Point;
+    domContainer?: HTMLElement | null;
+    clientX?: number;
+    clientY?: number;
+    geometryHelper?: PageGeometryHelper;
+}): PositionHit | null;
+//# sourceMappingURL=PositionHitResolver.d.ts.map

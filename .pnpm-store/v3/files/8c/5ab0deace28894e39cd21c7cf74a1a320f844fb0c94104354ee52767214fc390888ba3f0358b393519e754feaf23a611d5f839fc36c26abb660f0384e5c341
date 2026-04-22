@@ -1,0 +1,43 @@
+/**
+ * Pre-AST normalizer that converts fixed-width ASCII tables to GFM pipe tables.
+ *
+ * LLMs commonly produce pandoc-style fixed-width tables in markdown:
+ *
+ *     Name        Age    City
+ *     ----------- ------ --------
+ *     Alice       30     Seattle
+ *     Bob         25     Portland
+ *
+ * remark-gfm only recognizes GFM pipe-table syntax, so these become paragraphs
+ * instead of table nodes in the AST. This module detects fixed-width tables and
+ * rewrites them before AST parsing:
+ *
+ *     | Name | Age | City |
+ *     | --- | --- | --- |
+ *     | Alice | 30 | Seattle |
+ *     | Bob | 25 | Portland |
+ *
+ * Supported layouts:
+ *   (A) border → header → guide → data... → border   (bordered)
+ *   (B) header → guide → data...                      (unbounded)
+ *
+ * Continuation lines (empty first column) are merged into the preceding row.
+ * In bordered tables, blank lines between data rows are treated as row separators.
+ * In unbounded tables, a blank line terminates the table.
+ *
+ * Code blocks are skipped entirely (fenced and 4-space/tab-indented).
+ */
+/**
+ * Detect pandoc-style fixed-width ASCII tables in a markdown string and
+ * rewrite them as GFM pipe tables that remark-gfm can parse.
+ *
+ * Code blocks are skipped (fenced and 4-space/tab-indented). Bordered (top/bottom border) and
+ * unbounded (header + guide only) layouts are both supported, including
+ * continuation lines that wrap across multiple rows.
+ *
+ * @param markdown - Raw markdown source, possibly containing fixed-width tables.
+ * @returns The markdown with fixed-width tables replaced by GFM pipe-table syntax.
+ *   Returns the input unchanged if no fixed-width tables are detected.
+ */
+export declare function normalizeFixedWidthTables(markdown: string): string;
+//# sourceMappingURL=normalizeFixedWidthTables.d.ts.map

@@ -1,0 +1,138 @@
+import { HeaderFooterRegion } from './types.js';
+export type { HeaderFooterRegion } from './types.js';
+/**
+ * Result returned from showEditingOverlay operation.
+ */
+type ShowOverlayResult = {
+    /** Whether the overlay was successfully shown */
+    success: boolean;
+    /** The editor host element if successful */
+    editorHost?: HTMLElement;
+    /** Reason for failure if not successful */
+    reason?: string;
+};
+/**
+ * Manages visual overlays and editor host elements for in-place header/footer editing.
+ *
+ * This class implements the sibling host architecture pattern:
+ * ```html
+ * <div class="superdoc-page">
+ *   <div class="superdoc-page-header" style="pointer-events: none">
+ *     <!-- static content, hidden during editing -->
+ *   </div>
+ *   <div class="superdoc-header-editor-host" style="pointer-events: auto">
+ *     <!-- PM editor, shown during editing -->
+ *   </div>
+ *   <!-- body content -->
+ *   <div class="superdoc-page-footer" style="pointer-events: none">...</div>
+ *   <div class="superdoc-footer-editor-host" style="pointer-events: auto">...</div>
+ * </div>
+ * ```
+ */
+export declare class EditorOverlayManager {
+    #private;
+    /**
+     * Creates a new EditorOverlayManager instance.
+     *
+     * @param painterHost - The host element containing painted pages. Must be an HTMLElement connected to the DOM.
+     * @param visibleHost - The visible host element for overlay positioning. Must be an HTMLElement connected to the DOM.
+     * @param selectionOverlay - The selection overlay element (optional). If provided, must be an HTMLElement.
+     *
+     * @throws {TypeError} If painterHost is not an HTMLElement
+     * @throws {TypeError} If visibleHost is not an HTMLElement
+     * @throws {TypeError} If selectionOverlay is provided but is not an HTMLElement
+     * @throws {Error} If painterHost is not connected to the DOM
+     * @throws {Error} If visibleHost is not connected to the DOM
+     */
+    constructor(_painterHost: HTMLElement, _visibleHost: HTMLElement, selectionOverlay?: HTMLElement | null);
+    /**
+     * Sets the callback to be invoked when the dimming overlay is clicked.
+     * This allows PresentationEditor to exit header/footer mode when the user
+     * clicks outside the editing region.
+     *
+     * @param callback - Function to call when dimming overlay is clicked
+     */
+    setOnDimmingClick(_callback: () => void): void;
+    /**
+     * Gets the currently active editor host element.
+     * This is useful for checking if a click target is inside the active editing area.
+     *
+     * @returns The active editor host element, or null if not in editing mode
+     */
+    getActiveEditorHost(): HTMLElement | null;
+    /**
+     * Shows the editing overlay for a header/footer region.
+     *
+     * This method:
+     * 1. Creates or retrieves the editor host element as a sibling to the decoration container
+     * 2. Positions the editor host to match the decoration container bounds
+     * 3. Hides the static decoration content
+     * 4. Shows the dimming overlay over body content
+     * 5. Returns the editor host element for mounting the ProseMirror editor
+     *
+     * @param pageElement - The page DOM element containing the region
+     * @param region - The header/footer region to edit
+     * @param zoom - Current zoom level (for positioning calculations)
+     * @returns Result object with success status and editor host element
+     *
+     * @example
+     * ```typescript
+     * const result = overlayManager.showEditingOverlay(pageElement, region, 1.0);
+     * if (result.success && result.editorHost) {
+     *   // Mount ProseMirror editor in result.editorHost
+     * }
+     * ```
+     */
+    showEditingOverlay(pageElement: HTMLElement, region: HeaderFooterRegion, zoom: number): ShowOverlayResult;
+    /**
+     * Hides the editing overlay and restores normal view.
+     *
+     * This method:
+     * 1. Shows the static decoration content
+     * 2. Hides the editor host (but doesn't destroy it for reuse)
+     * 3. Removes the dimming overlay
+     *
+     * @example
+     * ```typescript
+     * overlayManager.hideEditingOverlay();
+     * // Static decoration is now visible, editor is hidden
+     * ```
+     */
+    hideEditingOverlay(): void;
+    /**
+     * Hides the layout selection overlay to prevent double caret rendering.
+     *
+     * Called when entering header/footer editing mode to ensure only the
+     * ProseMirror editor's caret is visible, not both the PM caret and the
+     * layout engine's selection overlay.
+     *
+     * @example
+     * ```typescript
+     * overlayManager.hideSelectionOverlay();
+     * // Selection overlay is now hidden
+     * ```
+     */
+    hideSelectionOverlay(): void;
+    /**
+     * Shows the layout selection overlay.
+     *
+     * Called when exiting header/footer editing mode to restore the
+     * normal selection overlay rendering for body content.
+     *
+     * @example
+     * ```typescript
+     * overlayManager.showSelectionOverlay();
+     * // Selection overlay is now visible
+     * ```
+     */
+    showSelectionOverlay(): void;
+    /**
+     * Destroys the overlay manager and cleans up all resources.
+     *
+     * Clears all references.
+     * Editor host elements are left in the DOM as they're children of page elements
+     * that will be cleaned up by the virtualization system.
+     */
+    destroy(): void;
+}
+//# sourceMappingURL=EditorOverlayManager.d.ts.map

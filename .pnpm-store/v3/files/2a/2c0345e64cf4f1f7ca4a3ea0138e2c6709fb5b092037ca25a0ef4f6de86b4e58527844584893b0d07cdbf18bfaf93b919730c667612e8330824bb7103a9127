@@ -1,0 +1,62 @@
+import { EditorState, Transaction } from 'prosemirror-state';
+import { DomPositionIndex } from '../../../dom-observer/DomPositionIndex.js';
+import { ProofingAnnotation } from '../proofing/types.js';
+import { CommentHighlightDecorator } from './CommentHighlightDecorator.js';
+import { DecorationBridge } from './DecorationBridge.js';
+import { FieldAnnotationInteractionLayer } from './FieldAnnotationInteractionLayer.js';
+import { PresentationProofingDecorator } from './PresentationProofingDecorator.js';
+type DecorationRange = {
+    from: number;
+    to: number;
+    classes: string[];
+    style: string | null;
+    dataAttrs: Record<string, string>;
+};
+type FieldAnnotationLayerLike = Pick<FieldAnnotationInteractionLayer, 'setContainer' | 'apply' | 'clear'>;
+type CommentHighlightDecoratorLike = Pick<CommentHighlightDecorator, 'setContainer' | 'setActiveComment' | 'apply' | 'destroy'>;
+type DecorationBridgeLike = Pick<DecorationBridge, 'recordTransaction' | 'hasChanges' | 'collectDecorationRanges' | 'sync' | 'destroy'>;
+type ProofingDecoratorLike = Pick<PresentationProofingDecorator, 'setContainer' | 'applyAnnotations' | 'clear'>;
+type PresentationPostPaintPipelineDeps = {
+    fieldAnnotationLayer?: FieldAnnotationLayerLike;
+    commentHighlightDecorator?: CommentHighlightDecoratorLike;
+    decorationBridge?: DecorationBridgeLike;
+    proofingDecorator?: ProofingDecoratorLike;
+};
+type RefreshAfterPaintOptions = {
+    layoutEpoch: number;
+    editorState: EditorState | null | undefined;
+    domPositionIndex: DomPositionIndex;
+    proofingAnnotations: ProofingAnnotation[] | null | undefined;
+    rebuildDomPositionIndex: () => void;
+    reapplyStructuredContentHover?: () => void;
+};
+/**
+ * Owns every editor-side post-paint DOM mutation layer that still sits on top
+ * of painter output.
+ *
+ * The key invariant is that PresentationEditor never hand-orders these layers
+ * ad hoc. The pipeline is the single owner of:
+ * - field annotation interaction upgrades
+ * - comment highlight inline styles
+ * - bridged plugin decorations
+ * - proofing decorations
+ */
+export declare class PresentationPostPaintPipeline {
+    #private;
+    constructor(deps?: PresentationPostPaintPipelineDeps);
+    setContainer(container: HTMLElement | null): void;
+    setActiveComment(commentId: string | null): boolean;
+    recordDecorationTransaction(transaction?: Transaction): void;
+    hasDecorationChanges(editorState: EditorState): boolean;
+    collectDecorationRanges(editorState: EditorState): DecorationRange[];
+    syncDecorations(editorState: EditorState | null | undefined, domPositionIndex: DomPositionIndex, options?: {
+        restoreEmptyDecorations?: boolean;
+    }): boolean;
+    applyCommentHighlights(): void;
+    syncInlineStyleLayers(editorState: EditorState | null | undefined, domPositionIndex: DomPositionIndex): boolean;
+    applyProofingAnnotations(annotations: ProofingAnnotation[] | null | undefined, rebuildDomPositionIndex: () => void): boolean;
+    refreshAfterPaint(options: RefreshAfterPaintOptions): void;
+    destroy(): void;
+}
+export {};
+//# sourceMappingURL=PresentationPostPaintPipeline.d.ts.map

@@ -1,0 +1,18 @@
+export function normalizeWrap(attrs?: Object): {
+    type: string;
+    attrs: Record<string, any>;
+};
+export function normalizeMarginOffset(marginOffset?: Object): {
+    horizontal?: number;
+    top?: number;
+    right?: number;
+    bottom?: number;
+};
+export function getNormalizedImageAttrs(attrs?: Object): {
+    wrap: {
+        type: string;
+        attrs: Record<string, any>;
+    };
+    marginOffset: Record<string, any>;
+};
+//# sourceMappingURL=legacyAttributes.d.ts.map

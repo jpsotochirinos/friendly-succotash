@@ -1,0 +1,2 @@
+export { attrConfig as idAttrConfig } from './w-id';
+//# sourceMappingURL=index.d.ts.map

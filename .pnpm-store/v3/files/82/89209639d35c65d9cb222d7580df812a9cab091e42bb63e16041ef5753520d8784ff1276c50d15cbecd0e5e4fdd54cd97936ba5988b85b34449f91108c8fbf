@@ -1,0 +1,25 @@
+import { Extension } from '../../core/Extension.js';
+/**
+ * Configuration options for TextAlign
+ * @typedef {Object} TextAlignOptions
+ * @category Options
+ * @property {string[]} [alignments=['left', 'center', 'right', 'justify']] - Available alignment options
+ * @property {string} [defaultAlignment='left'] - Default text alignment
+ */
+/**
+ * @module TextAlign
+ * @sidebarTitle Text Align
+ * @snippetPath /snippets/extensions/text-align.mdx
+ * @shortcut Mod-Shift-l | setTextAlign('left') | Align text left
+ * @shortcut Mod-Shift-e | setTextAlign('center') | Align text center
+ * @shortcut Mod-Shift-r | setTextAlign('right') | Align text right
+ * @shortcut Mod-Shift-j | setTextAlign('justify') | Justify text
+ */
+export const TextAlign: Extension<{
+    alignments: string[];
+}, Record<string, never>>;
+/**
+ * Configuration options for TextAlign
+ */
+export type TextAlignOptions = Object;
+//# sourceMappingURL=text-align.d.ts.map

@@ -1,0 +1,3 @@
+import { NodeTranslator } from '../../../node-translator/index.js';
+export const translator: NodeTranslator;
+//# sourceMappingURL=cntxtAlts-translator.d.ts.map

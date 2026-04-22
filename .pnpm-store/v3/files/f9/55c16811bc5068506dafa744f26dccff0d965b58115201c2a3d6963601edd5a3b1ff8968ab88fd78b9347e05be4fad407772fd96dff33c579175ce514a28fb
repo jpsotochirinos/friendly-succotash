@@ -1,0 +1,33 @@
+import { MarkType } from 'prosemirror-model';
+import { MutationOptions } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+/**
+ * Validates that an editor command exists and returns it.
+ *
+ * @throws {DocumentApiAdapterError} `CAPABILITY_UNAVAILABLE` with `reason: 'missing_command'`.
+ */
+export declare function requireEditorCommand<T>(command: T | undefined, operationName: string): NonNullable<T>;
+/**
+ * Validates that a schema mark exists and returns it.
+ *
+ * @throws {DocumentApiAdapterError} `CAPABILITY_UNAVAILABLE` with `reason: 'missing_mark'`.
+ */
+export declare function requireSchemaMark(editor: Editor, markName: string, operationName: string): MarkType;
+/**
+ * Validates all tracked-mode prerequisites: insertTrackedChange command,
+ * optional required marks, and a configured user.
+ *
+ * @throws {DocumentApiAdapterError} `CAPABILITY_UNAVAILABLE` with a `reason` detail
+ *   of `'missing_command'`, `'missing_mark'`, or `'missing_user'`.
+ */
+export declare function ensureTrackedCapability(editor: Editor, config: {
+    operation: string;
+    requireMarks?: string[];
+}): void;
+/**
+ * Rejects tracked mode for adapters that do not support it yet.
+ *
+ * @throws {DocumentApiAdapterError} `CAPABILITY_UNAVAILABLE` with `reason: 'tracked_mode_unsupported'`.
+ */
+export declare function rejectTrackedMode(operation: string, options?: MutationOptions): void;
+//# sourceMappingURL=mutation-helpers.d.ts.map

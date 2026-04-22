@@ -1,0 +1,7 @@
+export function handleBookmarkStartNode(params: import('../../v3/node-translator').SCEncoderConfig): Object;
+/**
+ * Bookmark start node handler entity
+ * @type {Object} Handler entity
+ */
+export const bookmarkStartNodeHandlerEntity: Object;
+//# sourceMappingURL=bookmarkStartImporter.d.ts.map

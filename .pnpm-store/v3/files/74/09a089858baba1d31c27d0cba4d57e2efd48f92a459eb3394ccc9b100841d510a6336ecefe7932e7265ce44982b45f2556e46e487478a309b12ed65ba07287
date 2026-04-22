@@ -1,0 +1,10 @@
+/**
+ * Generates an uppercase 8-character hexadecimal identifier compatible with
+ * OOXML attributes such as `w14:paraId` and `w14:textId`.
+ *
+ * Callers are responsible for using the value only on schema-valid elements.
+ *
+ * @returns {string}
+ */
+export function generateDocxHexId(): string;
+//# sourceMappingURL=generateDocxHexId.d.ts.map

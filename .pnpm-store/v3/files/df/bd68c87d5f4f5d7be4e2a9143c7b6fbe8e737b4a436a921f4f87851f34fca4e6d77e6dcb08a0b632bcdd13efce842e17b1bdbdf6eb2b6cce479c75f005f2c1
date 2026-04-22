@@ -1,0 +1,31 @@
+import { ContentControlInfo, ContentControlType, ContentControlBinding, ContentControlTarget, LockMode } from '@superdoc/document-api';
+import { ResolvedSdt } from './target-resolution.js';
+import { SdtPrElement } from './sdt-properties-write.js';
+/** Resolve the SDT control type from node attributes. */
+export declare function resolveControlType(attrs: Record<string, unknown>): ContentControlType;
+/** Resolve the lock mode from node attributes. */
+export declare function resolveLockMode(attrs: Record<string, unknown>): LockMode;
+/** Resolve the visual appearance from node attributes. */
+export declare function resolveAppearance(attrs: Record<string, unknown>): ContentControlInfo['properties']['appearance'];
+/** Extract data binding metadata from the sdtPr passthrough object (XML element form). */
+export declare function resolveBinding(attrs: Record<string, unknown>): ContentControlBinding | undefined;
+/** Build a ContentControlTarget from a resolved SDT node. */
+export declare function buildTarget(sdt: ResolvedSdt): ContentControlTarget;
+/** Read the checked state from a checkbox sdtPr element. */
+export declare function readCheckboxChecked(sdtPr: SdtPrElement | undefined): boolean;
+/** Read choice-list items and selected value from a comboBox/dropDownList sdtPr element. */
+export declare function readChoiceListData(sdtPr: SdtPrElement | undefined, controlType: 'comboBox' | 'dropDownList'): {
+    items: Array<{
+        displayText: string;
+        value: string;
+    }>;
+    selectedValue: string | undefined;
+};
+/** Build the full ContentControlInfo shape from a resolved SDT node. */
+export declare function buildContentControlInfoFromNode(sdt: ResolvedSdt): ContentControlInfo;
+/**
+ * Build a minimal ContentControlInfo from raw node attributes and kind.
+ * Used by node-info-mapper.ts when no ResolvedSdt is available.
+ */
+export declare function buildContentControlInfoFromAttrs(attrs: Record<string, unknown> | undefined, kind: 'block' | 'inline'): ContentControlInfo;
+//# sourceMappingURL=sdt-info-builder.d.ts.map

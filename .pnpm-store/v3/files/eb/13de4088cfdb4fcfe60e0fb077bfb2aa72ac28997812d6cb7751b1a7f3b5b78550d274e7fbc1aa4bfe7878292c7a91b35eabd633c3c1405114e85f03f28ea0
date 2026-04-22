@@ -1,0 +1,2 @@
+export * from './smallCaps-translator.js';
+//# sourceMappingURL=index.d.ts.map

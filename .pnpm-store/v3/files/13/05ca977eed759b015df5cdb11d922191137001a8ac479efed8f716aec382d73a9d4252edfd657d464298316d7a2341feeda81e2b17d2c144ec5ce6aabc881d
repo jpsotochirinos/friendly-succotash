@@ -1,0 +1,74 @@
+/**
+ * Represents a single attribute change capturing the previous and next values.
+ */
+export interface AttributeChange {
+    from: unknown;
+    to: unknown;
+}
+/**
+ * Aggregated attribute diff broken down into added, deleted, and modified dotted paths.
+ */
+export interface AttributesDiff {
+    /** Attributes added in the new payload. */
+    added: Record<string, unknown>;
+    /** Attributes removed from the old payload. */
+    deleted: Record<string, unknown>;
+    /** Attributes that changed values between old and new payloads. */
+    modified: Record<string, AttributeChange>;
+}
+/**
+ * Aggregated marks diff broken down into added, deleted, and modified marks.
+ */
+export interface MarksDiff {
+    /** Marks added in the new payload. */
+    added: {
+        name: string;
+        attrs: Record<string, unknown>;
+    }[];
+    /** Marks removed from the old payload. */
+    deleted: {
+        name: string;
+        attrs: Record<string, unknown>;
+    }[];
+    /** Marks whose attributes changed between old and new payloads. */
+    modified: {
+        name: string;
+        oldAttrs: Record<string, unknown>;
+        newAttrs: Record<string, unknown>;
+    }[];
+}
+/**
+ * Computes the attribute level diff between two arbitrary objects.
+ * Produces a map of dotted paths to added, deleted and modified values.
+ *
+ * @param objectA Baseline attributes to compare.
+ * @param objectB Updated attributes to compare.
+ * @param ignoreKeys Additional attribute keys to ignore.
+ * @returns Structured diff or null when objects are effectively equal.
+ */
+export declare function getAttributesDiff(objectA?: Record<string, unknown> | null | undefined, objectB?: Record<string, unknown> | null | undefined, ignoreKeys?: string[]): AttributesDiff | null;
+/**
+ * Computes the attribute level diff between two sets of ProseMirror marks.
+ * Produces a map of dotted paths to added, deleted and modified values.
+ *
+ * @param marksA Baseline marks to compare.
+ * @param marksB Updated marks to compare.
+ * @returns Structured diff or null when marks are effectively equal.
+ *
+ */
+export declare function getMarksDiff(marksA?: Array<{
+    type: string;
+    attrs?: Record<string, unknown>;
+}> | null, marksB?: Array<{
+    type: string;
+    attrs?: Record<string, unknown>;
+}> | null): MarksDiff | null;
+/**
+ * Checks deep equality for primitives, arrays, and plain objects.
+ *
+ * @param a First value.
+ * @param b Second value.
+ * @returns True when both values are deeply equal.
+ */
+export declare function deepEquals(a: unknown, b: unknown): boolean;
+//# sourceMappingURL=attributes-diffing.d.ts.map

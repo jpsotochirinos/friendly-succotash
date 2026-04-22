@@ -1,0 +1,33 @@
+import { Editor } from '../../core/Editor.js';
+import { CommentInfo, CommentStatus, TextTarget } from '@superdoc/document-api';
+export interface CommentEntityRecord {
+    commentId?: string;
+    importedId?: string;
+    parentCommentId?: string;
+    commentText?: string;
+    commentJSON?: unknown;
+    elements?: unknown;
+    isInternal?: boolean;
+    isDone?: boolean;
+    resolvedTime?: number | null;
+    resolvedByEmail?: string | null;
+    resolvedByName?: string | null;
+    creatorName?: string;
+    creatorEmail?: string;
+    creatorImage?: string;
+    createdTime?: number;
+    [key: string]: unknown;
+}
+export declare function getCommentEntityStore(editor: Editor): CommentEntityRecord[];
+export declare function findCommentEntity(store: CommentEntityRecord[], commentId: string): CommentEntityRecord | undefined;
+export declare function upsertCommentEntity(store: CommentEntityRecord[], commentId: string, patch: Partial<CommentEntityRecord>): CommentEntityRecord;
+export declare function removeCommentEntityTree(store: CommentEntityRecord[], commentId: string): CommentEntityRecord[];
+export declare function extractCommentText(entry: CommentEntityRecord): string | undefined;
+export declare function buildCommentJsonFromText(text: string): unknown[];
+export declare function isCommentResolved(entry: CommentEntityRecord): boolean;
+export declare function toCommentInfo(entry: CommentEntityRecord, options?: {
+    target?: TextTarget;
+    status?: CommentStatus;
+    anchoredText?: string;
+}): CommentInfo;
+//# sourceMappingURL=comment-entity-store.d.ts.map

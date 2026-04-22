@@ -1,0 +1,28 @@
+import { Editor } from '../../core/Editor.js';
+/**
+ * Authoritative room-seeding helper.
+ *
+ * Writes the full state of a local editor into a target Yjs document,
+ * replacing any prior content. This is the single source of truth for
+ * the "overwrite a room with local state" operation.
+ *
+ * Used by `SuperDoc.upgradeToCollaboration()` to seed a collaborative
+ * room before the collaborative runtime mounts.
+ */
+import * as Y from 'yjs';
+/**
+ * Authoritatively overwrite a Yjs document with the current editor state.
+ *
+ * This is a **replacement** operation, not a merge. All prior content in the
+ * target ydoc (fragment, parts, media, metadata) is replaced with the
+ * editor's current state.
+ *
+ * Steps:
+ * 1. Replace the Yjs XML fragment with the current ProseMirror document
+ * 2. Seed non-document parts with authoritative replacement
+ * 3. Replace media files (prune stale, upsert current)
+ * 4. Write document metadata (bodySectPr, fonts, bootstrap marker)
+ * 5. Clear stale legacy content (meta.docx)
+ */
+export declare function seedEditorStateToYDoc(editor: Editor, targetYdoc: Y.Doc): void;
+//# sourceMappingURL=seed-editor-to-ydoc.d.ts.map

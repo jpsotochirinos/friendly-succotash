@@ -1,0 +1,544 @@
+import { t as decodeString } from "./micromark-util-decode-string-CHF-vL9A.es.js";
+import { a as patternInScope, i as formatCodeAsIndented, n as formatHeadingAsSetext, r as encodeCharacterReference, t as handle } from "./handle-DaMysrzA.es.js";
+var own$1 = {}.hasOwnProperty;
+function zwitch(key, options) {
+	const settings = options || {};
+	function one(value, ...parameters) {
+		let fn = one.invalid;
+		const handlers = one.handlers;
+		if (value && own$1.call(value, key)) {
+			const id = String(value[key]);
+			fn = own$1.call(handlers, id) ? handlers[id] : one.unknown;
+		}
+		if (fn) return fn.call(this, value, ...parameters);
+	}
+	one.handlers = settings.handlers || {};
+	one.invalid = settings.invalid;
+	one.unknown = settings.unknown;
+	return one;
+}
+var own = {}.hasOwnProperty;
+function configure(base, extension) {
+	let index = -1;
+	let key;
+	if (extension.extensions) while (++index < extension.extensions.length) configure(base, extension.extensions[index]);
+	for (key in extension) if (own.call(extension, key)) switch (key) {
+		case "extensions": break;
+		case "unsafe":
+			list(base[key], extension[key]);
+			break;
+		case "join":
+			list(base[key], extension[key]);
+			break;
+		case "handlers":
+			map(base[key], extension[key]);
+			break;
+		default: base.options[key] = extension[key];
+	}
+	return base;
+}
+function list(left, right) {
+	if (right) left.push(...right);
+}
+function map(left, right) {
+	if (right) Object.assign(left, right);
+}
+const join = [joinDefaults];
+function joinDefaults(left, right, parent, state) {
+	if (right.type === "code" && formatCodeAsIndented(right, state) && (left.type === "list" || left.type === right.type && formatCodeAsIndented(left, state))) return false;
+	if ("spread" in parent && typeof parent.spread === "boolean") {
+		if (left.type === "paragraph" && (left.type === right.type || right.type === "definition" || right.type === "heading" && formatHeadingAsSetext(right, state))) return;
+		return parent.spread ? 1 : 0;
+	}
+}
+var fullPhrasingSpans = [
+	"autolink",
+	"destinationLiteral",
+	"destinationRaw",
+	"reference",
+	"titleQuote",
+	"titleApostrophe"
+];
+const unsafe = [
+	{
+		character: "	",
+		after: "[\\r\\n]",
+		inConstruct: "phrasing"
+	},
+	{
+		character: "	",
+		before: "[\\r\\n]",
+		inConstruct: "phrasing"
+	},
+	{
+		character: "	",
+		inConstruct: ["codeFencedLangGraveAccent", "codeFencedLangTilde"]
+	},
+	{
+		character: "\r",
+		inConstruct: [
+			"codeFencedLangGraveAccent",
+			"codeFencedLangTilde",
+			"codeFencedMetaGraveAccent",
+			"codeFencedMetaTilde",
+			"destinationLiteral",
+			"headingAtx"
+		]
+	},
+	{
+		character: "\n",
+		inConstruct: [
+			"codeFencedLangGraveAccent",
+			"codeFencedLangTilde",
+			"codeFencedMetaGraveAccent",
+			"codeFencedMetaTilde",
+			"destinationLiteral",
+			"headingAtx"
+		]
+	},
+	{
+		character: " ",
+		after: "[\\r\\n]",
+		inConstruct: "phrasing"
+	},
+	{
+		character: " ",
+		before: "[\\r\\n]",
+		inConstruct: "phrasing"
+	},
+	{
+		character: " ",
+		inConstruct: ["codeFencedLangGraveAccent", "codeFencedLangTilde"]
+	},
+	{
+		character: "!",
+		after: "\\[",
+		inConstruct: "phrasing",
+		notInConstruct: fullPhrasingSpans
+	},
+	{
+		character: "\"",
+		inConstruct: "titleQuote"
+	},
+	{
+		atBreak: true,
+		character: "#"
+	},
+	{
+		character: "#",
+		inConstruct: "headingAtx",
+		after: "(?:[\r\n]|$)"
+	},
+	{
+		character: "&",
+		after: "[#A-Za-z]",
+		inConstruct: "phrasing"
+	},
+	{
+		character: "'",
+		inConstruct: "titleApostrophe"
+	},
+	{
+		character: "(",
+		inConstruct: "destinationRaw"
+	},
+	{
+		before: "\\]",
+		character: "(",
+		inConstruct: "phrasing",
+		notInConstruct: fullPhrasingSpans
+	},
+	{
+		atBreak: true,
+		before: "\\d+",
+		character: ")"
+	},
+	{
+		character: ")",
+		inConstruct: "destinationRaw"
+	},
+	{
+		atBreak: true,
+		character: "*",
+		after: "(?:[ 	\r\n*])"
+	},
+	{
+		character: "*",
+		inConstruct: "phrasing",
+		notInConstruct: fullPhrasingSpans
+	},
+	{
+		atBreak: true,
+		character: "+",
+		after: "(?:[ 	\r\n])"
+	},
+	{
+		atBreak: true,
+		character: "-",
+		after: "(?:[ 	\r\n-])"
+	},
+	{
+		atBreak: true,
+		before: "\\d+",
+		character: ".",
+		after: "(?:[ 	\r\n]|$)"
+	},
+	{
+		atBreak: true,
+		character: "<",
+		after: "[!/?A-Za-z]"
+	},
+	{
+		character: "<",
+		after: "[!/?A-Za-z]",
+		inConstruct: "phrasing",
+		notInConstruct: fullPhrasingSpans
+	},
+	{
+		character: "<",
+		inConstruct: "destinationLiteral"
+	},
+	{
+		atBreak: true,
+		character: "="
+	},
+	{
+		atBreak: true,
+		character: ">"
+	},
+	{
+		character: ">",
+		inConstruct: "destinationLiteral"
+	},
+	{
+		atBreak: true,
+		character: "["
+	},
+	{
+		character: "[",
+		inConstruct: "phrasing",
+		notInConstruct: fullPhrasingSpans
+	},
+	{
+		character: "[",
+		inConstruct: ["label", "reference"]
+	},
+	{
+		character: "\\",
+		after: "[\\r\\n]",
+		inConstruct: "phrasing"
+	},
+	{
+		character: "]",
+		inConstruct: ["label", "reference"]
+	},
+	{
+		atBreak: true,
+		character: "_"
+	},
+	{
+		character: "_",
+		inConstruct: "phrasing",
+		notInConstruct: fullPhrasingSpans
+	},
+	{
+		atBreak: true,
+		character: "`"
+	},
+	{
+		character: "`",
+		inConstruct: ["codeFencedLangGraveAccent", "codeFencedMetaGraveAccent"]
+	},
+	{
+		character: "`",
+		inConstruct: "phrasing",
+		notInConstruct: fullPhrasingSpans
+	},
+	{
+		atBreak: true,
+		character: "~"
+	}
+];
+function association(node) {
+	if (node.label || !node.identifier) return node.label || "";
+	return decodeString(node.identifier);
+}
+function compilePattern(pattern) {
+	if (!pattern._compiled) {
+		const before = (pattern.atBreak ? "[\\r\\n][\\t ]*" : "") + (pattern.before ? "(?:" + pattern.before + ")" : "");
+		pattern._compiled = new RegExp((before ? "(" + before + ")" : "") + (/[|\\{}()[\]^$+*?.-]/.test(pattern.character) ? "\\" : "") + pattern.character + (pattern.after ? "(?:" + pattern.after + ")" : ""), "g");
+	}
+	return pattern._compiled;
+}
+function containerPhrasing(parent, state, info) {
+	const indexStack = state.indexStack;
+	const children = parent.children || [];
+	const results = [];
+	let index = -1;
+	let before = info.before;
+	let encodeAfter;
+	indexStack.push(-1);
+	let tracker = state.createTracker(info);
+	while (++index < children.length) {
+		const child = children[index];
+		let after;
+		indexStack[indexStack.length - 1] = index;
+		if (index + 1 < children.length) {
+			let handle$1 = state.handle.handlers[children[index + 1].type];
+			if (handle$1 && handle$1.peek) handle$1 = handle$1.peek;
+			after = handle$1 ? handle$1(children[index + 1], parent, state, {
+				before: "",
+				after: "",
+				...tracker.current()
+			}).charAt(0) : "";
+		} else after = info.after;
+		if (results.length > 0 && (before === "\r" || before === "\n") && child.type === "html") {
+			results[results.length - 1] = results[results.length - 1].replace(/(\r?\n|\r)$/, " ");
+			before = " ";
+			tracker = state.createTracker(info);
+			tracker.move(results.join(""));
+		}
+		let value = state.handle(child, parent, state, {
+			...tracker.current(),
+			after,
+			before
+		});
+		if (encodeAfter && encodeAfter === value.slice(0, 1)) value = encodeCharacterReference(encodeAfter.charCodeAt(0)) + value.slice(1);
+		const encodingInfo = state.attentionEncodeSurroundingInfo;
+		state.attentionEncodeSurroundingInfo = void 0;
+		encodeAfter = void 0;
+		if (encodingInfo) {
+			if (results.length > 0 && encodingInfo.before && before === results[results.length - 1].slice(-1)) results[results.length - 1] = results[results.length - 1].slice(0, -1) + encodeCharacterReference(before.charCodeAt(0));
+			if (encodingInfo.after) encodeAfter = after;
+		}
+		tracker.move(value);
+		results.push(value);
+		before = value.slice(-1);
+	}
+	indexStack.pop();
+	return results.join("");
+}
+function containerFlow(parent, state, info) {
+	const indexStack = state.indexStack;
+	const children = parent.children || [];
+	const tracker = state.createTracker(info);
+	const results = [];
+	let index = -1;
+	indexStack.push(-1);
+	while (++index < children.length) {
+		const child = children[index];
+		indexStack[indexStack.length - 1] = index;
+		results.push(tracker.move(state.handle(child, parent, state, {
+			before: "\n",
+			after: "\n",
+			...tracker.current()
+		})));
+		if (child.type !== "list") state.bulletLastUsed = void 0;
+		if (index < children.length - 1) results.push(tracker.move(between(child, children[index + 1], parent, state)));
+	}
+	indexStack.pop();
+	return results.join("");
+}
+function between(left, right, parent, state) {
+	let index = state.join.length;
+	while (index--) {
+		const result = state.join[index](left, right, parent, state);
+		if (result === true || result === 1) break;
+		if (typeof result === "number") return "\n".repeat(1 + result);
+		if (result === false) return "\n\n<!---->\n\n";
+	}
+	return "\n\n";
+}
+var eol = /\r?\n|\r/g;
+function indentLines(value, map$1) {
+	const result = [];
+	let start = 0;
+	let line = 0;
+	let match;
+	while (match = eol.exec(value)) {
+		one(value.slice(start, match.index));
+		result.push(match[0]);
+		start = match.index + match[0].length;
+		line++;
+	}
+	one(value.slice(start));
+	return result.join("");
+	function one(value$1) {
+		result.push(map$1(value$1, line, !value$1));
+	}
+}
+function safe(state, input, config) {
+	const value = (config.before || "") + (input || "") + (config.after || "");
+	const positions = [];
+	const result = [];
+	const infos = {};
+	let index = -1;
+	while (++index < state.unsafe.length) {
+		const pattern = state.unsafe[index];
+		if (!patternInScope(state.stack, pattern)) continue;
+		const expression = state.compilePattern(pattern);
+		let match;
+		while (match = expression.exec(value)) {
+			const before = "before" in pattern || Boolean(pattern.atBreak);
+			const after = "after" in pattern;
+			const position = match.index + (before ? match[1].length : 0);
+			if (positions.includes(position)) {
+				if (infos[position].before && !before) infos[position].before = false;
+				if (infos[position].after && !after) infos[position].after = false;
+			} else {
+				positions.push(position);
+				infos[position] = {
+					before,
+					after
+				};
+			}
+		}
+	}
+	positions.sort(numerical);
+	let start = config.before ? config.before.length : 0;
+	const end = value.length - (config.after ? config.after.length : 0);
+	index = -1;
+	while (++index < positions.length) {
+		const position = positions[index];
+		if (position < start || position >= end) continue;
+		if (position + 1 < end && positions[index + 1] === position + 1 && infos[position].after && !infos[position + 1].before && !infos[position + 1].after || positions[index - 1] === position - 1 && infos[position].before && !infos[position - 1].before && !infos[position - 1].after) continue;
+		if (start !== position) result.push(escapeBackslashes(value.slice(start, position), "\\"));
+		start = position;
+		if (/[!-/:-@[-`{-~]/.test(value.charAt(position)) && (!config.encode || !config.encode.includes(value.charAt(position)))) result.push("\\");
+		else {
+			result.push(encodeCharacterReference(value.charCodeAt(position)));
+			start++;
+		}
+	}
+	result.push(escapeBackslashes(value.slice(start, end), config.after));
+	return result.join("");
+}
+function numerical(a, b) {
+	return a - b;
+}
+function escapeBackslashes(value, after) {
+	const expression = /\\(?=[!-/:-@[-`{-~])/g;
+	const positions = [];
+	const results = [];
+	const whole = value + after;
+	let index = -1;
+	let start = 0;
+	let match;
+	while (match = expression.exec(whole)) positions.push(match.index);
+	while (++index < positions.length) {
+		if (start !== positions[index]) results.push(value.slice(start, positions[index]));
+		results.push("\\");
+		start = positions[index];
+	}
+	results.push(value.slice(start));
+	return results.join("");
+}
+function track(config) {
+	/* c8 ignore next 5 */
+	const options = config || {};
+	const now = options.now || {};
+	let lineShift = options.lineShift || 0;
+	let line = now.line || 1;
+	let column = now.column || 1;
+	return {
+		move,
+		current,
+		shift
+	};
+	function current() {
+		return {
+			now: {
+				line,
+				column
+			},
+			lineShift
+		};
+	}
+	function shift(value) {
+		lineShift += value;
+	}
+	function move(input) {
+		const value = input || "";
+		const chunks = value.split(/\r?\n|\r/g);
+		const tail = chunks[chunks.length - 1];
+		line += chunks.length - 1;
+		column = chunks.length === 1 ? column + tail.length : 1 + tail.length + lineShift;
+		return value;
+	}
+}
+function toMarkdown(tree, options) {
+	const settings = options || {};
+	const state = {
+		associationId: association,
+		containerPhrasing: containerPhrasingBound,
+		containerFlow: containerFlowBound,
+		createTracker: track,
+		compilePattern,
+		enter,
+		handlers: { ...handle },
+		handle: void 0,
+		indentLines,
+		indexStack: [],
+		join: [...join],
+		options: {},
+		safe: safeBound,
+		stack: [],
+		unsafe: [...unsafe]
+	};
+	configure(state, settings);
+	if (state.options.tightDefinitions) state.join.push(joinDefinition);
+	state.handle = zwitch("type", {
+		invalid,
+		unknown,
+		handlers: state.handlers
+	});
+	let result = state.handle(tree, void 0, state, {
+		before: "\n",
+		after: "\n",
+		now: {
+			line: 1,
+			column: 1
+		},
+		lineShift: 0
+	});
+	if (result && result.charCodeAt(result.length - 1) !== 10 && result.charCodeAt(result.length - 1) !== 13) result += "\n";
+	return result;
+	function enter(name) {
+		state.stack.push(name);
+		return exit;
+		function exit() {
+			state.stack.pop();
+		}
+	}
+}
+function invalid(value) {
+	throw new Error("Cannot handle value `" + value + "`, expected node");
+}
+function unknown(value) {
+	const node = value;
+	throw new Error("Cannot handle unknown node `" + node.type + "`");
+}
+function joinDefinition(left, right) {
+	if (left.type === "definition" && left.type === right.type) return 0;
+}
+function containerPhrasingBound(parent, info) {
+	return containerPhrasing(parent, this, info);
+}
+function containerFlowBound(parent, info) {
+	return containerFlow(parent, this, info);
+}
+function safeBound(value, config) {
+	return safe(this, value, config);
+}
+function remarkStringify(options) {
+	const self = this;
+	self.compiler = compiler;
+	function compiler(tree) {
+		return toMarkdown(tree, {
+			...self.data("settings"),
+			...options,
+			extensions: self.data("toMarkdownExtensions") || []
+		});
+	}
+}
+export { remarkStringify as t };

@@ -1,0 +1,100 @@
+import { Mark, Node as ProseMirrorNode } from 'prosemirror-model';
+import { Editor } from '../../core/Editor.js';
+import { BlockIndex } from './node-address-resolver.js';
+import { InlineAnchor, InlineNodeType, NodeAddress, NodeType } from '@superdoc/document-api';
+/** A single inline-level element (mark span, atom, or range marker) resolved to block-relative offsets. */
+export type InlineCandidate = {
+    nodeType: InlineNodeType;
+    anchor: InlineAnchor;
+    blockId: string;
+    pos: number;
+    end: number;
+    node?: ProseMirrorNode;
+    mark?: Mark;
+    attrs?: Record<string, unknown>;
+};
+/** Position-sorted index of inline candidates with type and anchor lookup maps. */
+export type InlineIndex = {
+    candidates: InlineCandidate[];
+    byType: Map<InlineNodeType, InlineCandidate[]>;
+    byKey: Map<string, InlineCandidate>;
+};
+/**
+ * Returns `true` if `nodeType` is an inline type recognised by the inline adapter.
+ *
+ * @param nodeType - A node type string.
+ * @returns Whether the type is an {@link InlineNodeType}.
+ */
+export declare function isInlineQueryType(nodeType: NodeType): nodeType is InlineNodeType;
+type ActiveMark = {
+    mark: Mark;
+    startOffset: number;
+    startPos: number;
+};
+/**
+ * Mutable state carried through the block-content walker.
+ *
+ * **Purpose**: Walks ProseMirror block content to build an index of inline
+ * elements (marks, atoms, range markers) with block-relative text offsets.
+ *
+ * **Offset model**: Text nodes contribute their UTF-16 length. Leaf atoms
+ * (images, tabs, breaks) contribute 1. Block separators (between sibling
+ * blocks) contribute 1. Zero-width range delimiters (bookmarkEnd,
+ * commentRangeStart, commentRangeEnd) contribute 0. This mirrors ProseMirror's
+ * `textBetween(from, to, '\n', '\ufffc')` model.
+ *
+ * **Mark lifecycle**: `syncMarks()` opens/closes mark spans when the active
+ * mark set changes between nodes. All open marks auto-close at block
+ * boundaries via `closeAllMarks()`.
+ *
+ * **Range markers**: Bookmark and comment ranges use start/end element pairs.
+ * Starts are buffered in maps (`bookmarkStarts`, `commentRangeStarts`); ends
+ * close the range and emit a candidate. Unpaired starts/ends are discarded.
+ *
+ * **Deduplication**: Comments found via marks and via range markers are
+ * deduplicated via `commentIdsWithMarks` — marks take priority.
+ */
+export type BlockWalkState = {
+    blockId: string;
+    offset: number;
+    candidates: InlineCandidate[];
+    activeMarks: Map<string, ActiveMark>;
+    bookmarkStarts: Map<string, {
+        offset: number;
+        pos: number;
+        attrs: Record<string, unknown>;
+    }>;
+    commentRangeStarts: Map<string, {
+        offset: number;
+        pos: number;
+        attrs: Record<string, unknown>;
+    }>;
+    commentIdsWithMarks: Set<string>;
+};
+/**
+ * Walks all inline-hosting blocks and builds an index of inline-level nodes
+ * (marks, atoms, and range markers).
+ *
+ * @param editor - The editor instance to inspect.
+ * @param blockIndex - A pre-built block index to iterate over.
+ * @returns An {@link InlineIndex} with sorted candidates and lookup maps.
+ */
+export declare function buildInlineIndex(editor: Editor, blockIndex: BlockIndex): InlineIndex;
+/**
+ * Looks up an inline candidate by its {@link NodeAddress} anchor.
+ *
+ * @param index - The inline index to search.
+ * @param address - The inline address to resolve.
+ * @returns The matching candidate, or `undefined` if not found.
+ */
+export declare function findInlineByAnchor(index: InlineIndex, address: NodeAddress): InlineCandidate | undefined;
+/**
+ * Returns all inline candidates matching a given type, or all candidates if no type is specified.
+ *
+ * @param index - The inline index to search.
+ * @param nodeType - Optional inline node type to filter by.
+ * @returns Matching inline candidates.
+ */
+export declare function findInlineByType(index: InlineIndex, nodeType?: InlineNodeType): InlineCandidate[];
+export {};
+//# sourceMappingURL=inline-address-resolver.d.ts.map

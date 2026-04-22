@@ -1,0 +1,13 @@
+/**
+ * Built-in step executor registration — registers all core step executors
+ * with the executor registry.
+ *
+ * Called once from adapter assembly to wire the dispatch table.
+ *
+ * Handles both single-block (range) and cross-block (span) targets via the
+ * CompiledTarget discriminated union. Each target kind has its own executor
+ * function; this module partitions targets and dispatches accordingly.
+ */
+export declare function buildTableInput(op: string, blockId: string, args: Record<string, unknown>): Record<string, unknown>;
+export declare function registerBuiltInExecutors(): void;
+//# sourceMappingURL=register-executors.d.ts.map

@@ -1,0 +1,6 @@
+/**
+ * Tab node handler entity
+ * @type {Object} Handler entity
+ */
+export const tabNodeEntityHandler: Object;
+//# sourceMappingURL=tabImporter.d.ts.map

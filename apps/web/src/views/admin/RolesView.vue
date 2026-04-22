@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { apiClient } from '../../api/client';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
@@ -11,7 +12,20 @@ import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
 import Checkbox from 'primevue/checkbox';
 import Tag from 'primevue/tag';
+import Dropdown from 'primevue/dropdown';
 import ConfirmDialog from 'primevue/confirmdialog';
+import {
+  ROLE_TEMPLATE_IDS,
+  codesForTemplate,
+  permissionLabelKey,
+  categoryLabelKey,
+  type RoleTemplateId,
+} from '@/constants/role-templates';
+import PageHeader from '@/components/common/PageHeader.vue';
+
+const { t, te } = useI18n();
+const toast = useToast();
+const confirm = useConfirm();
 
 interface Permission {
   id: string;
@@ -28,9 +42,6 @@ interface Role {
   permissions: Permission[];
 }
 
-const toast = useToast();
-const confirm = useConfirm();
-
 const roles = ref<Role[]>([]);
 const allPermissions = ref<Permission[]>([]);
 const loading = ref(false);
@@ -38,6 +49,16 @@ const loading = ref(false);
 const dialogVisible = ref(false);
 const editingRole = ref<Role | null>(null);
 const form = ref({ name: '', description: '', permissionIds: [] as string[] });
+const selectedTemplateId = ref<RoleTemplateId | ''>('');
+
+const templateOptions = computed(() => {
+  const none = { value: '' as const, label: t('rolesAdmin.templateNone') };
+  const rest = ROLE_TEMPLATE_IDS.map((id) => ({
+    value: id,
+    label: t(`rolesAdmin.templates.${id}.name`),
+  }));
+  return [none, ...rest];
+});
 
 const groupedPermissions = computed(() => {
   const groups: Record<string, Permission[]> = {};
@@ -48,13 +69,33 @@ const groupedPermissions = computed(() => {
   return groups;
 });
 
+function labelForPermission(perm: Permission): string {
+  const key = permissionLabelKey(perm.code);
+  if (te(key)) return t(key);
+  return perm.description || perm.code;
+}
+
+function labelForCategory(category: string): string {
+  const key = categoryLabelKey(category);
+  if (te(key)) return t(key);
+  return category;
+}
+
+function applyTemplate(id: RoleTemplateId | '') {
+  if (!id) return;
+  const codes = new Set(codesForTemplate(id));
+  form.value.permissionIds = allPermissions.value.filter((p) => codes.has(p.code)).map((p) => p.id);
+  form.value.name = t(`rolesAdmin.templates.${id}.name`);
+  form.value.description = t(`rolesAdmin.templates.${id}.desc`);
+}
+
 async function loadRoles() {
   loading.value = true;
   try {
     const { data } = await apiClient.get('/roles');
     roles.value = data;
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los roles', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Error', detail: t('rolesAdmin.loadError'), life: 3000 });
   } finally {
     loading.value = false;
   }
@@ -65,13 +106,14 @@ async function loadPermissions() {
     const { data } = await apiClient.get('/roles/permissions');
     allPermissions.value = data;
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los permisos', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Error', detail: t('rolesAdmin.loadPermsError'), life: 3000 });
   }
 }
 
 function openCreate() {
   editingRole.value = null;
   form.value = { name: '', description: '', permissionIds: [] };
+  selectedTemplateId.value = '';
   dialogVisible.value = true;
 }
 
@@ -82,8 +124,15 @@ function openEdit(role: Role) {
     description: role.description ?? '',
     permissionIds: role.permissions.map((p) => p.id),
   };
+  selectedTemplateId.value = '';
   dialogVisible.value = true;
 }
+
+watch(selectedTemplateId, (id) => {
+  if (!editingRole.value && id) {
+    applyTemplate(id as RoleTemplateId);
+  }
+});
 
 async function saveRole() {
   try {
@@ -95,32 +144,32 @@ async function saveRole() {
 
     if (editingRole.value) {
       await apiClient.patch(`/roles/${editingRole.value.id}`, payload);
-      toast.add({ severity: 'success', summary: 'Actualizado', detail: 'Rol actualizado correctamente', life: 3000 });
+      toast.add({ severity: 'success', summary: t('rolesAdmin.save'), detail: t('rolesAdmin.saveOk'), life: 3000 });
     } else {
       await apiClient.post('/roles', payload);
-      toast.add({ severity: 'success', summary: 'Creado', detail: 'Rol creado correctamente', life: 3000 });
+      toast.add({ severity: 'success', summary: t('rolesAdmin.save'), detail: t('rolesAdmin.saveOk'), life: 3000 });
     }
 
     dialogVisible.value = false;
     await loadRoles();
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo guardar el rol', life: 3000 });
+    toast.add({ severity: 'error', summary: 'Error', detail: t('rolesAdmin.saveError'), life: 3000 });
   }
 }
 
 function confirmDelete(role: Role) {
   confirm.require({
-    message: `¿Estás seguro de eliminar el rol "${role.name}"?`,
-    header: 'Confirmar eliminación',
+    message: t('rolesAdmin.deleteConfirm', { name: role.name }),
+    header: t('rolesAdmin.deleteHeader'),
     icon: 'pi pi-exclamation-triangle',
     acceptClass: 'p-button-danger',
     accept: async () => {
       try {
         await apiClient.delete(`/roles/${role.id}`);
-        toast.add({ severity: 'success', summary: 'Eliminado', detail: 'Rol eliminado correctamente', life: 3000 });
+        toast.add({ severity: 'success', summary: t('rolesAdmin.deleteOk'), life: 3000 });
         await loadRoles();
       } catch {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el rol', life: 3000 });
+        toast.add({ severity: 'error', summary: 'Error', detail: t('rolesAdmin.deleteError'), life: 3000 });
       }
     },
   });
@@ -133,29 +182,39 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="p-4">
+  <div class="flex flex-col gap-6 max-w-6xl mx-auto w-full">
     <ConfirmDialog />
 
-    <div class="flex items-center justify-between mb-4">
-      <h1 class="text-2xl font-bold dark:text-white">Gestión de Roles</h1>
-      <Button label="Nuevo rol" icon="pi pi-plus" @click="openCreate" />
-    </div>
+    <PageHeader :title="t('rolesAdmin.title')" :subtitle="t('rolesAdmin.pageSubtitle')">
+      <template #actions>
+        <Button :label="t('rolesAdmin.newRole')" icon="pi pi-plus" size="small" @click="openCreate" />
+      </template>
+    </PageHeader>
 
-    <DataTable :value="roles" :loading="loading" stripedRows responsiveLayout="scroll" class="dark:bg-surface-800">
-      <Column field="name" header="Nombre" sortable />
-      <Column field="description" header="Descripción" />
-      <Column header="Permisos">
+    <DataTable
+      :value="roles"
+      :loading="loading"
+      striped-rows
+      responsive-layout="scroll"
+      class="text-sm"
+      :pt="{
+        root: { style: { background: 'var(--surface-raised)' } },
+      }"
+    >
+      <Column field="name" :header="t('rolesAdmin.name')" sortable />
+      <Column field="description" :header="t('rolesAdmin.description')" />
+      <Column :header="t('rolesAdmin.permissionsCount')">
         <template #body="{ data }">
           <Tag :value="String(data.permissions?.length ?? 0)" severity="info" />
         </template>
       </Column>
-      <Column header="Sistema">
+      <Column :header="t('rolesAdmin.system')">
         <template #body="{ data }">
-          <Tag v-if="data.isSystem" value="Sistema" severity="warn" />
-          <Tag v-else value="Custom" severity="success" />
+          <Tag v-if="data.isSystem" :value="t('rolesAdmin.system')" severity="warn" />
+          <Tag v-else :value="t('rolesAdmin.custom')" severity="success" />
         </template>
       </Column>
-      <Column header="Acciones">
+      <Column :header="t('rolesAdmin.actions')">
         <template #body="{ data }">
           <div class="flex gap-2">
             <Button
@@ -163,7 +222,6 @@ onMounted(() => {
               severity="info"
               text
               rounded
-              :disabled="data.isSystem"
               @click="openEdit(data)"
             />
             <Button
@@ -171,7 +229,6 @@ onMounted(() => {
               severity="danger"
               text
               rounded
-              :disabled="data.isSystem"
               @click="confirmDelete(data)"
             />
           </div>
@@ -181,34 +238,56 @@ onMounted(() => {
 
     <Dialog
       v-model:visible="dialogVisible"
-      :header="editingRole ? 'Editar Rol' : 'Nuevo Rol'"
+      :header="editingRole ? t('rolesAdmin.editRole') : t('rolesAdmin.createRole')"
       modal
-      :style="{ width: '600px' }"
-      class="dark:bg-surface-800"
+      :style="{ width: 'min(640px, 96vw)' }"
+      :content-style="{ background: 'var(--surface-raised)' }"
     >
       <div class="flex flex-col gap-4 pt-2">
-        <div class="flex flex-col gap-1">
-          <label class="font-semibold dark:text-white">Nombre *</label>
-          <InputText v-model="form.name" placeholder="Nombre del rol" class="w-full" />
+        <div v-if="!editingRole" class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-fg">{{
+            t('rolesAdmin.templateLabel')
+          }}</label>
+          <Dropdown
+            v-model="selectedTemplateId"
+            :options="templateOptions"
+            option-label="label"
+            option-value="value"
+            class="w-full"
+            :placeholder="t('rolesAdmin.templatePlaceholder')"
+          />
+          <p class="text-xs leading-relaxed text-fg-muted">
+            {{ t('rolesAdmin.templateHint') }}
+          </p>
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="font-semibold dark:text-white">Descripción</label>
-          <Textarea v-model="form.description" rows="3" placeholder="Descripción del rol" class="w-full" />
+          <label class="text-sm font-medium text-fg">{{ t('rolesAdmin.name') }} *</label>
+          <InputText v-model="form.name" class="w-full" />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm font-medium text-fg">{{ t('rolesAdmin.description') }}</label>
+          <Textarea v-model="form.description" rows="3" class="w-full" />
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold dark:text-white">Permisos</label>
+          <label class="text-sm font-medium text-fg">{{ t('rolesAdmin.permissions') }}</label>
           <div
             v-for="(perms, category) in groupedPermissions"
             :key="category"
-            class="border border-surface-200 dark:border-surface-600 rounded p-3 mb-2"
+            class="rounded-lg border border-surface-border bg-surface-sunken p-3 mb-2"
           >
-            <h4 class="font-semibold mb-2 capitalize dark:text-white">{{ category }}</h4>
-            <div class="grid grid-cols-2 gap-2">
-              <div v-for="perm in perms" :key="perm.id" class="flex items-center gap-2">
-                <Checkbox v-model="form.permissionIds" :inputId="perm.id" :value="perm.id" />
-                <label :for="perm.id" class="cursor-pointer dark:text-surface-300">{{ perm.code }}</label>
+            <h4 class="text-sm font-semibold mb-3 text-fg">
+              {{ labelForCategory(String(category)) }}
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div v-for="perm in perms" :key="perm.id" class="flex items-start gap-2">
+                <Checkbox v-model="form.permissionIds" :input-id="perm.id" :value="perm.id" class="mt-0.5" />
+                <label :for="perm.id" class="cursor-pointer text-sm leading-snug">
+                  <span class="block text-fg">{{ labelForPermission(perm) }}</span>
+                  <span class="text-xs font-mono opacity-60" :title="perm.code">{{ perm.code }}</span>
+                </label>
               </div>
             </div>
           </div>
@@ -216,8 +295,13 @@ onMounted(() => {
       </div>
 
       <template #footer>
-        <Button label="Cancelar" severity="secondary" text @click="dialogVisible = false" />
-        <Button label="Guardar" icon="pi pi-check" :disabled="!form.name.trim()" @click="saveRole" />
+        <Button :label="t('rolesAdmin.cancel')" severity="secondary" text @click="dialogVisible = false" />
+        <Button
+          :label="t('rolesAdmin.save')"
+          icon="pi pi-check"
+          :disabled="!form.name.trim()"
+          @click="saveRole"
+        />
       </template>
     </Dialog>
   </div>

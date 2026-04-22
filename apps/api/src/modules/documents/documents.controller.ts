@@ -99,12 +99,25 @@ export class DocumentsController {
 
   @Post(':id/export-docx')
   @RequirePermissions('document:read')
-  async exportDocx(
-    @Param('id') id: string,
-    @Body('editorContent') editorContent: Record<string, unknown>,
-    @Res() res: Response,
-  ) {
-    res.json({ message: 'Export handled client-side via SuperDoc' });
+  async exportDocx(@Param('id') id: string, @Res() res: Response) {
+    const { buffer, filename, mimeType } = await this.documentsService.downloadDocument(id);
+    const isWord =
+      mimeType.includes('word') ||
+      mimeType.includes('wordprocessingml') ||
+      filename.toLowerCase().endsWith('.docx');
+    if (!isWord) {
+      return res.status(400).json({
+        message:
+          'Este documento no es DOCX. Usá el editor para exportar o convertí el archivo antes de descargar desde el servidor.',
+      });
+    }
+    const safeName = filename.toLowerCase().endsWith('.docx') ? filename : `${filename}.docx`;
+    res.set({
+      'Content-Type': mimeType,
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(safeName)}"`,
+      'Content-Length': buffer.length,
+    });
+    return res.send(buffer);
   }
 
   @Get(':id/download')
@@ -153,6 +166,12 @@ export class DocumentsController {
     return this.documentsService.getVersions(id);
   }
 
+  @Get(':id/workflow-history')
+  @RequirePermissions('document:read')
+  async getWorkflowHistory(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.documentsService.getWorkflowHistory(id, user.organizationId);
+  }
+
   @Get(':id/editor-content')
   @RequirePermissions('document:read')
   async getEditorContent(@Param('id') id: string) {
@@ -180,6 +199,8 @@ export class DocumentsController {
   @Get('trash/list')
   @RequirePermissions('document:read')
   async getTrash(@CurrentUser() user: any) {
+    const days = await this.documentsService.resolveTrashRetentionDays(user.organizationId);
+    await this.documentsService.purgeExpiredTrashedDocuments(user.organizationId, days);
     return this.documentsService.findTrashed(user.organizationId);
   }
 
@@ -196,6 +217,7 @@ export class DocumentsController {
   async findAll(
     @Query('folderId') folderId?: string,
     @Query('workflowItemId') workflowItemId?: string,
+    @Query('trackableId') trackableId?: string,
     @Query('isTemplate') isTemplate?: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -203,14 +225,29 @@ export class DocumentsController {
     const where: any = { deletedAt: null };
     if (folderId) where.folder = folderId;
     if (workflowItemId) where.workflowItem = workflowItemId;
+    if (trackableId && !folderId) {
+      where.folder = { trackable: trackableId };
+    }
     if (isTemplate !== undefined) where.isTemplate = isTemplate === 'true';
 
     const populate: string[] = ['uploadedBy'];
+    if (folderId || trackableId || workflowItemId) {
+      populate.push('workflowItem');
+    }
     if (isTemplate === 'true') {
       populate.push('folder', 'folder.trackable');
     }
 
-    return this.documentsService.findAll(where, { page, limit }, {
+    const pagination: { page?: number; limit?: number; sortBy?: string; sortOrder?: 'ASC' | 'DESC' } = {
+      page,
+      limit,
+    };
+    if (trackableId && !folderId) {
+      pagination.sortBy = 'updatedAt';
+      pagination.sortOrder = 'DESC';
+    }
+
+    return this.documentsService.findAll(where, pagination, {
       populate: populate as any,
     });
   }
@@ -219,9 +256,16 @@ export class DocumentsController {
   @RequirePermissions('document:update')
   async update(
     @Param('id') id: string,
-    @Body() dto: { title?: string; reviewStatus?: string; isTemplate?: boolean; tags?: string[] },
+    @Body() dto: {
+      title?: string;
+      reviewStatus?: string;
+      isTemplate?: boolean;
+      tags?: string[];
+      workflowItemId?: string | null;
+    },
+    @CurrentUser() user: any,
   ) {
-    return this.documentsService.update(id, dto as any);
+    return this.documentsService.patchDocument(id, dto, user.organizationId);
   }
 
   @Patch(':id/editor-content')
@@ -236,8 +280,18 @@ export class DocumentsController {
 
   @Post(':id/submit-review')
   @RequirePermissions('document:update')
-  async submitForReview(@Param('id') id: string) {
-    return this.documentsService.submitForReview(id);
+  async submitForReview(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.documentsService.submitForReview(id, user.organizationId, user.id);
+  }
+
+  @Post(':id/link-workflow-item')
+  @RequirePermissions('document:update')
+  async linkWorkflowItem(
+    @Param('id') id: string,
+    @Body() body: { workflowItemId: string | null },
+    @CurrentUser() user: any,
+  ) {
+    return this.documentsService.linkWorkflowItem(id, body.workflowItemId ?? null, user.organizationId);
   }
 
   @Post(':id/evaluate')

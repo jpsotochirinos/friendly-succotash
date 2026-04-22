@@ -1,0 +1,2 @@
+export function backspaceEmptyRunParagraph(): import('./types').Command;
+//# sourceMappingURL=backspaceEmptyRunParagraph.d.ts.map

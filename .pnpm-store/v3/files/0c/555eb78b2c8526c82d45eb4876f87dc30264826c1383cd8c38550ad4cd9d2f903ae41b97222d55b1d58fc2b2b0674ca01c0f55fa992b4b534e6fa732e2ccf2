@@ -1,0 +1,46 @@
+import { SectionHeaderFooterKind, SectionHeaderFooterVariant } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+export type EnsureExplicitHeaderFooterSlotInput = {
+    sectionId: string;
+    kind: SectionHeaderFooterKind;
+    variant: SectionHeaderFooterVariant;
+    /** Optional source part to clone from. If omitted, clones from inherited or creates empty. */
+    sourceRefId?: string;
+};
+export type EnsureExplicitHeaderFooterSlotResult = {
+    refId: string;
+    createdPartPath: string;
+    sectionId: string;
+    kind: SectionHeaderFooterKind;
+    variant: SectionHeaderFooterVariant;
+    /** The refId of the inherited source that was cloned, if any. */
+    materializedFromRefId: string | null;
+    /** Whether a new slot was actually created (false means it already existed). */
+    created: boolean;
+};
+/**
+ * Normalize a section type from the UI to a valid OOXML variant.
+ *
+ * In Word's OOXML model, odd-page headers are represented by the `default`
+ * slot — there is no explicit `w:headerReference` with `w:type="odd"`.
+ *
+ * This is the caller's responsibility — the materialization helper rejects
+ * unrecognized variants rather than silently mapping them.
+ */
+export declare function normalizeVariant(sectionType: string): SectionHeaderFooterVariant;
+/**
+ * Ensure a section has an explicit header/footer slot, materializing it if necessary.
+ *
+ * Idempotent: if the slot already has an explicit ref, returns it immediately.
+ *
+ * When creating a new slot:
+ * 1. Resolves inherited effective ref if present
+ * 2. Creates a new header/footer part (cloning from inherited source when available)
+ * 3. Adds the relationship to `word/_rels/document.xml.rels`
+ * 4. Writes the explicit ref into the section's `sectPr`
+ *
+ * The entire sequence is wrapped in `compoundMutation()` so that failure
+ * rolls back parts, relationships, and header/footer caches atomically.
+ */
+export declare function ensureExplicitHeaderFooterSlot(editor: Editor, input: EnsureExplicitHeaderFooterSlotInput): EnsureExplicitHeaderFooterSlotResult | null;
+//# sourceMappingURL=header-footer-slot-materialization.d.ts.map

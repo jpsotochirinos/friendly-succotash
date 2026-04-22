@@ -1,0 +1,79 @@
+/**
+ * Prepend `https://` to bare `www.` URLs so they pass protocol validation.
+ *
+ * This is user-intent normalization — `sanitizeHref` correctly rejects bare
+ * `www.` as a security boundary, so we add the protocol before calling it.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function maybeAddProtocol(text: string): string;
+/**
+ * Detect whether a pasted plain-text string is a single URL.
+ *
+ * Rejects strings with internal whitespace (not a bare URL).
+ * Handles `www.` inputs by prepending `https://`.
+ *
+ * @param {string} text        Raw clipboard text
+ * @param {string[]} protocols Extra protocols from link extension config
+ * @returns {{ href: string } | null}
+ */
+export function detectPasteUrl(text: string, protocols?: string[]): {
+    href: string;
+} | null;
+/**
+ * Whether the editor context allows writing to `word/_rels/document.xml.rels`.
+ *
+ * Child editors and header/footer editors need part-local rels that the export
+ * step creates — writing to the main rels from those contexts is wrong.
+ *
+ * @param {object} editor
+ * @returns {boolean}
+ */
+export function canAllocateRels(editor: object): boolean;
+/**
+ * Handle a plain-text paste that was detected as a URL.
+ *
+ * - Collapsed selection: inserts URL as text and applies link + underline marks.
+ * - Non-collapsed text selection: keeps selected text and applies link mark with URL as href.
+ * - Non-text selections (NodeSelection, CellSelection): not handled — return false.
+ *
+ * @param {object} editor    SuperEditor instance
+ * @param {object} view      ProseMirror EditorView
+ * @param {string} plainText The pasted text
+ * @param {{ href: string }} detected Result from `detectPasteUrl`
+ * @returns {boolean} Whether the paste was handled
+ */
+export function handlePlainTextUrlPaste(editor: object, view: object, plainText: string, detected: {
+    href: string;
+}): boolean;
+/**
+ * Normalize every link mark within the changed range of a paste transaction.
+ *
+ * - Strips untrusted pasted rIds
+ * - Validates and sanitizes hrefs (including `www.` → `https://www.`)
+ * - Removes link marks with no valid href and no anchor
+ * - Allocates fresh rIds when appropriate (main docx editor only)
+ *
+ * Resolves extra protocols from the link extension config automatically
+ * when `protocols` is not provided.
+ *
+ * Mutates `tr` in place. Call before dispatching.
+ *
+ * @param {import('prosemirror-state').Transaction} tr
+ * @param {object} editor    SuperEditor instance
+ * @param {Array<string | { scheme: string }>} [protocols] Extra allowed protocols (auto-resolved from editor if omitted)
+ */
+export function normalizePastedLinks(tr: import('prosemirror-state').Transaction, editor: object, protocols?: Array<string | {
+    scheme: string;
+}>): void;
+/**
+ * Resolve extra protocols from the link extension configuration.
+ *
+ * @param {object} editor
+ * @returns {Array<string | { scheme: string }>}
+ */
+export function resolveLinkProtocols(editor: object): Array<string | {
+    scheme: string;
+}>;
+//# sourceMappingURL=paste-link-normalizer.d.ts.map

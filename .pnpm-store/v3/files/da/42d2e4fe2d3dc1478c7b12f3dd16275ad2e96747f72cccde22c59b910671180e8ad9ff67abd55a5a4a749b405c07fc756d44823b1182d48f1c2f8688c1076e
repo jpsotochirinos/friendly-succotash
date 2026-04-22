@@ -1,0 +1,25 @@
+import { Node as ProseMirrorNode } from 'prosemirror-model';
+import { FieldAddress, FieldDomain, FieldInfo, DiscoveryItem } from '@superdoc/document-api';
+export interface ResolvedField {
+    pos: number;
+    blockId: string;
+    occurrenceIndex: number;
+    nestingDepth: number;
+    instruction: string;
+    fieldType: string;
+    resolvedText: string;
+}
+export declare function findAllFields(doc: ProseMirrorNode): ResolvedField[];
+/**
+ * Returns the subset of document fields whose positions intersect a range.
+ *
+ * For a collapsed selection (from === to) the field immediately at or
+ * adjacent to the cursor is matched — mirroring Word's "caret on a field"
+ * semantics. For a range selection, all fields overlapping [from, to) are
+ * returned.
+ */
+export declare function findFieldsInRange(doc: ProseMirrorNode, from: number, to: number): ResolvedField[];
+export declare function resolveFieldTarget(doc: ProseMirrorNode, target: FieldAddress): ResolvedField;
+export declare function extractFieldInfo(resolved: ResolvedField): FieldInfo;
+export declare function buildFieldDiscoveryItem(resolved: ResolvedField, evaluatedRevision: string): DiscoveryItem<FieldDomain>;
+//# sourceMappingURL=field-resolver.d.ts.map

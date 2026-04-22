@@ -1,0 +1,21 @@
+import { Node as ProseMirrorNode } from 'prosemirror-model';
+import { BookmarkAddress, BookmarkDomain, BookmarkInfo, DiscoveryItem } from '@superdoc/document-api';
+export interface ResolvedBookmark {
+    node: ProseMirrorNode;
+    pos: number;
+    name: string;
+    bookmarkId: string;
+    endPos: number | null;
+}
+/**
+ * Finds all bookmarkStart nodes in document order.
+ */
+export declare function findAllBookmarks(doc: ProseMirrorNode): ResolvedBookmark[];
+/**
+ * Resolves a BookmarkAddress to its ProseMirror node and position.
+ * @throws DocumentApiAdapterError with code TARGET_NOT_FOUND if not found.
+ */
+export declare function resolveBookmarkTarget(doc: ProseMirrorNode, target: BookmarkAddress): ResolvedBookmark;
+export declare function extractBookmarkInfo(doc: ProseMirrorNode, resolved: ResolvedBookmark): BookmarkInfo;
+export declare function buildBookmarkDiscoveryItem(doc: ProseMirrorNode, resolved: ResolvedBookmark, evaluatedRevision: string): DiscoveryItem<BookmarkDomain>;
+//# sourceMappingURL=bookmark-resolver.d.ts.map

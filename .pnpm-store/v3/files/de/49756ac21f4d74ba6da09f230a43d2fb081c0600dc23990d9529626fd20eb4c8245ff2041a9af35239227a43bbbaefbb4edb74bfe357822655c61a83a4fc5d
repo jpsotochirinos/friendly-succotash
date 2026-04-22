@@ -1,0 +1,12 @@
+import { createServer } from 'node:http';
+type UpgradeValidationResult = {
+    ok: true;
+    documentId: string;
+} | {
+    ok: false;
+    statusCode: 400 | 404;
+};
+export declare function validateUpgradePath(pathname: string): UpgradeValidationResult;
+export declare function createCollabServer(): ReturnType<typeof createServer>;
+export {};
+//# sourceMappingURL=collab-server.d.ts.map

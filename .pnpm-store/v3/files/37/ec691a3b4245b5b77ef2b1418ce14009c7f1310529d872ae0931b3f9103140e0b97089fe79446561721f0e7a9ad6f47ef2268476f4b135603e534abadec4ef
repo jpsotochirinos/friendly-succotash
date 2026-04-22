@@ -1,0 +1,16 @@
+import { Plugin, PluginKey } from 'prosemirror-state';
+/**
+ * ProseMirror plugin that enforces M1 chart immutability.
+ *
+ * Rejects any transaction that deletes, replaces, modifies attrs of,
+ * or inserts a chart node.
+ *
+ * Performance characteristics:
+ * - Chart-free docs: O(1) per transaction (checks step slices only)
+ * - Docs with charts: O(chart count) per transaction (maps old positions)
+ * - Never O(doc size) during editing — full scan only at init
+ * - Globally registered but zero-cost when no charts exist
+ */
+export function createChartImmutabilityPlugin(): Plugin<number>;
+export const CHART_IMMUTABILITY_KEY: PluginKey<any>;
+//# sourceMappingURL=chart-immutability-plugin.d.ts.map

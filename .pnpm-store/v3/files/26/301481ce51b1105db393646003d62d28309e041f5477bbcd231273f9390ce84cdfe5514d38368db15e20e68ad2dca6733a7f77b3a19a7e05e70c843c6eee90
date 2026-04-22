@@ -1,0 +1,171 @@
+import { EditorState } from 'prosemirror-state';
+import { FlowBlock, Layout, Measure } from '@superdoc/contracts';
+import { PageGeometryHelper } from '@superdoc/layout-bridge';
+import { RemoteCursorState, PresenceOptions, AwarenessWithSetField } from '../types.js';
+/**
+ * Minimal interface for collaboration provider with awareness.
+ */
+type CollaborationProviderLike = {
+    awareness?: AwarenessWithSetField | null;
+    disconnect?: () => void;
+} | null;
+/**
+ * Caret geometry in page-local layout space.
+ */
+type CaretLayout = {
+    pageIndex: number;
+    x: number;
+    y: number;
+    height: number;
+};
+/**
+ * Configuration options for RemoteCursorManager.
+ */
+export type RemoteCursorManagerOptions = {
+    /** The host element where the editor is mounted (for scroll events) */
+    visibleHost: HTMLElement;
+    /** The overlay element to render cursors into */
+    remoteCursorOverlay: HTMLElement;
+    /** Presence configuration options */
+    presence?: PresenceOptions;
+    /** Collaboration provider with awareness support */
+    collaborationProvider?: CollaborationProviderLike;
+    /** Fallback color palette for users without custom colors */
+    fallbackColors: readonly string[];
+    /** Style constants for cursor rendering */
+    cursorStyles: CursorStylesLike;
+    /** Maximum selection rectangles per user (performance guardrail) */
+    maxSelectionRectsPerUser: number;
+    /** Default page height for coordinate calculations */
+    defaultPageHeight: number;
+};
+/**
+ * Style constants for remote cursor rendering.
+ */
+type CursorStylesLike = {
+    CARET_WIDTH: number;
+    LABEL_FONT_SIZE: number;
+    LABEL_PADDING: string;
+    LABEL_OFFSET: string;
+    SELECTION_BORDER_RADIUS: string;
+    MAX_LABEL_LENGTH: number;
+};
+/**
+ * Dependencies required for rendering remote cursors.
+ * These are passed from PresentationEditor as they change with layout updates.
+ */
+export type RenderDependencies = {
+    layout: Layout | null;
+    blocks: FlowBlock[];
+    measures: Measure[];
+    pageGeometryHelper: PageGeometryHelper | null;
+    pageHeight: number;
+    computeCaretLayoutRect: (pos: number) => CaretLayout | null;
+    convertPageLocalToOverlayCoords: (pageIndex: number, x: number, y: number) => {
+        x: number;
+        y: number;
+    } | null;
+};
+/**
+ * Telemetry payload for remote cursor render events.
+ */
+export type RemoteCursorsTelemetry = {
+    collaboratorCount: number;
+    visibleCount: number;
+    renderTimeMs: number;
+};
+/**
+ * Manages remote cursor state and rendering for collaborative editing.
+ *
+ * This class is designed to be instantiated by PresentationEditor and owns all
+ * the state related to remote cursor rendering. It delegates actual rendering
+ * to the helper functions in RemoteCursorAwareness.ts and RemoteCursorRendering.ts.
+ */
+export declare class RemoteCursorManager {
+    #private;
+    constructor(options: RemoteCursorManagerOptions);
+    /**
+     * Get the current remote cursor state map.
+     * Useful for emitting cursor data to host consumers.
+     */
+    get state(): Map<number, RemoteCursorState>;
+    /**
+     * Get the cursor elements map for testing/debugging.
+     */
+    get elements(): Map<number, HTMLElement>;
+    /**
+     * Check if the manager is currently set up.
+     */
+    get isSetup(): boolean;
+    /**
+     * Set a telemetry callback to receive render metrics.
+     */
+    setTelemetryCallback(callback: ((data: RemoteCursorsTelemetry) => void) | null): void;
+    /**
+     * Set a callback to receive cursor update events.
+     */
+    setCursorsUpdateCallback(callback: ((cursors: RemoteCursorState[]) => void) | null): void;
+    /**
+     * Update the collaboration provider reference. Called during late-attach
+     * upgrade so `setup()` reads the correct provider when `collaborationReady` fires.
+     */
+    setCollaborationProvider(provider: CollaborationProviderLike): void;
+    /**
+     * Setup awareness event subscriptions for remote cursor tracking.
+     * Includes scroll listener for virtualization updates.
+     * Called after collaborationReady event when ySync plugin is initialized.
+     * Prevents double-initialization by cleaning up existing subscriptions first.
+     */
+    setup(): void;
+    /**
+     * Mark the cursor state as dirty, requiring a re-render.
+     */
+    markDirty(): void;
+    /**
+     * Schedule a remote cursor update using microtask + throttle-based rendering.
+     *
+     * Uses queueMicrotask to defer cursor normalization until after all
+     * synchronous code completes. This fixes a race condition where awareness events
+     * fire before the ProseMirror state is updated with Yjs document changes.
+     */
+    scheduleUpdate(): void;
+    /**
+     * Set the callback to invoke when a scheduled update fires.
+     * This allows PresentationEditor to provide the update logic with current state.
+     */
+    setUpdateCallback(callback: (() => void) | null): void;
+    /**
+     * Update remote cursor state by normalizing awareness states and rendering.
+     * Call this when awareness state has changed.
+     */
+    update(editorState: EditorState | null, deps: RenderDependencies): void;
+    /**
+     * Render remote cursors from existing state without normalization.
+     * Use this when only layout geometry has changed, not cursor positions.
+     */
+    render(deps: RenderDependencies): void;
+    /**
+     * Update local cursor position in awareness.
+     *
+     * CRITICAL FIX: The y-prosemirror cursor plugin only updates awareness when
+     * view.hasFocus() returns true. In PresentationEditor, the hidden PM EditorView
+     * may not have DOM focus. This method bypasses the focus check and manually
+     * updates awareness with the current selection position.
+     */
+    updateLocalCursor(editorState: EditorState | null): void;
+    /**
+     * Update presence options at runtime.
+     */
+    updatePresenceOptions(presence: PresenceOptions | undefined): void;
+    /**
+     * Check if there are any remote cursors to render.
+     */
+    hasRemoteCursors(): boolean;
+    /**
+     * Clean up all resources.
+     * Call this when destroying the PresentationEditor.
+     */
+    destroy(): void;
+}
+export {};
+//# sourceMappingURL=RemoteCursorManager.d.ts.map

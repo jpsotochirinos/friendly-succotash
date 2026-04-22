@@ -1,0 +1,27 @@
+/**
+ * Adds a single mark's run-property representation to an empty paragraph's
+ * `paragraphProperties.runProperties`.
+ *
+ * @param {import('prosemirror-state').Transaction} tr
+ * @param {import('prosemirror-model').Mark | { type: import('prosemirror-model').MarkType | { name: string } | string, attrs?: Record<string, unknown> }} mark
+ */
+export function addParagraphRunProperty(tr: import('prosemirror-state').Transaction, mark: import('prosemirror-model').Mark | {
+    type: import('prosemirror-model').MarkType | {
+        name: string;
+    } | string;
+    attrs?: Record<string, unknown>;
+}): void;
+/**
+ * Removes a single mark's run-property representation from an empty paragraph's
+ * `paragraphProperties.runProperties`.
+ *
+ * @param {import('prosemirror-state').Transaction} tr
+ * @param {import('prosemirror-model').Mark | { type: import('prosemirror-model').MarkType | { name: string } | string, attrs?: Record<string, unknown> }} mark
+ */
+export function removeParagraphRunProperty(tr: import('prosemirror-state').Transaction, mark: import('prosemirror-model').Mark | {
+    type: import('prosemirror-model').MarkType | {
+        name: string;
+    } | string;
+    attrs?: Record<string, unknown>;
+}): void;
+//# sourceMappingURL=syncParagraphRunProperties.d.ts.map

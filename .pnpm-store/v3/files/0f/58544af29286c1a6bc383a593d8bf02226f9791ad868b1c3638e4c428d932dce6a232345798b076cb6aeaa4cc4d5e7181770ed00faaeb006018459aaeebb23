@@ -1,0 +1,2 @@
+export function getRandomId(prefix?: string): string;
+//# sourceMappingURL=getRandomId.d.ts.map

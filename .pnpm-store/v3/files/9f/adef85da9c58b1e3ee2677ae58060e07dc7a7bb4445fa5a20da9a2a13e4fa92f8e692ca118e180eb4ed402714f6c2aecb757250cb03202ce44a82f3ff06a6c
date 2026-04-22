@@ -1,0 +1,19 @@
+const require_rolldown_runtime = require("./rolldown-runtime-C34Jxks9.cjs");
+const require_jszip = require("./jszip-4KbV_vHe.cjs");
+var import_jszip_min = /* @__PURE__ */ require_rolldown_runtime.__toESM(require_jszip.require_jszip_min(), 1);
+async function createZip(blobs, fileNames) {
+	const zip = new import_jszip_min.default();
+	blobs.forEach((blob, index) => {
+		zip.file(fileNames[index], blob);
+	});
+	return await zip.generateAsync({
+		type: "blob",
+		compression: "DEFLATE"
+	});
+}
+Object.defineProperty(exports, "createZip", {
+	enumerable: true,
+	get: function() {
+		return createZip;
+	}
+});

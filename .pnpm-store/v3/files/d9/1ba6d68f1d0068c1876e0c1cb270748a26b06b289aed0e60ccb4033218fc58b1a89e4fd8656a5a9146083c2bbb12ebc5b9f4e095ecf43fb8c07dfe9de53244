@@ -1,0 +1,17 @@
+import { Extension } from '../../core/Extension.js';
+/**
+ * Configuration options for Gapcursor
+ * @typedef {Object} GapcursorOptions
+ * @category Options
+ */
+/**
+ * @module Gapcursor
+ * @sidebarTitle Gap Cursor
+ * @snippetPath /snippets/extensions/gapcursor.mdx
+ */
+export const Gapcursor: Extension<{}, Record<string, never>>;
+/**
+ * Configuration options for Gapcursor
+ */
+export type GapcursorOptions = Object;
+//# sourceMappingURL=gapcursor.d.ts.map

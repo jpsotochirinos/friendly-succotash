@@ -1,0 +1,21 @@
+import { HighlightRange } from '@superdoc/document-api';
+export interface SnippetResult {
+    snippet: string;
+    highlightRange: HighlightRange;
+}
+/**
+ * Builds a snippet containing the matched text with surrounding context.
+ *
+ * @param matchedText - The text that was matched.
+ * @param blockText - Full text of the containing block(s).
+ * @param matchStartInBlock - Start offset of the match within `blockText`.
+ *
+ * Rules (per D11):
+ * - Up to SNIPPET_CONTEXT_CHARS before and after, clipped to block boundaries.
+ * - Total max length: SNIPPET_MAX_LENGTH.
+ * - When matched text alone exceeds budget, snippet contains first SNIPPET_MAX_LENGTH
+ *   characters with highlightRange = { start: 0, end: snippet.length }.
+ * - Invariant: highlightRange.start >= 0 && highlightRange.end <= snippet.length.
+ */
+export declare function buildSnippet(matchedText: string, blockText: string, matchStartInBlock: number): SnippetResult;
+//# sourceMappingURL=snippet-builder.d.ts.map

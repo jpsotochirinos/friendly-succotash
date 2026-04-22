@@ -1,69 +1,106 @@
 <template>
-  <div class="flex items-center justify-center min-h-screen bg-gray-50">
-    <div class="w-full max-w-md p-8 bg-white rounded-xl shadow-lg">
-      <h1 class="text-2xl font-bold text-center mb-6">{{ $t('auth.login') }}</h1>
+  <AuthShell>
+    <template #title>{{ $t('auth.login') }}</template>
+    <template #subtitle>{{ $t('auth.loginSubtitle') }}</template>
 
-      <form @submit.prevent="handleLogin" class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium mb-1">Email</label>
-          <InputText v-model="email" type="email" class="w-full" required />
-        </div>
-
-        <div v-if="!isMagicLink">
-          <label class="block text-sm font-medium mb-1">Password</label>
-          <Password v-model="password" class="w-full" :feedback="false" toggleMask />
-        </div>
-
-        <Button
-          :label="isMagicLink ? 'Enviar enlace mágico' : $t('auth.login')"
-          type="submit"
-          class="w-full"
-          :loading="loading"
-        />
-      </form>
-
-      <div class="mt-4 text-center">
-        <button
-          @click="isMagicLink = !isMagicLink"
-          class="text-sm text-blue-600 hover:underline"
-        >
-          {{ isMagicLink ? 'Usar contraseña' : 'Enviar enlace mágico' }}
-        </button>
+    <form class="flex flex-col gap-5" @submit.prevent="handleLogin">
+      <div class="flex flex-col gap-2">
+        <FloatLabel variant="on">
+          <InputText
+            id="login-email"
+            v-model="email"
+            type="email"
+            class="w-full"
+            autocomplete="email"
+            :invalid="showError"
+          />
+          <label for="login-email">{{ $t('auth.email') }}</label>
+        </FloatLabel>
       </div>
 
-      <div class="mt-4">
-        <Button
-          label="Continuar con Google"
-          icon="pi pi-google"
-          severity="secondary"
-          class="w-full"
-          @click="authStore.loginWithGoogle()"
-        />
+      <div v-if="!isMagicLink" class="flex flex-col gap-2">
+        <FloatLabel variant="on">
+          <Password
+            input-id="login-password"
+            v-model="password"
+            class="w-full [&_.p-password-input]:w-full"
+            input-class="w-full"
+            :feedback="false"
+            toggle-mask
+            :invalid="showError"
+            autocomplete="current-password"
+          />
+          <label for="login-password">{{ $t('auth.password') }}</label>
+        </FloatLabel>
       </div>
 
-      <p class="mt-4 text-center text-sm text-gray-600">
-        ¿No tienes cuenta?
-        <RouterLink to="/auth/register" class="text-blue-600 hover:underline">
-          {{ $t('auth.register') }}
-        </RouterLink>
-      </p>
-
-      <Message v-if="message" :severity="messageSeverity" class="mt-4">
+      <Message v-if="message" :severity="messageSeverity" class="w-full text-sm" :closable="false">
         {{ message }}
       </Message>
-    </div>
-  </div>
+
+      <Button
+        type="submit"
+        class="w-full"
+        :label="isMagicLink ? $t('auth.sendMagicLink') : $t('auth.login')"
+        :loading="loading"
+      />
+
+      <div class="flex justify-center -mt-1">
+        <Button
+          type="button"
+          :label="isMagicLink ? $t('auth.usePassword') : $t('auth.sendMagicLink')"
+          class="text-sm"
+          link
+          @click="toggleMagicLink"
+        />
+      </div>
+
+      <Divider align="center" class="!my-1">
+        <span
+          class="text-xs font-medium uppercase tracking-wide px-2"
+          :style="{
+            color: 'var(--fg-subtle)',
+            backgroundColor: 'var(--surface-raised)',
+          }"
+        >
+          {{ $t('auth.or') }}
+        </span>
+      </Divider>
+
+      <Button
+        type="button"
+        class="w-full"
+        :label="$t('auth.continueWithGoogle')"
+        icon="pi pi-google"
+        severity="secondary"
+        outlined
+        @click="authStore.loginWithGoogle()"
+      />
+    </form>
+
+    <template #footer>
+      <span>{{ $t('auth.noAccount') }}</span>
+      <RouterLink :to="{ name: 'register' }" class="text-primary font-medium hover:underline ml-1">
+        {{ $t('auth.register') }}
+      </RouterLink>
+    </template>
+  </AuthShell>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth.store';
+import AuthShell from '@/components/auth/AuthShell.vue';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
+import FloatLabel from 'primevue/floatlabel';
+import Divider from 'primevue/divider';
 
+const { t } = useI18n();
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
@@ -75,21 +112,29 @@ const loading = ref(false);
 const message = ref('');
 const messageSeverity = ref<'success' | 'error'>('success');
 
+const showError = computed(() => messageSeverity.value === 'error' && !!message.value);
+
+function toggleMagicLink() {
+  isMagicLink.value = !isMagicLink.value;
+  message.value = '';
+}
+
 async function handleLogin() {
   loading.value = true;
   message.value = '';
   try {
     if (isMagicLink.value) {
       await authStore.requestMagicLink(email.value);
-      message.value = 'Enlace enviado. Revisa tu email.';
+      message.value = t('auth.magicLinkSent');
       messageSeverity.value = 'success';
     } else {
       await authStore.login(email.value, password.value);
       const redirect = (route.query.redirect as string) || '/';
       router.push(redirect);
     }
-  } catch (err: any) {
-    message.value = err.response?.data?.message || 'Error al iniciar sesión';
+  } catch (err: unknown) {
+    const ax = err as { response?: { data?: { message?: string } } };
+    message.value = ax.response?.data?.message || t('auth.loginError');
     messageSeverity.value = 'error';
   } finally {
     loading.value = false;

@@ -1,0 +1,106 @@
+import { ToolbarContext } from '../types.js';
+export declare const normalizeFontSizeValue: (value: unknown) => unknown;
+export declare const normalizeFontFamilyValue: (value: unknown) => unknown;
+export declare const normalizeLinkHrefValue: (value: unknown) => string | null;
+export declare const normalizeColorValue: (value: unknown) => string | null;
+export declare const isFormattingActivatedFromLinkedStyle: (context: ToolbarContext | null, styleKey: "font-size" | "font-family" | "bold") => boolean;
+export declare const hasNegatedFormattingMark: (formatting: Array<{
+    name: string;
+    attrs?: Record<string, unknown>;
+}>, markName: string) => boolean;
+export declare const createBoldStateDeriver: () => ({ context }: {
+    context: ToolbarContext | null;
+}) => {
+    active: any;
+    disabled: boolean;
+};
+export declare const createItalicStateDeriver: () => ({ context }: {
+    context: ToolbarContext | null;
+}) => {
+    active: any;
+    disabled: boolean;
+};
+export declare const createUnderlineStateDeriver: () => ({ context }: {
+    context: ToolbarContext | null;
+}) => {
+    active: any;
+    disabled: boolean;
+};
+export declare const createStrikethroughStateDeriver: () => ({ context }: {
+    context: ToolbarContext | null;
+}) => {
+    active: any;
+    disabled: boolean;
+};
+export declare const createFontSizeStateDeriver: () => ({ context }: {
+    context: ToolbarContext | null;
+}) => {
+    active: boolean;
+    disabled: boolean;
+    value: unknown;
+};
+export declare const createFontFamilyStateDeriver: () => ({ context }: {
+    context: ToolbarContext | null;
+}) => {
+    active: boolean;
+    disabled: boolean;
+    value: unknown;
+};
+export declare const createTextColorStateDeriver: () => ({ context }: {
+    context: ToolbarContext | null;
+}) => {
+    active: boolean;
+    disabled: boolean;
+    value: unknown;
+};
+export declare const createHighlightColorStateDeriver: () => ({ context }: {
+    context: ToolbarContext | null;
+}) => {
+    active: boolean;
+    disabled: boolean;
+    value: unknown;
+};
+export declare const createLinkStateDeriver: () => ({ context }: {
+    context: ToolbarContext | null;
+}) => {
+    active: boolean;
+    disabled: boolean;
+    value: unknown;
+};
+export declare const createBoldExecute: () => ({ context, payload }: {
+    context: ToolbarContext | null;
+    payload?: unknown;
+}) => boolean;
+export declare const createItalicExecute: () => ({ context, payload }: {
+    context: ToolbarContext | null;
+    payload?: unknown;
+}) => boolean;
+export declare const createUnderlineExecute: () => ({ context, payload }: {
+    context: ToolbarContext | null;
+    payload?: unknown;
+}) => boolean;
+export declare const createFontSizeExecute: () => ({ context, payload }: {
+    context: ToolbarContext | null;
+    payload?: unknown;
+}) => boolean;
+export declare const createFontFamilyExecute: () => ({ context, payload }: {
+    context: ToolbarContext | null;
+    payload?: unknown;
+}) => boolean;
+export declare const createTextColorExecute: () => ({ context, payload }: {
+    context: ToolbarContext | null;
+    payload?: unknown;
+}) => boolean;
+export declare const createHighlightColorExecute: () => ({ context, payload }: {
+    context: ToolbarContext | null;
+    payload?: unknown;
+}) => boolean;
+export declare const createLinkExecute: () => ({ context, payload }: {
+    context: ToolbarContext | null;
+    payload?: unknown;
+}) => boolean;
+export declare const createImageExecute: () => ({ context }: {
+    context: ToolbarContext | null;
+    payload?: unknown;
+}) => boolean;
+//# sourceMappingURL=formatting.d.ts.map

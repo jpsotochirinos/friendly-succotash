@@ -1,0 +1,9 @@
+/**
+ * Parse `vertical-align` from inline styles on table cells (TD/TH), e.g. pasted HTML.
+ * Maps CSS `middle` to the schema value `center`.
+ *
+ * @param {HTMLElement} element
+ * @returns {string | null}
+ */
+export function parseCellVerticalAlignFromStyle(element: HTMLElement): string | null;
+//# sourceMappingURL=parseCellVerticalAlign.d.ts.map

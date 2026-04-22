@@ -1,0 +1,56 @@
+/** @param {Uint8Array[]} chunks */
+export function concatUint8Arrays(chunks: Uint8Array[]): Uint8Array<ArrayBuffer>;
+/** @param {number} value @param {number} multiple */
+export function roundUp(value: number, multiple: number): number;
+/** @param {number} sectorId @param {number} sectorSize */
+export function getSectorOffset(sectorId: number, sectorSize: number): number;
+/** @param {DataView} view @param {number} offset */
+export function readUint16LE(view: DataView, offset: number): number;
+/** @param {DataView} view @param {number} offset */
+export function readUint32LE(view: DataView, offset: number): number;
+/** @param {DataView} view @param {number} offset */
+export function readUint64LE(view: DataView, offset: number): bigint;
+/** @param {DataView} view @param {number} offset @param {number} value */
+export function writeUint16LE(view: DataView, offset: number, value: number): void;
+/** @param {DataView} view @param {number} offset @param {number} value */
+export function writeUint32LE(view: DataView, offset: number, value: number): void;
+/** @param {DataView} view @param {number} offset @param {bigint} value */
+export function writeUint64LE(view: DataView, offset: number, value: bigint): void;
+/** @param {Uint8Array} bytes */
+export function decodeUtf16Le(bytes: Uint8Array): string;
+/** @param {string} value */
+export function encodeUtf16Le(value: string): Uint8Array<ArrayBuffer>;
+/** @param {Uint8Array} data @param {number} size */
+export function padToLength(data: Uint8Array, size: number): Uint8Array<ArrayBufferLike>;
+/** @param {Uint8Array} data @param {number} chunkSize */
+export function splitIntoPaddedChunks(data: Uint8Array, chunkSize: number): Uint8Array<ArrayBufferLike>[];
+/**
+ * Shared CFB/OLE constants and byte helpers used by the internal reader/writer.
+ *
+ * The OOXML encryption pipeline only needs a narrow slice of MS-CFB:
+ * reading and writing root-level streams, plus the mini-stream structures used
+ * for sub-4KB streams like EncryptionInfo.
+ */
+export const CFB_SIGNATURE: Uint8Array<ArrayBuffer>;
+export const CFB_HEADER_SIZE: 512;
+export const CFB_DIRECTORY_ENTRY_SIZE: 128;
+export const CFB_HEADER_DIFAT_ENTRY_COUNT: 109;
+export const CFB_MINI_STREAM_CUTOFF_SIZE: 4096;
+export const CFB_MINI_SECTOR_SIZE: 64;
+export const CFB_VERSION_3_SECTOR_SIZE: 512;
+export const CFB_VERSION_4_SECTOR_SIZE: 4096;
+export const CFB_FREE_SECTOR: 4294967295;
+export const CFB_END_OF_CHAIN: 4294967294;
+export const CFB_FAT_SECTOR: 4294967293;
+export const CFB_DIFAT_SECTOR: 4294967292;
+export const CFB_NO_STREAM: 4294967295;
+export namespace CFB_OBJECT_TYPE {
+    let STORAGE: number;
+    let STREAM: number;
+    let ROOT: number;
+}
+export const CFB_BYTE_ORDER: 65534;
+export const CFB_VERSION_3: 3;
+export const CFB_VERSION_4: 4;
+export const CFB_MINI_SECTOR_SHIFT: 6;
+//# sourceMappingURL=cfb-shared.d.ts.map

@@ -1,0 +1,26 @@
+import { QueryMatchInput, QueryMatchOutput, TextAddress, SelectionTarget, StoryLocator } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+export interface TextRefV3 {
+    v: 3;
+    rev: string;
+    matchId: string;
+    scope: 'match' | 'block' | 'run';
+    segments: Array<{
+        blockId: string;
+        start: number;
+        end: number;
+    }>;
+    blockIndex?: number;
+    runIndex?: number;
+}
+export declare function encodeV3Ref(payload: TextRefV3): string;
+/**
+ * Builds a canonical `SelectionTarget` from raw text ranges.
+ *
+ * Used by the legacy find adapter which doesn't build match blocks.
+ * When `story` is provided (non-body stories), it is included in the
+ * target so mutations route to the correct editor.
+ */
+export declare function buildSelectionTargetFromTextRanges(textRanges: TextAddress[], story?: StoryLocator): SelectionTarget;
+export declare function queryMatchAdapter(editor: Editor, input: QueryMatchInput): QueryMatchOutput;
+//# sourceMappingURL=query-match-adapter.d.ts.map

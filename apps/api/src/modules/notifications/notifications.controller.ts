@@ -8,32 +8,51 @@ export class NotificationsController {
 
   @Get()
   async findAll(
-    @CurrentUser('id') userId: string,
+    @CurrentUser() user: { id: string; organizationId: string; permissions?: string[] },
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('unreadOnly') unreadOnly?: boolean,
+    @Query('type') type?: string,
+    @Query('trackableId') trackableId?: string,
+    @Query('onlyDirect') onlyDirect?: string,
   ) {
-    const filters: any = { user: userId };
-    if (unreadOnly) filters.isRead = false;
-    return this.service.findAll(filters, { page, limit }, {
-      orderBy: { createdAt: 'DESC' } as any,
+    const perms = user.permissions ?? [];
+    return this.service.listInbox(user.id, user.organizationId, perms, {
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+      unreadOnly: unreadOnly === true || (unreadOnly as unknown) === 'true',
+      type,
+      trackableId,
+      onlyDirect: onlyDirect === 'true',
     });
   }
 
   @Get('unread-count')
-  async unreadCount(@CurrentUser('id') userId: string) {
-    const count = await this.service.getUnreadCount(userId);
+  async unreadCount(
+    @CurrentUser() user: { id: string; organizationId: string; permissions?: string[] },
+  ) {
+    const count = await this.service.getUnreadCount(
+      user.id,
+      user.organizationId,
+      user.permissions ?? [],
+    );
     return { count };
   }
 
-  @Patch(':id/read')
-  async markAsRead(@Param('id') id: string) {
-    return this.service.markAsRead(id);
+  @Patch('read-all')
+  async markAllAsRead(
+    @CurrentUser() user: { id: string; organizationId: string },
+  ) {
+    await this.service.markAllRead(user.id, user.organizationId);
+    return { success: true };
   }
 
-  @Patch('read-all')
-  async markAllAsRead(@CurrentUser('id') userId: string) {
-    await this.service.markAllAsRead(userId);
-    return { success: true };
+  /** `id` is notification event id */
+  @Patch(':id/read')
+  async markAsRead(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string; organizationId: string; permissions?: string[] },
+  ) {
+    return this.service.markEventRead(id, user.id, user.organizationId, user.permissions ?? []);
   }
 }

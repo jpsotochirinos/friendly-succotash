@@ -1,0 +1,19 @@
+import { SelectionPoint } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+export interface ExpandedRange {
+    absFrom: number;
+    absTo: number;
+}
+/**
+ * Optionally expands a resolved selection range to include fully-covered
+ * boundary blocks.
+ *
+ * @param editor  - The editor instance (for document and block index access).
+ * @param absFrom - Resolved absolute start position.
+ * @param absTo   - Resolved absolute end position.
+ * @param start   - The original start selection point (used to determine expansion eligibility).
+ * @param end     - The original end selection point (used to determine expansion eligibility).
+ * @returns The (possibly expanded) range.
+ */
+export declare function expandDeleteSelection(editor: Editor, absFrom: number, absTo: number, start: SelectionPoint, end: SelectionPoint): ExpandedRange;
+//# sourceMappingURL=expand-delete-selection.d.ts.map

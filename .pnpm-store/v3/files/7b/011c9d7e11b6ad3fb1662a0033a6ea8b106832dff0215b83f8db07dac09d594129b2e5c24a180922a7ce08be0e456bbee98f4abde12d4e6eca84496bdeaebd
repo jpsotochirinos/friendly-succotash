@@ -1,0 +1,16 @@
+declare const _default: import('vue').DefineComponent<{}, {
+    editor: Record<string, any>;
+    closePopover: Function;
+    openPopover: Function;
+    popoverVisible: boolean;
+    linkPopoverResolver?: Function | undefined;
+    $props: {
+        readonly editor?: Record<string, any> | undefined;
+        readonly closePopover?: Function | undefined;
+        readonly openPopover?: Function | undefined;
+        readonly popoverVisible?: boolean | undefined;
+        readonly linkPopoverResolver?: Function | undefined;
+    };
+}, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, string, import('vue').PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import('vue').ComponentProvideOptions, true, {}, any>;
+export default _default;
+//# sourceMappingURL=LinkClickHandler.vue.d.ts.map

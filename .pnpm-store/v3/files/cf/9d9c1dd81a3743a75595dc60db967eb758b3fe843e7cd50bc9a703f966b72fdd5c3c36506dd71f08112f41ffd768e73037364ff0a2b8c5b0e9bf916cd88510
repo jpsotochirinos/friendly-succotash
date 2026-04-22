@@ -1,0 +1,89 @@
+import { Mark } from '../../core/Mark.js';
+/**
+ * Target frame options
+ * @typedef {'_top' | '_self' | '_parent' | '_blank' | string} TargetFrameOptions
+ */
+/**
+ * Configuration options for Link
+ * @typedef {Object} LinkOptions
+ * @category Options
+ * @property {string[]} [protocols=['http', 'https']] - Allowed URL protocols
+ * @property {Object} [htmlAttributes] - HTML attributes for link elements
+ * @property {string} [htmlAttributes.target=null] - Default link target
+ * @property {string} [htmlAttributes.rel='noopener noreferrer nofollow'] - Default rel attribute
+ * @property {string} [htmlAttributes.class=null] - CSS class
+ * @property {string} [htmlAttributes.title=null] - Title attribute
+ */
+/**
+ * Attributes for link marks
+ * @typedef {Object} LinkAttributes
+ * @category Attributes
+ * @property {string} [href] - URL or anchor reference
+ * @property {TargetFrameOptions} [target='_blank'] - Link target window
+ * @property {string} [rel='noopener noreferrer nofollow'] - Relationship attributes
+ * @property {string} [text] - Display text for the link
+ * @property {string} [name] - Anchor name for internal references
+ * @property {boolean} [history=true] - Whether to add to viewed hyperlinks list
+ * @property {string} [anchor] - Bookmark target name (ignored if rId and href specified)
+ * @property {string} [docLocation] - Location in target hyperlink
+ * @property {string} [tooltip] - Tooltip for the link
+ * @property {string} [rId] @internal Word relationship ID for internal links
+ */
+/**
+ * Link options for setLink command
+ * @typedef {Object} SetLinkOptions
+ * @property {string} [href] - URL for the link
+ * @property {string} [text] - Display text (uses selection if omitted)
+ */
+/**
+ * @module Link
+ * @sidebarTitle Link
+ * @snippetPath /snippets/extensions/link.mdx
+ * @note Non-inclusive mark that doesn't expand when typing at edges
+ */
+export const Link: Mark<{
+    protocols: string[];
+    htmlAttributes: {
+        target: null;
+        rel: string;
+        class: null;
+        title: null;
+    };
+}, Record<string, never>, {
+    href: unknown;
+    target: unknown;
+    rel: unknown;
+    rId: unknown;
+    text: unknown;
+    name: unknown;
+    history: unknown;
+    anchor: unknown;
+    docLocation: unknown;
+    tooltip: unknown;
+}>;
+/**
+ * Target frame options
+ */
+export type TargetFrameOptions = "_top" | "_self" | "_parent" | "_blank" | string;
+/**
+ * Configuration options for Link
+ */
+export type LinkOptions = Object;
+/**
+ * Attributes for link marks
+ */
+export type LinkAttributes = Object;
+/**
+ * Link options for setLink command
+ */
+export type SetLinkOptions = {
+    /**
+     * - URL for the link
+     */
+    href?: string | undefined;
+    /**
+     * - Display text (uses selection if omitted)
+     */
+    text?: string | undefined;
+};
+//# sourceMappingURL=link.d.ts.map

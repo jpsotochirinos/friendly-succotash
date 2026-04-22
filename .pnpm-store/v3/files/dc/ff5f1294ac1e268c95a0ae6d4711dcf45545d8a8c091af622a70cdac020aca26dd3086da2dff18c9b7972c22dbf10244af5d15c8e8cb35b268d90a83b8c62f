@@ -1,0 +1,2 @@
+export function isInlineContext(path: any[] | undefined, currentNodeName: any): boolean;
+//# sourceMappingURL=inlineContext.d.ts.map

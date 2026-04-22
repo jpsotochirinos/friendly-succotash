@@ -1,0 +1,91 @@
+import { Node as PMNode, Schema } from 'prosemirror-model';
+import { Transaction } from 'prosemirror-state';
+import { NumberingProperties, StylesDocumentProperties } from '@superdoc/style-engine/ooxml';
+import { DiffSnapshot, DiffPayload, DiffApplyResult } from '@superdoc/document-api';
+import { CommentInput } from '../algorithm/comment-diffing';
+export interface DiffServiceEditor {
+    state: {
+        doc: PMNode;
+        schema: Schema;
+        tr: Transaction;
+    };
+    converter?: {
+        comments?: CommentInput[];
+        translatedLinkedStyles?: StylesDocumentProperties | null;
+        translatedNumbering?: NumberingProperties | null;
+        headers?: Record<string, unknown>;
+        footers?: Record<string, unknown>;
+        headerIds?: Record<string, unknown>;
+        footerIds?: Record<string, unknown>;
+        convertedXml?: Record<string, unknown>;
+        numbering?: Record<string, unknown>;
+        bodySectPr?: Record<string, unknown> | null;
+        savedTagsToRestore?: Array<Record<string, unknown>>;
+        headerFooterModified?: boolean;
+        documentModified?: boolean;
+        exportToXmlJson?: (opts: {
+            data: unknown;
+            editor: {
+                schema: Schema;
+                getUpdatedJson: () => unknown;
+            };
+            editorSchema: Schema;
+            isHeaderFooter: boolean;
+            comments?: unknown[];
+            commentDefinitions?: unknown[];
+            isFinalDoc?: boolean;
+        }) => {
+            result?: {
+                elements?: Array<{
+                    elements?: unknown[];
+                }>;
+            };
+        };
+    } | null;
+    emit?: (event: string, payload: unknown) => void;
+    options?: {
+        documentId?: string | null;
+        user?: unknown;
+        mediaFiles?: Record<string, unknown>;
+    };
+    storage?: {
+        image?: {
+            media?: Record<string, unknown>;
+        };
+    };
+}
+/**
+ * Captures the current editor's diffable state as a versioned snapshot.
+ *
+ * The payload stores **raw** document data (full comments with identity and
+ * body fields intact) so that `compareToSnapshot` can feed them into
+ * `computeDiff` → `diffComments` which needs `commentId`, `textJson`, and
+ * `elements`. Canonicalization is used only for fingerprinting.
+ */
+export declare function captureSnapshot(editor: DiffServiceEditor): DiffSnapshot;
+/**
+ * Compares the current editor (base) against a target snapshot.
+ * Returns a versioned diff payload.
+ */
+export declare function compareToSnapshot(editor: DiffServiceEditor, targetSnapshot: DiffSnapshot): DiffPayload;
+export interface ApplyOptions {
+    changeMode?: 'direct' | 'tracked';
+}
+/** Returned by applyDiffPayload — includes the transaction for the caller to dispatch. */
+export interface ApplyDiffResult {
+    result: DiffApplyResult;
+    tr: Transaction;
+}
+/**
+ * Applies a previously computed diff payload against the current editor.
+ *
+ * Returns both the public result and the PM transaction. The caller (adapter
+ * or editor command) is responsible for dispatching the transaction.
+ */
+export declare function applyDiffPayload(editor: DiffServiceEditor, diffPayload: DiffPayload, options?: ApplyOptions): ApplyDiffResult;
+export type DiffServiceErrorCode = 'INVALID_INPUT' | 'CAPABILITY_UNSUPPORTED' | 'PRECONDITION_FAILED' | 'CAPABILITY_UNAVAILABLE' | 'INTERNAL_ERROR';
+export declare class DiffServiceError extends Error {
+    code: DiffServiceErrorCode;
+    constructor(code: DiffServiceErrorCode, message: string);
+}
+//# sourceMappingURL=diff-service.d.ts.map

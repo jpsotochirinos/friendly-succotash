@@ -1,0 +1,27 @@
+import { ShallowRef } from 'vue';
+import { CreateHeadlessToolbarOptions, PublicToolbarItemId, ToolbarSnapshot } from './types.js';
+/**
+ * Vue composable for the headless toolbar.
+ *
+ * Returns `{ snapshot, execute }` — bind `snapshot` in your template and call
+ * `execute` from your event handlers. Cleanup is automatic on unmount.
+ *
+ * `superdoc` must be available when the composable is called. If it depends on
+ * the DOM, create it in `onMounted` and use `createHeadlessToolbar` directly
+ * instead (see the vue-vuetify example).
+ *
+ * ```vue
+ * <script setup>
+ * const { snapshot, execute } = useHeadlessToolbar(superdoc, ['bold', 'italic', 'undo', 'redo']);
+ * </script>
+ *
+ * <template>
+ *   <button @click="execute('bold')" :data-active="snapshot.commands.bold?.active">Bold</button>
+ * </template>
+ * ```
+ */
+export declare function useHeadlessToolbar(superdoc: CreateHeadlessToolbarOptions['superdoc'] | null | undefined, commands?: PublicToolbarItemId[]): {
+    snapshot: ShallowRef<ToolbarSnapshot>;
+    execute: (id: PublicToolbarItemId, payload?: unknown) => boolean;
+};
+//# sourceMappingURL=vue.d.ts.map

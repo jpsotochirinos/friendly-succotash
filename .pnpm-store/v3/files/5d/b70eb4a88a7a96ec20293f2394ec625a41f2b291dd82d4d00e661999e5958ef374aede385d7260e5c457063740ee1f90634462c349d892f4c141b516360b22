@@ -1,0 +1,8 @@
+export function insertListItemAt({ pos, position, text, sdBlockId, tracked }: {
+    pos: number;
+    position: "before" | "after";
+    text?: string;
+    sdBlockId?: string;
+    tracked?: boolean;
+}): import('./types/index.js').Command;
+//# sourceMappingURL=insertListItemAt.d.ts.map

@@ -1,0 +1,3 @@
+export function findParentNode(predicate: (arg0: import('prosemirror-model').Node) => boolean): (arg0: Object) => ParentNodeInfo | null;
+export type ParentNodeInfo = import('./findParentNodeClosestToPos').ParentNodeInfo;
+//# sourceMappingURL=findParentNode.d.ts.map

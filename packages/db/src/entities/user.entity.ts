@@ -9,7 +9,7 @@ import {
 } from '@mikro-orm/core';
 import { TenantBaseEntity } from './tenant-base.entity';
 import type { Role } from './role.entity';
-import type { Notification } from './notification.entity';
+import type { NotificationRecipient } from './notification-recipient.entity';
 
 @Entity({ tableName: 'users' })
 @Unique({ properties: ['email'] })
@@ -46,8 +46,14 @@ export class User extends TenantBaseEntity {
   @Property({ nullable: true, hidden: true })
   refreshToken?: string;
 
-  @OneToMany('Notification', 'user')
-  notifications = new Collection<Notification>(this);
+  @Property({ type: 'date', nullable: true })
+  birthDate?: Date;
+
+  @Property({ length: 64, nullable: true, hidden: true })
+  calendarIcsToken?: string;
+
+  @OneToMany('NotificationRecipient', 'user')
+  notificationRecipients = new Collection<NotificationRecipient>(this);
 
   getFullName(): string {
     return [this.firstName, this.lastName].filter(Boolean).join(' ') || this.email;

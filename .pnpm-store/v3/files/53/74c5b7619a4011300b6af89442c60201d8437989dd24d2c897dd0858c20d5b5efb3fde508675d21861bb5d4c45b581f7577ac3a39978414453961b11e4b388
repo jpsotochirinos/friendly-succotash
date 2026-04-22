@@ -1,0 +1,9 @@
+/**
+ * Recursively extract plain text content from an OMML XML tree.
+ * Collects all m:t text elements to produce a readable fallback string.
+ *
+ * @param {object} node - An OMML JSON node (xml2json format)
+ * @returns {string} Concatenated text content
+ */
+export function extractMathText(node: object): string;
+//# sourceMappingURL=extract-math-text.d.ts.map

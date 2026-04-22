@@ -1,0 +1,1 @@
+{"version":3,"file":"table.d.ts","sourceRoot":"","sources":["../../../../../../super-editor/src/headless-toolbar/helpers/table.ts"],"names":[],"mappings":"AAGA,OAAO,KAAK,EAAE,mBAAmB,EAAE,cAAc,EAAE,MAAM,aAAa,CAAC;AAEvE,eAAO,MAAM,8BAA8B,SAExC,aAAa;IAAE,OAAO,EAAE,cAAc,GAAG,IAAI,CAAA;CAAE,KAAG,mBASlD,CAAC"}

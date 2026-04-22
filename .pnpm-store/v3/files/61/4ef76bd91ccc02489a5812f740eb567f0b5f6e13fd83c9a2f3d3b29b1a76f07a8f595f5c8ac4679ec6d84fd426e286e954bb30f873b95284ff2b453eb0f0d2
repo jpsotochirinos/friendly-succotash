@@ -1,0 +1,5 @@
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const require_rolldown_runtime = require("../chunks/rolldown-runtime-C34Jxks9.cjs");
+require("../chunks/jszip-4KbV_vHe.cjs");
+const require_zipper = require("../chunks/zipper-Dh1XxRRc.cjs");
+exports.createZip = require_zipper.createZip;

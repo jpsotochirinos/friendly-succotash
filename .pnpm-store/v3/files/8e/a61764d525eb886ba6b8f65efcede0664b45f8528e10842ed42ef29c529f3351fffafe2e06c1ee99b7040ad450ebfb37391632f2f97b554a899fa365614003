@@ -1,0 +1,10 @@
+import { DiffCoverage } from '@superdoc/document-api';
+/** Default v1 coverage — all supported components enabled. */
+export declare const V1_COVERAGE: DiffCoverage;
+/** Default v2 coverage — every currently supported component enabled. */
+export declare const V2_COVERAGE: DiffCoverage;
+/**
+ * Returns true when two coverage objects are structurally equal.
+ */
+export declare function coverageEquals(a: DiffCoverage, b: DiffCoverage): boolean;
+//# sourceMappingURL=coverage.d.ts.map

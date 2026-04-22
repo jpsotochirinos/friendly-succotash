@@ -1,0 +1,7 @@
+const require_rolldown_runtime = require("../chunks/rolldown-runtime-C34Jxks9.cjs");
+require("../chunks/jszip-4KbV_vHe.cjs");
+require("../chunks/xml-js-B2J5tNmr.cjs");
+require("../chunks/constants-DDSbERiY.cjs");
+require("../chunks/dist-kRpWoWUg.cjs");
+const require_DocxZipper = require("../chunks/DocxZipper-COagSXn8.cjs");
+module.exports = require_DocxZipper.DocxZipper_default;

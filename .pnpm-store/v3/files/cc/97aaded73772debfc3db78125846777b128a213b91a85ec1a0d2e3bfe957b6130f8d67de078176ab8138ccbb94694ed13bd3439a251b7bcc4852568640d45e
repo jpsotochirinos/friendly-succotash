@@ -1,0 +1,2 @@
+export function getMediaObjectUrls(media: Object): Object;
+//# sourceMappingURL=imageBlobs.d.ts.map

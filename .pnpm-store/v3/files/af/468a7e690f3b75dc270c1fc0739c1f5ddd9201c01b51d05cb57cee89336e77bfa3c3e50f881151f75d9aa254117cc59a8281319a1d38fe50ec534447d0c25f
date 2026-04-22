@@ -1,0 +1,9 @@
+import { Node } from '../../core/Node.js';
+export const AiLoaderNode: Node<{
+    htmlAttributes: {
+        class: string;
+        contentEditable: string;
+        'aria-label': string;
+    };
+}, Record<string, never>, Record<string, unknown>>;
+//# sourceMappingURL=ai-nodes.d.ts.map

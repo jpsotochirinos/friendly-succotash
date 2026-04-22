@@ -11,12 +11,13 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "dictionary-es": "^4.0.0",
     "nspell": "^2.1.0",
-    "dictionary-es": "^4.0.0"
+    "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@types/nspell": "^2.1.0",
     "typescript": "^5.5.0",
-    "vitest": "^2.0.0",
-    "@types/nspell": "^2.1.0"
+    "vitest": "^2.0.0"
   }
 }

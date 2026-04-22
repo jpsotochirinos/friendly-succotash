@@ -1,0 +1,5 @@
+/** @type {import('@translator').NodeTranslatorConfig} */
+export const config: import('../../../node-translator/index.js').NodeTranslatorConfig;
+/** @type {import('@translator').NodeTranslator} */
+export const translator: import('../../../node-translator/index.js').NodeTranslator;
+//# sourceMappingURL=documentStatField-translator.d.ts.map

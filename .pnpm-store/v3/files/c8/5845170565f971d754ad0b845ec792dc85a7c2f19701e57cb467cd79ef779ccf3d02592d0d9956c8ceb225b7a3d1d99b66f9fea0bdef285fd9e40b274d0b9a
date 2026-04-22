@@ -1,0 +1,3 @@
+/// <reference path="../../_internal-shims.d.ts" />
+export * from './editors/v1/types.js';
+//# sourceMappingURL=types.d.ts.map

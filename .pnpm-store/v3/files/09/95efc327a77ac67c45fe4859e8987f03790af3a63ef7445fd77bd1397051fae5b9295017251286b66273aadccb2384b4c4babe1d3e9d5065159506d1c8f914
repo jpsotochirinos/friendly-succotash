@@ -1,0 +1,9 @@
+export function handleSdtNode(params: any): {
+    nodes: any[];
+    consumed: number;
+};
+/**
+ * @type {Object}
+ */
+export const sdtNodeHandlerEntity: Object;
+//# sourceMappingURL=sdtNodeImporter.d.ts.map

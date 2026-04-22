@@ -1,0 +1,7 @@
+export function getDefaultSpacing(): {
+    after: null;
+    before: null;
+    line: null;
+    lineRule: string;
+};
+//# sourceMappingURL=getDefaultSpacing.d.ts.map

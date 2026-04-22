@@ -1,0 +1,11 @@
+[package]
+name = "desktop-migrator"
+version = "0.1.0"
+edition = "2021"
+description = "Placeholder CLI for local folder migration to Alega"
+
+[dependencies]
+
+[[bin]]
+name = "desktop-migrator"
+path = "src/main.rs"

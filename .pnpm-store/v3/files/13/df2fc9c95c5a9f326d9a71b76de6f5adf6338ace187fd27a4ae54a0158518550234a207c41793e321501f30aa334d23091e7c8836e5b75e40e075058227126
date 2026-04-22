@@ -1,0 +1,92 @@
+import { Node } from '../../core/Node.js';
+/**
+ * Configuration options for Image
+ * @typedef {Object} ImageOptions
+ * @category Options
+ * @property {boolean} [allowBase64=true] - Allow base64 encoded images
+ * @property {Object} [htmlAttributes] - Default HTML attributes for image elements
+ */
+/**
+ * Attributes for image nodes
+ * @typedef {Object} ImageAttributes
+ * @category Attributes
+ * @property {string} [src] - Image source URL or path
+ * @property {string} [alt='Uploaded picture'] - Alternative text for accessibility
+ * @property {string} [title] - Image title/tooltip text
+ * @property {Object} [size] - Image dimensions
+ * @property {number} [size.width] - Width in pixels
+ * @property {number} [size.height] - Height in pixels
+ * @property {Object} [padding] - Image padding/margins
+ * @property {number} [padding.left] - Left padding in pixels
+ * @property {number} [padding.top] - Top padding in pixels
+ * @property {number} [padding.bottom] - Bottom padding in pixels
+ * @property {number} [padding.right] - Right padding in pixels
+ * @property {Object} [marginOffset] - Margin offset for anchored images
+ * @property {number} [marginOffset.horizontal] - Left/right margin offset
+ * @property {number} [marginOffset.top] - Top margin offset
+ * @property {string} [style] - Custom inline CSS styles
+ * @property {string} [id] @internal Image element ID
+ * @property {string} [rId] @internal Relationship ID for Word export
+ * @property {Object} [originalPadding] @internal Original padding values from Word import
+ * @property {Object} [originalAttributes] @internal Original attributes from Word import
+ * @property {boolean} [wrapTopAndBottom] @internal Wrap text above and below image
+ * @property {Object} [anchorData] @internal Anchor positioning data for Word
+ * @property {boolean} [isAnchor] @internal Whether image is anchored
+ * @property {boolean} [simplePos] @internal Simple positioning flag
+ * @property {string} [wrapText] @internal Text wrapping style
+ */
+/**
+ * Options for inserting an image
+ * @typedef {Object} ImageInsertOptions
+ * @property {string} src - Image source URL or data URI
+ * @property {string} [alt] - Alternative text
+ * @property {string} [title] - Image title
+ * @property {Object} [size] - Image dimensions
+ * @property {number} [size.width] - Width in pixels
+ * @property {number} [size.height] - Height in pixels
+ */
+/**
+ * @module Image
+ * @sidebarTitle Image
+ * @snippetPath /snippets/extensions/image.mdx
+ */
+export const Image: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+/**
+ * Configuration options for Image
+ */
+export type ImageOptions = Object;
+/**
+ * Attributes for image nodes
+ */
+export type ImageAttributes = Object;
+/**
+ * Options for inserting an image
+ */
+export type ImageInsertOptions = {
+    /**
+     * - Image source URL or data URI
+     */
+    src: string;
+    /**
+     * - Alternative text
+     */
+    alt?: string | undefined;
+    /**
+     * - Image title
+     */
+    title?: string | undefined;
+    /**
+     * - Image dimensions
+     */
+    size?: {
+        /**
+         * - Width in pixels
+         */
+        width?: number | undefined;
+        /**
+         * - Height in pixels
+         */
+        height?: number | undefined;
+    } | undefined;
+};
+//# sourceMappingURL=image.d.ts.map

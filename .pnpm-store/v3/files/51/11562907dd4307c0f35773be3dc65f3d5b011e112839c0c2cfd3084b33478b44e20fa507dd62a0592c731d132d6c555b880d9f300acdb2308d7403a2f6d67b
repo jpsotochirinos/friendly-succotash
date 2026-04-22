@@ -1,0 +1,2 @@
+export * from './hidden-translator.js';
+//# sourceMappingURL=index.d.ts.map

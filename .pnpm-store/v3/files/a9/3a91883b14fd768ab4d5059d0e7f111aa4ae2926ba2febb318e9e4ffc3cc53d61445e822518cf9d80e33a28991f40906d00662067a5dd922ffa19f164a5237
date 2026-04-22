@@ -1,0 +1,18 @@
+import { ReplayResult } from './replay-types';
+/**
+ * Replays a single inline diff into a transaction.
+ *
+ * @param params Input bundle for replaying an inline diff.
+ * @param params.tr Transaction to append steps to.
+ * @param params.diff Inline diff payload to replay.
+ * @param params.schema Schema used to rebuild nodes and marks.
+ * @param params.paragraphEndPos Fallback insertion anchor when startPos is missing.
+ * @returns Result summary for the applied inline diff.
+ */
+export declare function replayInlineDiff({ tr, diff, schema, paragraphEndPos, }: {
+    tr: import('prosemirror-state').Transaction;
+    diff: import('../algorithm/inline-diffing').InlineDiffResult;
+    schema: import('prosemirror-model').Schema;
+    paragraphEndPos: number;
+}): ReplayResult;
+//# sourceMappingURL=replay-inline.d.ts.map

@@ -1,0 +1,6 @@
+import { Node } from '../../core/Node.js';
+export const fieldAnnotationName: "fieldAnnotation";
+export const annotationClass: "annotation";
+export const annotationContentClass: "annotation-content";
+export const FieldAnnotation: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+//# sourceMappingURL=field-annotation.d.ts.map

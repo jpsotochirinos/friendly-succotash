@@ -1,0 +1,22 @@
+import { ReplayResult } from './replay-types';
+type ReplayEditor = {
+    emit?: (event: string, payload: unknown) => void;
+    options?: {
+        documentId?: string | null;
+    };
+};
+/**
+ * Replays a list of comment diffs into a mutable comment store.
+ *
+ * @param params Input bundle for replaying comment diffs.
+ * @param params.comments Mutable comment store to update in place.
+ * @param params.commentDiffs Comment diffs to replay in provided order.
+ * @returns Aggregated result summary for all replayed comment diffs.
+ */
+export declare function replayComments({ comments, commentDiffs, editor, }: {
+    comments: import('../algorithm/comment-diffing').CommentInput[];
+    commentDiffs: import('../algorithm/comment-diffing').CommentDiff[];
+    editor?: ReplayEditor;
+}): ReplayResult;
+export {};
+//# sourceMappingURL=replay-comments.d.ts.map

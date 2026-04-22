@@ -1,0 +1,2 @@
+export * from './vertAlign-translator.js';
+//# sourceMappingURL=index.d.ts.map

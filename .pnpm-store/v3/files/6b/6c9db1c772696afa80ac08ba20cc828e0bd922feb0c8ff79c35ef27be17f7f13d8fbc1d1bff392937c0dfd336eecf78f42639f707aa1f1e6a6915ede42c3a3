@@ -1,0 +1,20 @@
+type JsonSchema = {
+    type?: string | string[];
+    required?: string[];
+    properties?: Record<string, JsonSchema>;
+    additionalProperties?: boolean | JsonSchema;
+    items?: JsonSchema;
+    const?: unknown;
+    enum?: unknown[];
+    oneOf?: JsonSchema[];
+    anyOf?: JsonSchema[];
+    $ref?: string;
+    $defs?: Record<string, JsonSchema>;
+};
+export interface SchemaValidationResult {
+    valid: boolean;
+    errors: string[];
+}
+export declare function validateJsonSchema(schema: JsonSchema, value: unknown, $defs?: Record<string, JsonSchema>): SchemaValidationResult;
+export {};
+//# sourceMappingURL=schema-validator.d.ts.map

@@ -1,0 +1,31 @@
+/**
+ * FieldAnnotationInteractionLayer
+ *
+ * Upgrades field annotation DOM elements with editing affordances after each
+ * paint cycle. The DomPainter renders annotations as inert visual elements with
+ * position contract attributes (data-pm-start, data-pm-end, data-type, etc.).
+ *
+ * This layer adds:
+ * - `draggable="true"` and `data-draggable="true"` for native drag-and-drop
+ * - `data-display-label` for drag toast text
+ * - `data-variant` mirroring `data-type` for drag payload metadata
+ * - Caret-anchor `<span>` elements for cursor placement after annotations
+ *
+ * Called by PresentationEditor after each paint and on virtualization remounts
+ * via the centralized `#refreshEditorDomAugmentations()` method.
+ */
+export declare class FieldAnnotationInteractionLayer {
+    #private;
+    setContainer(container: HTMLElement | null): void;
+    /**
+     * Apply editing affordances to all annotation elements in the container.
+     * Idempotent: skips elements already upgraded for the current layout epoch.
+     */
+    apply(layoutEpoch: number): void;
+    /**
+     * Remove all editing affordances from annotation elements.
+     * Used during teardown.
+     */
+    clear(): void;
+}
+//# sourceMappingURL=FieldAnnotationInteractionLayer.d.ts.map

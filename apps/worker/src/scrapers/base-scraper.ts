@@ -5,6 +5,13 @@ export interface ScrapeResult {
   data: Record<string, unknown>[];
   errors: string[];
   scrapedAt: Date;
+  /** SINOE: rango de fechas aplicado, conteos, etc. (sin buffers) */
+  meta?: {
+    dateRange?: { from: string; to: string };
+    byStatus?: Record<string, number>;
+    newCount?: number;
+    totalCount?: number;
+  };
 }
 
 export abstract class BaseScraper {

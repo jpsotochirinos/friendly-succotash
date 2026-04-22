@@ -1,0 +1,110 @@
+import { PluginKey } from 'prosemirror-state';
+import { DecorationSet } from 'prosemirror-view';
+import { Extension } from '../../core/Extension.js';
+/**
+ * Plugin key for accessing custom search highlight decorations
+ */
+export const customSearchHighlightsKey: PluginKey<any>;
+export function getCustomSearchDecorations(state: import('prosemirror-state').EditorState): DecorationSet | null;
+/**
+ * A document range
+ * @typedef {Object} DocRange
+ * @property {number} from - Start position in document
+ * @property {number} to - End position in document
+ */
+/**
+ * Search match object
+ * @typedef {Object} SearchMatch
+ * @property {string} text - Found text (combined from all ranges)
+ * @property {number} from - From position (start of first range)
+ * @property {number} to - To position (end of last range)
+ * @property {string} id - ID of the search match (first tracker ID for multi-range)
+ * @property {DocRange[]} [ranges] - Array of document ranges for cross-paragraph matches
+ * @property {string[]} [trackerIds] - Array of position tracker IDs for each range
+ */
+/**
+ * Configuration options for Search
+ * @typedef {Object} SearchOptions
+ * @category Options
+ */
+/**
+ * Options for the search command
+ * @typedef {Object} SearchCommandOptions
+ * @property {boolean} [highlight=true] - Whether to apply CSS classes for visual highlighting of search matches.
+ *   When true, matches are styled with 'ProseMirror-search-match' or 'ProseMirror-active-search-match' classes.
+ *   When false, matches are tracked without visual styling, useful for programmatic search without UI changes.
+ * @property {number} [maxMatches=1000] - Maximum number of matches to return.
+ * @property {boolean} [caseSensitive=false] - Whether the search should be case-sensitive.
+ */
+/**
+ * @module Search
+ * @sidebarTitle Search
+ * @snippetPath /snippets/extensions/search.mdx
+ */
+export const Search: Extension<Record<string, never>, Record<string, never>>;
+/**
+ * A document range
+ */
+export type DocRange = {
+    /**
+     * - Start position in document
+     */
+    from: number;
+    /**
+     * - End position in document
+     */
+    to: number;
+};
+/**
+ * Search match object
+ */
+export type SearchMatch = {
+    /**
+     * - Found text (combined from all ranges)
+     */
+    text: string;
+    /**
+     * - From position (start of first range)
+     */
+    from: number;
+    /**
+     * - To position (end of last range)
+     */
+    to: number;
+    /**
+     * - ID of the search match (first tracker ID for multi-range)
+     */
+    id: string;
+    /**
+     * - Array of document ranges for cross-paragraph matches
+     */
+    ranges?: DocRange[] | undefined;
+    /**
+     * - Array of position tracker IDs for each range
+     */
+    trackerIds?: string[] | undefined;
+};
+/**
+ * Configuration options for Search
+ */
+export type SearchOptions = Object;
+/**
+ * Options for the search command
+ */
+export type SearchCommandOptions = {
+    /**
+     * - Whether to apply CSS classes for visual highlighting of search matches.
+     * When true, matches are styled with 'ProseMirror-search-match' or 'ProseMirror-active-search-match' classes.
+     * When false, matches are tracked without visual styling, useful for programmatic search without UI changes.
+     */
+    highlight?: boolean | undefined;
+    /**
+     * - Maximum number of matches to return.
+     */
+    maxMatches?: number | undefined;
+    /**
+     * - Whether the search should be case-sensitive.
+     */
+    caseSensitive?: boolean | undefined;
+};
+//# sourceMappingURL=search.d.ts.map

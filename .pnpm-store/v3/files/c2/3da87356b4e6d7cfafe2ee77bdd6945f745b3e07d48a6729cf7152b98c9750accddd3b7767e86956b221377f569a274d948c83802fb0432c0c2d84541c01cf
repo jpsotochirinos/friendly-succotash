@@ -1,0 +1,2 @@
+export * from './abstractNum-translator.js';
+//# sourceMappingURL=index.d.ts.map

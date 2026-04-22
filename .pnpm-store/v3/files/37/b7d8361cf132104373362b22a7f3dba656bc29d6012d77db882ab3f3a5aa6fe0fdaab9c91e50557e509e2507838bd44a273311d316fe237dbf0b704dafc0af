@@ -1,0 +1,19 @@
+declare const _default: import('vue').DefineComponent<{}, {
+    editor: Record<string, any>;
+    selectedText: string;
+    handleClose: Function;
+    apiKey?: string | undefined;
+    endpoint?: string | undefined;
+    $props: {
+        readonly editor?: Record<string, any> | undefined;
+        readonly selectedText?: string | undefined;
+        readonly handleClose?: Function | undefined;
+        readonly apiKey?: string | undefined;
+        readonly endpoint?: string | undefined;
+    };
+}, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, string, import('vue').PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import('vue').ComponentProvideOptions, true, {
+    aiWriterRef: HTMLDivElement;
+    editableRef: HTMLTextAreaElement;
+}, HTMLDivElement>;
+export default _default;
+//# sourceMappingURL=AIWriter.vue.d.ts.map

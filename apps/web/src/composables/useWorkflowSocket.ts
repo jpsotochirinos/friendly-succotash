@@ -1,12 +1,16 @@
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, shallowRef, type Ref } from 'vue';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/stores/auth.store';
 
-export function useWorkflowSocket(trackableId?: string) {
-  const socket = ref<Socket | null>(null);
+export function useWorkflowSocket(trackableId?: string): {
+  socket: Ref<Socket | null>;
+  onWorkflowItemUpdate: (cb: (data: unknown) => void) => void;
+  onTrackableUpdate: (cb: (data: unknown) => void) => void;
+} {
+  const socket = shallowRef<Socket | null>(null);
   const callbacks = {
-    workflowItemUpdate: [] as Function[],
-    trackableUpdate: [] as Function[],
+    workflowItemUpdate: [] as Array<(data: unknown) => void>,
+    trackableUpdate: [] as Array<(data: unknown) => void>,
   };
 
   onMounted(() => {
@@ -36,11 +40,11 @@ export function useWorkflowSocket(trackableId?: string) {
     socket.value?.disconnect();
   });
 
-  function onWorkflowItemUpdate(cb: Function) {
+  function onWorkflowItemUpdate(cb: (data: unknown) => void) {
     callbacks.workflowItemUpdate.push(cb);
   }
 
-  function onTrackableUpdate(cb: Function) {
+  function onTrackableUpdate(cb: (data: unknown) => void) {
     callbacks.trackableUpdate.push(cb);
   }
 

@@ -1,0 +1,29 @@
+/**
+ * Constants for the part-sync collaboration module.
+ *
+ * Yjs map key names, source identifiers, and configuration defaults.
+ */
+/** Yjs map for non-document OOXML parts. */
+export declare const PARTS_MAP_KEY = "parts";
+/** Yjs map for document metadata (docx, fonts, migration status, etc.). */
+export declare const META_MAP_KEY = "meta";
+/** Yjs map for media files. */
+export declare const MEDIA_MAP_KEY = "media";
+export declare const META_PARTS_SCHEMA_VERSION_KEY = "partsSchemaVersion";
+export declare const META_PARTS_MIGRATION_KEY = "partsMigration";
+export declare const META_PARTS_LAST_HYDRATED_AT_KEY = "partsLastHydratedAt";
+export declare const META_PARTS_FALLBACK_MODE_KEY = "partsFallbackMode";
+export declare const META_PARTS_CAPABILITY_KEY = "partsCapability";
+/** Source prefix for all local part mutations originating from part-sync. */
+export declare const SOURCE_COLLAB_REMOTE_PARTS = "collab:remote:parts";
+/** Source prefix for remote collaboration changes. Used in filtering. */
+export declare const SOURCE_COLLAB_REMOTE_PREFIX = "collab:remote:";
+/** Default staleness window (ms) for concurrent-overwrite detection. */
+export declare const DEFAULT_STALENESS_WINDOW_MS = 5000;
+/** Current parts schema version. */
+export declare const PARTS_SCHEMA_VERSION = 1;
+/** Parts excluded from sync (handled by y-prosemirror). */
+export declare const EXCLUDED_PART_IDS: Set<string>;
+/** Critical parts that must succeed during initial hydration. */
+export declare const CRITICAL_PART_IDS: Set<string>;
+//# sourceMappingURL=constants.d.ts.map

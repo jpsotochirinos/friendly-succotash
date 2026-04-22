@@ -1,0 +1,5 @@
+export function encode(attributes: Object): string | undefined;
+export function decode(attrs: Object): string | undefined;
+/** @type {import('@translator').AttrConfig} */
+export const attrConfig: import('../../../../node-translator/index.js').AttrConfig;
+//# sourceMappingURL=w-displaced-by-custom-xml.d.ts.map

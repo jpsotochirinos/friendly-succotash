@@ -1,0 +1,48 @@
+import { MutationStep, TextRewriteStep, TextInsertStep, TextDeleteStep, StyleApplyStep, PlanReceipt, StepOutcome, MutationsApplyInput } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+import { CompiledPlan } from './compiler.js';
+import { CompiledTarget, CompiledRangeTarget, CompiledSpanTarget } from './executor-registry.types.js';
+import { Transaction } from 'prosemirror-state';
+import { Mapping } from 'prosemirror-transform';
+export declare function executeTextRewrite(editor: Editor, tr: Transaction, target: CompiledRangeTarget, step: TextRewriteStep, mapping: Mapping): {
+    changed: boolean;
+};
+export declare function executeTextInsert(editor: Editor, tr: Transaction, target: CompiledRangeTarget, step: TextInsertStep, mapping: Mapping): {
+    changed: boolean;
+};
+export declare function executeTextDelete(_editor: Editor, tr: Transaction, target: CompiledRangeTarget, _step: TextDeleteStep, mapping: Mapping): {
+    changed: boolean;
+};
+export declare function executeStyleApply(editor: Editor, tr: Transaction, target: CompiledRangeTarget, step: StyleApplyStep, mapping: Mapping): {
+    changed: boolean;
+};
+export declare function executeSpanTextRewrite(editor: Editor, tr: Transaction, target: CompiledSpanTarget, step: TextRewriteStep, mapping: Mapping): {
+    changed: boolean;
+};
+export declare function executeSpanTextDelete(_editor: Editor, tr: Transaction, target: CompiledSpanTarget, step: TextDeleteStep, mapping: Mapping): {
+    changed: boolean;
+};
+export declare function executeSpanStyleApply(editor: Editor, tr: Transaction, target: CompiledSpanTarget, step: StyleApplyStep, mapping: Mapping): {
+    changed: boolean;
+};
+export declare function executeCreateStep(editor: Editor, tr: Transaction, step: MutationStep, targets: CompiledTarget[], mapping: Mapping): StepOutcome;
+export declare function runMutationsOnTransaction(editor: Editor, tr: Transaction, compiled: CompiledPlan, options: {
+    throwOnAssertFailure: boolean;
+    changeMode?: 'direct' | 'tracked';
+    isPreview?: boolean;
+}): {
+    stepOutcomes: StepOutcome[];
+    assertFailures: Array<{
+        stepId: string;
+        expectedCount: number;
+        actualCount: number;
+    }>;
+    commandDispatched: boolean;
+};
+export interface ExecuteCompiledOptions {
+    changeMode?: 'direct' | 'tracked';
+    expectedRevision?: string;
+}
+export declare function executeCompiledPlan(editor: Editor, compiled: CompiledPlan, options?: ExecuteCompiledOptions): PlanReceipt;
+export declare function executePlan(editor: Editor, input: MutationsApplyInput): PlanReceipt;
+//# sourceMappingURL=executor.d.ts.map

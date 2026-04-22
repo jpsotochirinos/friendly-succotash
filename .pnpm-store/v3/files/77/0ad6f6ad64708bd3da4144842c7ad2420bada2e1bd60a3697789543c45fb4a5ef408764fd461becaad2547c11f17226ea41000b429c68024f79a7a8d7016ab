@@ -1,0 +1,8 @@
+export function insertTableAt({ pos, rows, columns, sdBlockId, tracked }: {
+    pos: number;
+    rows: number;
+    columns: number;
+    sdBlockId?: string;
+    tracked?: boolean;
+}): import('./types/index.js').Command;
+//# sourceMappingURL=insertTableAt.d.ts.map

@@ -1,0 +1,6 @@
+import { ToolbarContext } from '../types.js';
+export declare const resolveStateEditor: (context: ToolbarContext | null) => import('../../../../superdoc/src/index.js').Editor | null;
+export declare const getCurrentParagraphParent: (context: ToolbarContext | null) => import('../../editors/v1/core/helpers/findParentNodeClosestToPos.js').ParentNodeInfo | null;
+export declare const getCurrentResolvedParagraphProperties: (context: ToolbarContext | null) => any;
+export declare const isFieldAnnotationSelection: (context: ToolbarContext | null) => boolean;
+//# sourceMappingURL=context.d.ts.map

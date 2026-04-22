@@ -1,0 +1,15 @@
+/**
+ * Detect whether a file is a standard ZIP archive or an OLE/CFB compound file.
+ *
+ * ZIP files (normal .docx) start with bytes: 50 4B 03 04
+ * CFB files (encrypted .docx) start with bytes: D0 CF 11 E0 A1 B1 1A E1
+ */
+export type ContainerType = 'zip' | 'cfb' | 'unknown';
+/**
+ * Detect the container format from the first bytes of a file.
+ *
+ * @param data Raw file bytes
+ * @returns `'zip'` for normal OOXML, `'cfb'` for encrypted compound file, `'unknown'` otherwise
+ */
+export declare function detectContainerType(data: ArrayBuffer | Uint8Array | Buffer): ContainerType;
+//# sourceMappingURL=detect-container.d.ts.map

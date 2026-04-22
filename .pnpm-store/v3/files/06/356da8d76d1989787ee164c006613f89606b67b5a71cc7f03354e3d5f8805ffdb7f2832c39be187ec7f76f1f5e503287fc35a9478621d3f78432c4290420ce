@@ -1,0 +1,2 @@
+export * from './endnote.js';
+//# sourceMappingURL=index.d.ts.map

@@ -1,0 +1,30 @@
+import { extractIdentifierFromConverter, HeaderFooterIdentifier } from '@superdoc/layout-bridge';
+import { Editor } from '../Editor.js';
+import { HeaderFooterEditorManager, HeaderFooterLayoutAdapter } from './HeaderFooterRegistry.js';
+import { EditorOverlayManager } from './EditorOverlayManager.js';
+export type InitHeaderFooterRegistryDeps = {
+    painterHost: HTMLElement;
+    visibleHost: HTMLElement;
+    selectionOverlay: HTMLElement | null;
+    editor: Editor;
+    converter: Parameters<typeof extractIdentifierFromConverter>[0];
+    mediaFiles?: Record<string, unknown>;
+    isDebug: boolean;
+    initBudgetMs: number;
+    resetSession: () => void;
+    requestRerender: () => void;
+    exitHeaderFooterMode: () => void;
+    previousCleanups: Array<() => void>;
+    previousAdapter: HeaderFooterLayoutAdapter | null;
+    previousManager: HeaderFooterEditorManager | null;
+    previousOverlayManager: EditorOverlayManager | null;
+};
+export type InitHeaderFooterRegistryResult = {
+    overlayManager: EditorOverlayManager;
+    headerFooterIdentifier: HeaderFooterIdentifier | null;
+    headerFooterManager: HeaderFooterEditorManager;
+    headerFooterAdapter: HeaderFooterLayoutAdapter;
+    cleanups: Array<() => void>;
+};
+export declare function initHeaderFooterRegistry({ painterHost, visibleHost, selectionOverlay, editor, converter, mediaFiles, isDebug, initBudgetMs, resetSession, requestRerender, exitHeaderFooterMode, previousCleanups, previousAdapter, previousManager, previousOverlayManager, }: InitHeaderFooterRegistryDeps): InitHeaderFooterRegistryResult;
+//# sourceMappingURL=HeaderFooterRegistryInit.d.ts.map

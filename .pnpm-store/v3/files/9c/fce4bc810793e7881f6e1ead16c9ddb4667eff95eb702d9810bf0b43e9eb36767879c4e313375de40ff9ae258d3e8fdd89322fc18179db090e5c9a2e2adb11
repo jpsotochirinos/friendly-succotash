@@ -1,0 +1,5 @@
+export function insertSectionBreakAtSelection({ headerInches, footerInches }?: {
+    headerInches?: number;
+    footerInches?: number;
+}): import('./types/index.js').Command;
+//# sourceMappingURL=insertSectionBreakAtSelection.d.ts.map

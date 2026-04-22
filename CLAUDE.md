@@ -27,8 +27,13 @@ pnpm --filter @tracker/api test
 pnpm --filter @tracker/web test
 
 # Database
-pnpm db:migrate                   # run pending migrations
+pnpm db:migrate                   # run pending migrations (includes dropping workflow_items.status after sync)
 pnpm db:seed                      # seed basic data
+pnpm --filter @tracker/db seed:workflows     # system workflow definitions (states/transitions)
+pnpm --filter @tracker/db migrate:data:workflows  # backfill workflow_id/current_state_id
+pnpm db:validate:workflow-readiness           # optional; use -- --strict in CI
+pnpm --filter @tracker/db diagnose:workflows -- --org <uuid|email>  # debug configurable workflows per org
+# (migrations also add workflow_items.item_number for Jira-style ticket keys)
 pnpm --filter @tracker/db migrate:create   # scaffold new migration
 ```
 

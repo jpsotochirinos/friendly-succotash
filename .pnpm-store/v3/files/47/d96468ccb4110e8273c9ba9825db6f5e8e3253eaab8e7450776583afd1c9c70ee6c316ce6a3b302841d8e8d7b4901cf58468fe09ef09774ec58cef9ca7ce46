@@ -1,0 +1,92 @@
+import { Node as PMNode } from 'prosemirror-model';
+import { AttributesDiff, MarksDiff } from './attributes-diffing';
+type NodeJSON = ReturnType<PMNode['toJSON']>;
+type MarkJSON = {
+    type: string;
+    attrs?: Record<string, unknown>;
+};
+/**
+ * Supported diff operations for inline changes.
+ */
+type InlineAction = 'added' | 'deleted' | 'modified';
+/**
+ * Serialized representation of a single text character plus its run attributes.
+ */
+export type InlineTextToken = {
+    kind: 'text';
+    char: string;
+    runAttrs: Record<string, unknown>;
+    marks: MarkJSON[];
+    offset?: number | null;
+};
+/**
+ * Flattened inline node token treated as a single diff unit.
+ */
+export type InlineNodeToken = {
+    kind: 'inlineNode';
+    node: PMNode;
+    nodeType?: string;
+    toJSON?: () => unknown;
+    nodeJSON?: NodeJSON;
+    pos?: number | null;
+};
+/**
+ * Union of inline token kinds used as input for Myers diffing.
+ */
+export type InlineDiffToken = InlineTextToken | InlineNodeToken;
+/**
+ * Final grouped inline diff exposed to downstream consumers.
+ */
+export interface InlineDiffResult {
+    /** Change type for this inline segment. */
+    action: InlineAction;
+    /** Token kind associated with the diff. */
+    kind: 'text' | 'inlineNode';
+    /** Start position in the old document (or null when unknown). */
+    startPos: number | null;
+    /** End position in the old document (or null when unknown). */
+    endPos: number | null;
+    /** Inserted text for additions. */
+    text?: string;
+    /** Removed text for deletions/modifications. */
+    oldText?: string;
+    /** Inserted text for modifications. */
+    newText?: string;
+    /** Run attributes for added/deleted text. */
+    runAttrs?: Record<string, unknown>;
+    /** Attribute diff for modified runs. */
+    runAttrsDiff?: AttributesDiff | null;
+    /** Marks applied to added/deleted text. */
+    marks?: MarkJSON[];
+    /** Mark diff for modified text. */
+    marksDiff?: MarksDiff | null;
+    /** Inline node type name for node diffs. */
+    nodeType?: string;
+    /** Serialized inline node payload for additions/deletions. */
+    nodeJSON?: NodeJSON;
+    /** Serialized inline node payload before the change. */
+    oldNodeJSON?: NodeJSON;
+    /** Serialized inline node payload after the change. */
+    newNodeJSON?: NodeJSON;
+    /** Attribute diff for modified inline nodes. */
+    attrsDiff?: AttributesDiff | null;
+}
+/**
+ * Tokenizes inline content into diffable text and inline-node tokens.
+ *
+ * @param pmNode ProseMirror node containing inline content.
+ * @param baseOffset Offset applied to every token position (default: 0).
+ * @returns Flattened inline tokens with offsets relative to the base offset.
+ */
+export declare function tokenizeInlineContent(pmNode: PMNode, baseOffset?: number): InlineDiffToken[];
+/**
+ * Computes text-level additions and deletions between two sequences using the generic sequence diff, mapping back to document positions.
+ *
+ * @param oldContent Source tokens enriched with document offsets.
+ * @param newContent Target tokens.
+ * @param oldParagraphEndPos Absolute document position at the end of the old paragraph (used for trailing inserts).
+ * @returns List of grouped inline diffs with document positions and text content.
+ */
+export declare function getInlineDiff(oldContent: InlineDiffToken[], newContent: InlineDiffToken[], oldParagraphEndPos: number): InlineDiffResult[];
+export {};
+//# sourceMappingURL=inline-diffing.d.ts.map

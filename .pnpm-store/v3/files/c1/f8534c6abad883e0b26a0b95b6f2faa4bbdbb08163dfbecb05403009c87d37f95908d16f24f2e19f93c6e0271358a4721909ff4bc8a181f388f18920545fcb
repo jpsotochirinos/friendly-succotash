@@ -1,0 +1,2 @@
+export function findNodePosition(doc: import('prosemirror-model').Node, targetNode: import('prosemirror-model').Node): number | null;
+//# sourceMappingURL=find-node-position.d.ts.map

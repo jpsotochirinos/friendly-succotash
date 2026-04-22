@@ -1,0 +1,53 @@
+import { StoredIssue } from './types.js';
+import { Mapping } from 'prosemirror-transform';
+export declare class ProofingStore {
+    #private;
+    /** Add a validated, PM-range-resolved issue to the store. */
+    addIssue(issue: StoredIssue): void;
+    /**
+     * Remap issues for dirty segments through a PM transaction mapping.
+     * Issues where the mapped range collapses or is deleted are dropped.
+     * Surviving issues are marked as 'mapped' with the given recheckId.
+     *
+     * Uses left bias for pmFrom and right bias for pmTo so the issue
+     * range expands outward at insertion boundaries rather than collapsing.
+     */
+    remapIssues(segmentIds: Set<string>, mapping: Mapping, recheckId: number): void;
+    /**
+     * Replace mapped issues for a batch of segments with fresh confirmed results.
+     *
+     * Only removes issues matching the given recheckIds AND belonging to the
+     * covered segment IDs. This preserves display continuity for multi-batch
+     * checks: each batch only replaces its own segments, leaving mapped issues
+     * for other batches' segments visible until those batches complete.
+     *
+     * Orphaned old-segment-ID issues (from split/merge) are cleaned up
+     * separately by removeOrphanedSegments() in onDocumentChanged().
+     */
+    replaceBatchResults(recheckIds: Set<number>, coveredSegmentIds: Set<string>, freshIssues: StoredIssue[]): void;
+    /** Remove all issues for the given segment IDs. */
+    removeBySegmentIds(ids: Set<string>): void;
+    /**
+     * Remove issues whose segment ID is not in the current document.
+     * Handles paragraph merge/remove where old segment IDs vanish entirely.
+     */
+    removeOrphanedSegments(currentSegmentIds: Set<string>): void;
+    /** Clear all stored issues. */
+    clear(): void;
+    /** Get all stored issues (including suppressed). */
+    getAllIssues(): StoredIssue[];
+    /**
+     * Get display-ready issues: filtered by suppression and restricted to
+     * spelling kind in v1. Returns both confirmed and mapped issues.
+     *
+     * Suppression uses case-insensitive, NFC-normalized matching.
+     */
+    getDisplayIssues(ignoredWords: string[]): StoredIssue[];
+    /** Collect the set of recheckIds currently present on mapped issues. */
+    getActiveRecheckIds(): Set<number>;
+    /** Check if the store has any issues (including suppressed). */
+    get isEmpty(): boolean;
+    /** Total issue count (including suppressed). */
+    get size(): number;
+}
+//# sourceMappingURL=proofing-store.d.ts.map

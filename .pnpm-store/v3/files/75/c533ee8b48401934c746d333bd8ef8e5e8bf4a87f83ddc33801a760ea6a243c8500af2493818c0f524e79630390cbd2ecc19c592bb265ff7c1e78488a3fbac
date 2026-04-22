@@ -1,0 +1,20 @@
+export function parseCellBorders(element: HTMLElement): ParsedCellBorders | null;
+/**
+ * Parsed cell border shape used by table cell / header parseDOM.
+ */
+export type ParsedCellBorder = {
+    val: "none" | "single" | "dashed" | "dotted";
+    size: number;
+    color: string;
+    style: string;
+};
+/**
+ * Parsed borders object for each side.
+ */
+export type ParsedCellBorders = {
+    top?: ParsedCellBorder | undefined;
+    right?: ParsedCellBorder | undefined;
+    bottom?: ParsedCellBorder | undefined;
+    left?: ParsedCellBorder | undefined;
+};
+//# sourceMappingURL=parseCellBorders.d.ts.map

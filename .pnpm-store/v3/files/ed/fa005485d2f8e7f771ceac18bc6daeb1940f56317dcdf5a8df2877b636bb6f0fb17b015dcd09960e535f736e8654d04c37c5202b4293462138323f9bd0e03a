@@ -1,0 +1,23 @@
+import { Extension } from '../../core/Extension.js';
+/**
+ * Protection extension — provides `editor.storage.protection` as the
+ * single source of truth for document-level protection state.
+ *
+ * State is NOT initialized here via `onCreate` because that fires async
+ * after `#createInitialState()`. Instead, `Editor.#initProtectionState()`
+ * writes to storage before ProseMirror plugins init.
+ */
+export const Protection: Extension<Record<string, never>, {
+    /** @type {import('@superdoc/document-api').DocumentProtectionState} */
+    state: import('@superdoc/document-api').DocumentProtectionState;
+    /** Whether state has been populated from the document's settings.xml. */
+    initialized: boolean;
+    /**
+     * Host editability snapshot taken when protection was first enforced.
+     * Restored when protection is cleared. `null` means protection has not
+     * overridden editability (or has already been cleared).
+     * @type {boolean | null}
+     */
+    editableBaseline: boolean | null;
+}>;
+//# sourceMappingURL=protection.d.ts.map

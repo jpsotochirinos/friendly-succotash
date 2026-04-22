@@ -1,0 +1,8 @@
+import { Editor } from '../core/Editor.js';
+import { MarkdownToFragmentInput, SDMarkdownToFragmentResult } from '@superdoc/document-api';
+/**
+ * Converts a Markdown string into an SDM/1 fragment by parsing through the
+ * ProseMirror pipeline and projecting the resulting nodes.
+ */
+export declare function markdownToFragmentAdapter(editor: Editor, input: MarkdownToFragmentInput): SDMarkdownToFragmentResult;
+//# sourceMappingURL=markdown-to-fragment-adapter.d.ts.map

@@ -1,0 +1,14 @@
+import { Node } from '../../core/Node.js';
+export const PermStart: Node<Record<string, never>, Record<string, never>, {
+    id: unknown;
+    edGrp: unknown;
+    ed: unknown;
+    colFirst: unknown;
+    colLast: unknown;
+}>;
+export const PermStartBlock: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+/**
+ * Configuration options for PermStart
+ */
+export type PermStartOptions = Object;
+//# sourceMappingURL=perm-start.d.ts.map

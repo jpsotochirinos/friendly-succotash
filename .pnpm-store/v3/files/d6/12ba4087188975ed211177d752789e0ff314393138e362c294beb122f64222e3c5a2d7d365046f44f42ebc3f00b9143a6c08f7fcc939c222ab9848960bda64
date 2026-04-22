@@ -1,0 +1,12 @@
+import { Node } from '../../core/Node.js';
+export class EndnoteReferenceNodeView {
+    constructor(node: any, getPos: any, decorations: any, editor: any, htmlAttributes?: {});
+    node: any;
+    getPos: any;
+    editor: any;
+    dom: HTMLElement;
+    update(node: any): boolean;
+    #private;
+}
+export const EndnoteReference: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+//# sourceMappingURL=endnote.d.ts.map

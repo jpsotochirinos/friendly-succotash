@@ -1,0 +1,18 @@
+/**
+ * Map OOXML underline types to CSS text-decoration properties.
+ * Returns a CSS style string (kebab-case) suitable for inline decorations.
+ *
+ * @param {Object} params
+ * @param {string} [params.type='single'] - OOXML w:u@w:val value
+ * @param {string|null} [params.color=null] - CSS color (e.g., '#RRGGBB')
+ * @param {string|null} [params.thickness=null] - Optional explicit thickness (e.g., '0.2em', '2px')
+ * @param {boolean} [params.approximate=true] - Whether to approximate non-standard styles
+ * @returns {string} CSS style string (e.g., 'text-decoration-line: underline; text-decoration-style: dashed;')
+ */
+export function getUnderlineCssString({ type, color, thickness, approximate }?: {
+    type?: string | undefined;
+    color?: string | null | undefined;
+    thickness?: string | null | undefined;
+    approximate?: boolean | undefined;
+}): string;
+//# sourceMappingURL=underline-css.d.ts.map

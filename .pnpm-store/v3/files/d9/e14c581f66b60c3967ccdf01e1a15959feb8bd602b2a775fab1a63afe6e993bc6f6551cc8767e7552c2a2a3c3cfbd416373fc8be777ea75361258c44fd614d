@@ -1,0 +1,5 @@
+import { Node } from '../../core/Node.js';
+export const CommentRangeStart: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+export const CommentRangeEnd: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+export const CommentReference: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
+//# sourceMappingURL=comment.d.ts.map

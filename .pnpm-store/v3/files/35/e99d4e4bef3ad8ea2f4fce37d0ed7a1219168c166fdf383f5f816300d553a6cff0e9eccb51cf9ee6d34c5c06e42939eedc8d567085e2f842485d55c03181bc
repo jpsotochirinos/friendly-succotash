@@ -1,0 +1,34 @@
+/**
+ * Migration: `meta.docx` → Yjs `parts` map.
+ *
+ * Copies non-document OOXML parts from the legacy `meta.docx` array into
+ * individual `parts` map entries with versioned envelopes. The migration is
+ * idempotent and safe to re-run — already-present keys are skipped.
+ *
+ * `meta.docx` is NEVER deleted or modified.
+ */
+import * as Y from 'yjs';
+export interface MigrationResult {
+    migrated: boolean;
+    partsMigrated: number;
+    error: string | null;
+}
+/**
+ * Determine if migration from `meta.docx` → `parts` is needed.
+ *
+ * Migration triggers when any of these hold:
+ * 1. `parts` map has no non-document entries and `meta.docx` exists.
+ * 2. `parts` map exists but is missing keys present in `meta.docx`.
+ * 3. `partsMigration.status` is not `'success'`.
+ */
+export declare function isMigrationNeeded(ydoc: Y.Doc): boolean;
+/**
+ * Run the migration from `meta.docx` to individual `parts` entries.
+ *
+ * All-or-nothing: parse all candidates first, then write them in a single
+ * Yjs transaction. On parse failure, nothing is written.
+ */
+export declare function migrateMetaDocxToParts(ydoc: Y.Doc, options?: {
+    force?: boolean;
+}): MigrationResult;
+//# sourceMappingURL=migration-from-meta-docx.d.ts.map

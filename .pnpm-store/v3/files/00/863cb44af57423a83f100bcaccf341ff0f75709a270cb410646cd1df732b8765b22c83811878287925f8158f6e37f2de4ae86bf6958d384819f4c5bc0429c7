@@ -1,0 +1,12 @@
+import { DocumentInfo, InfoInput } from '@superdoc/document-api';
+import { Editor } from '../core/Editor.js';
+/**
+ * Build `doc.info` payload from live document counts, heading outline,
+ * and style inventory.
+ *
+ * Counts are derived from the centralized live-document-counts helper.
+ * Outline generation still uses the heading find query (needs NodeInfo data
+ * for text and level that the block index does not provide).
+ */
+export declare function infoAdapter(editor: Editor, _input: InfoInput): DocumentInfo;
+//# sourceMappingURL=info-adapter.d.ts.map

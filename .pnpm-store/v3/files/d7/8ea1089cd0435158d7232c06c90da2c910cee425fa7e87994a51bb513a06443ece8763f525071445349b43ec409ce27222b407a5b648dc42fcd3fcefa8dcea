@@ -1,0 +1,10 @@
+import { DocumentApiAdapters } from '@superdoc/document-api';
+import { Editor } from '../core/Editor.js';
+/**
+ * Assembles all document-api adapters for the given editor instance.
+ *
+ * @param editor - The editor instance to bind adapters to.
+ * @returns A {@link DocumentApiAdapters} object ready to pass to `createDocumentApi()`.
+ */
+export declare function assembleDocumentApiAdapters(editor: Editor): DocumentApiAdapters;
+//# sourceMappingURL=assemble-adapters.d.ts.map

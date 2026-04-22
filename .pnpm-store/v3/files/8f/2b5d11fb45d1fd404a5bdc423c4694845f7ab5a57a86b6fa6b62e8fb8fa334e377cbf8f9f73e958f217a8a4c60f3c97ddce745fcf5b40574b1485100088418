@@ -1,0 +1,2 @@
+export function getHeaderFooterAnnotations(editor: any): Object[];
+//# sourceMappingURL=getHeaderFooterAnnotations.d.ts.map

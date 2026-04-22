@@ -1,0 +1,4 @@
+import { Editor } from '../../core/Editor.js';
+import { ContentControlsAdapter, ContentControlsCreateAdapter } from '@superdoc/document-api';
+export declare function createContentControlsAdapter(editor: Editor): ContentControlsAdapter & ContentControlsCreateAdapter;
+//# sourceMappingURL=content-controls-wrappers.d.ts.map

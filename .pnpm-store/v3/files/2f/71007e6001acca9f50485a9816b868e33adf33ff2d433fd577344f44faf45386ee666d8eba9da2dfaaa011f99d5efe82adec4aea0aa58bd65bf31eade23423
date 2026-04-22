@@ -1,0 +1,15 @@
+import { Editor } from '../../core/Editor.js';
+export function createTestEditor(options?: {
+    extensions: any[];
+    content: Object;
+    editorOptions: Object;
+}): Editor;
+export function createMinimalTestEditor(extensions?: any[], options?: Object): Editor;
+export function createDocxTestEditor(options?: Object): Editor;
+export function getNodeFromEditor(editor: Editor, nodeType: string, pos?: number): Node | null;
+export function insertText(editor: Editor, text: string, pos?: number): void;
+export function createTransaction(editor: Editor): Transaction;
+export function applyTransaction(editor: Editor, tr: Transaction): void;
+export function getEditorJSON(editor: Editor): Object;
+export function setEditorContent(editor: Editor, content: Object): void;
+//# sourceMappingURL=editor-test-utils.d.ts.map

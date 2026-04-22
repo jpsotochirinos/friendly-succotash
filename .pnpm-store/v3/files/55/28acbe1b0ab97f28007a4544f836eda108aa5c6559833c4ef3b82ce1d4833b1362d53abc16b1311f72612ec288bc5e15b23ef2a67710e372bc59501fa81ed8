@@ -1,0 +1,27 @@
+/**
+ * Log a console.warn once per key. Subsequent calls with the same key are no-ops.
+ * @param {string} key
+ * @param {string} message
+ */
+export function warnOnce(key: string, message: string): void;
+/**
+ * Wrap an Editor instance in a Proxy that emits one-time deprecation
+ * warnings when consumers access ProseMirror internals or editor commands.
+ *
+ * The proxy is fully transparent — all property access and method calls are
+ * forwarded to the underlying editor. Only the warning side-effect is added.
+ *
+ * @param {import('@superdoc/super-editor').Editor} editor
+ * @returns {import('@superdoc/super-editor').Editor} Proxied editor (or the
+ *   original if null/already wrapped)
+ */
+export function createDeprecatedEditorProxy(editor: import('../../../super-editor/src/index.js').Editor): import('../../../super-editor/src/index.js').Editor;
+/**
+ * Unwrap a potentially proxied editor back to the raw Editor instance.
+ * Safe to call on an already-raw editor — returns it unchanged.
+ *
+ * @param {import('@superdoc/super-editor').Editor | null | undefined} editor
+ * @returns {import('@superdoc/super-editor').Editor | null | undefined}
+ */
+export function unwrapEditor(editor: import('../../../super-editor/src/index.js').Editor | null | undefined): import('../../../super-editor/src/index.js').Editor | null | undefined;
+//# sourceMappingURL=deprecation.d.ts.map

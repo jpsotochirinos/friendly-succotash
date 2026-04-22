@@ -1,0 +1,7 @@
+import { Plugin } from 'prosemirror-state';
+export function ImagePositionPlugin({ editor }: {
+    editor: Object;
+}): Plugin;
+export type PMStep = import('prosemirror-transform').Step;
+export type ReplaceStep = import('prosemirror-transform').ReplaceStep;
+//# sourceMappingURL=imagePositionPlugin.d.ts.map

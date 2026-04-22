@@ -1,0 +1,6 @@
+import { CanonicalDiffableState } from './canonicalize';
+/**
+ * Computes a SHA-256 fingerprint of the canonical diffable state.
+ */
+export declare function computeFingerprint(state: CanonicalDiffableState): string;
+//# sourceMappingURL=fingerprint.d.ts.map

@@ -1,0 +1,30 @@
+import { PartEnvelope } from './types.js';
+/**
+ * JSON ↔ Yjs encode/decode for part CRDT storage.
+ *
+ * v1 semantics: full-part replace. The OOXML JSON tree is recursively encoded
+ * into Yjs types (Y.Map / Y.Array / scalar) for the `data` field of the
+ * envelope. The envelope scalars (v, clientId) are written directly.
+ *
+ * `decodeYjsToJson` converts the Yjs structures back to plain JSON for
+ * local consumption by the mutation core.
+ */
+import * as Y from 'yjs';
+/**
+ * Encode a `PartEnvelope` into a Y.Map suitable for setting in the `parts` map.
+ *
+ * Layout: `Y.Map { v: number, clientId: number, data: <recursively encoded> }`
+ */
+export declare function encodeEnvelopeToYjs(envelope: PartEnvelope): Y.Map<unknown>;
+/**
+ * Decode a Y.Map from the `parts` map back into a `PartEnvelope`.
+ *
+ * Returns `null` if the structure is missing required fields.
+ */
+export declare function decodeYjsToEnvelope(yMap: Y.Map<unknown>): PartEnvelope | null;
+/**
+ * Read the current version from a Yjs parts map entry without full decode.
+ * Returns 0 if the entry doesn't exist or lacks a version.
+ */
+export declare function readEnvelopeVersion(partsMap: Y.Map<unknown>, partId: string): number;
+//# sourceMappingURL=json-crdt.d.ts.map

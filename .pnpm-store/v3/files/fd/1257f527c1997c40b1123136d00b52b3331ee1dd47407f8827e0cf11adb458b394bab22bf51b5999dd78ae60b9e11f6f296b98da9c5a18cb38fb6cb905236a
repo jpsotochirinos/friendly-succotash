@@ -1,0 +1,11 @@
+/**
+ * Minimal copy of ProseMirror splitBlock logic that tolerates splitting runs.
+ * Enhanced to preserve paragraph attributes and apply style-based marks.
+ * @param {import('prosemirror-state').EditorState} state
+ * @param {(tr: import('prosemirror-state').Transaction) => void} dispatch
+ * @param {Object} [editor]
+ */
+export function splitBlockPatch(state: import('prosemirror-state').EditorState, dispatch: (tr: import('prosemirror-state').Transaction) => void, editor?: Object): boolean;
+export function splitRunToParagraph(): import('../../../core/commands/types').Command;
+export function splitRunAtCursor(): import('../../../core/commands/types').Command;
+//# sourceMappingURL=split-run.d.ts.map

@@ -1,0 +1,165 @@
+import { Node as ProseMirrorNode } from 'prosemirror-model';
+import { Editor } from '../../core/Editor.js';
+import { TableAddress, TableCellAddress, TableCreateLocation, TableLocator, TableOrRowAddress } from '@superdoc/document-api';
+import { BlockCandidate } from './node-address-resolver.js';
+/**
+ * Resolved table information from a {@link TableLocator}.
+ */
+export interface ResolvedTable {
+    candidate: BlockCandidate;
+    address: TableAddress;
+}
+/**
+ * Resolves a {@link TableLocator} to a table {@link BlockCandidate}.
+ *
+ * Accepts either `target` (a full {@link BlockNodeAddress}) or a bare
+ * `nodeId` string. Validates that the resolved candidate is a table node.
+ *
+ * @throws {DocumentApiAdapterError} `INVALID_TARGET` if both or neither locator fields are provided.
+ * @throws {DocumentApiAdapterError} `TARGET_NOT_FOUND` if the node cannot be found.
+ * @throws {DocumentApiAdapterError} `INVALID_TARGET` if the resolved node is not a table.
+ */
+export declare function resolveTableLocator(editor: Editor, locator: TableLocator, operationName: string): ResolvedTable;
+/**
+ * Resolves a {@link TableCreateLocation} to an absolute document position.
+ *
+ * Handles `documentStart`, `documentEnd`, `before`, and `after` variants.
+ *
+ * @throws {DocumentApiAdapterError} `TARGET_NOT_FOUND` if the reference block cannot be found.
+ */
+export declare function resolveTableCreateLocation(editor: Editor, location: TableCreateLocation, operationName: string): number;
+/**
+ * Resolved row within a table: the table context, the row node, its absolute
+ * position, and its index within the table.
+ */
+export interface ResolvedRow {
+    table: ResolvedTable;
+    rowNode: ProseMirrorNode;
+    rowPos: number;
+    rowIndex: number;
+}
+/**
+ * Resolves a row within a table using the unified locator pattern.
+ *
+ * Uses node-type detection to determine addressing mode:
+ * - If `target`/`nodeId` resolves to a `tableRow` → direct row locator mode.
+ * - If `target`/`nodeId` resolves to a `table` → table-scoped mode (`rowIndex` required).
+ *
+ * @throws {DocumentApiAdapterError} Various target/validation errors.
+ */
+export declare function resolveRowLocator(editor: Editor, input: {
+    target?: TableOrRowAddress;
+    nodeId?: string;
+    rowIndex?: number;
+}, operationName: string): ResolvedRow;
+/**
+ * Resolved cell within a table: the table context, the cell node, its absolute
+ * position, and its row/column indices.
+ */
+export interface ResolvedCell {
+    table: ResolvedTable;
+    cellNode: ProseMirrorNode;
+    cellPos: number;
+    rowIndex: number;
+    columnIndex: number;
+}
+/**
+ * Resolves a {@link CellLocator} to a cell within its parent table.
+ *
+ * Uses the same `target`/`nodeId` pattern as table locators but expects
+ * the resolved node to be a `tableCell` (or `tableHeader`).
+ *
+ * @throws {DocumentApiAdapterError} Various target/validation errors.
+ */
+export declare function resolveCellLocator(editor: Editor, locator: {
+    target?: TableCellAddress;
+    nodeId?: string;
+}, operationName: string): ResolvedCell;
+/**
+ * Resolves a merge-range locator to a table plus validated start/end coordinates.
+ *
+ * @throws {DocumentApiAdapterError} Various target/validation errors.
+ */
+export declare function resolveMergeRangeLocator(editor: Editor, input: {
+    target?: TableAddress;
+    nodeId?: string;
+    start: {
+        rowIndex: number;
+        columnIndex: number;
+    };
+    end: {
+        rowIndex: number;
+        columnIndex: number;
+    };
+}, operationName: string): {
+    table: ResolvedTable;
+    startRow: number;
+    startCol: number;
+    endRow: number;
+    endCol: number;
+};
+/**
+ * Resolves a table-scoped cell locator (table target/nodeId + rowIndex + columnIndex)
+ * to a {@link ResolvedCell}.
+ *
+ * If the requested coordinates land inside a merged cell, the returned
+ * `rowIndex`/`columnIndex` are canonicalized to the merged cell's **anchor**
+ * (top-left) coordinates. This is critical for callers like `unmergeCells`
+ * that pass coordinates into `expandMergedCellIntoSingles`.
+ *
+ * @throws {DocumentApiAdapterError} Various target/validation errors.
+ */
+export declare function resolveTableScopedCellLocator(editor: Editor, input: {
+    target?: TableAddress;
+    nodeId?: string;
+    rowIndex: number;
+    columnIndex: number;
+}, operationName: string): ResolvedCell;
+/**
+ * Resolved column within a table: the table context plus validated column index.
+ */
+export interface ResolvedColumn {
+    table: ResolvedTable;
+    columnIndex: number;
+    columnCount: number;
+}
+/**
+ * Resolves a table-scoped column locator.
+ *
+ * @throws {DocumentApiAdapterError} Various target/validation errors.
+ */
+export declare function resolveColumnLocator(editor: Editor, input: {
+    target?: TableAddress;
+    nodeId?: string;
+    columnIndex: number;
+}, operationName: string): ResolvedColumn;
+/**
+ * Gets the column count from the first row's cells (summing their colspans).
+ */
+export declare function getTableColumnCount(tableNode: ProseMirrorNode): number;
+/**
+ * Re-resolves a table's address after a mutation has been dispatched.
+ *
+ * Uses transaction position mapping as the primary strategy, with
+ * nodeId-based fallback for DOCX tables with stable primary IDs.
+ *
+ * Returns `undefined` if the table cannot be re-resolved — callers
+ * should NOT fall back to the pre-mutation address.
+ */
+export declare function resolvePostMutationTableAddress(editor: Editor, preMutationPos: number, preMutationNodeId: string, tr: {
+    mapping: {
+        map(pos: number, assoc?: number): number;
+    };
+}): TableAddress | undefined;
+/**
+ * Returns a table-mutation failure result matching {@link TableMutationFailure}.
+ */
+export declare function toTableFailure(code: 'NO_OP' | 'INVALID_TARGET' | 'TARGET_NOT_FOUND' | 'CAPABILITY_UNAVAILABLE', message: string, details?: unknown): {
+    success: false;
+    failure: {
+        code: typeof code;
+        message: string;
+        details?: unknown;
+    };
+};
+//# sourceMappingURL=table-target-resolver.d.ts.map

@@ -1,0 +1,72 @@
+/**
+ * Shared layout for Jira-style workflow item dialogs (Expediente detail/create, global calendar composer).
+ * Import once in views that use `class="item-detail-dialog"` on PrimeVue Dialog.
+ */
+
+.item-detail-dialog .p-dialog-header {
+  padding-bottom: 0.5rem;
+}
+
+.item-detail-dialog .p-dialog-content {
+  padding-top: 0.25rem;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.item-detail-dialog .p-dialog-footer {
+  display: none;
+}
+
+.item-detail-title-input input {
+  padding: 0.25rem 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.item-detail-title-input input:focus {
+  outline: none;
+}
+
+.item-detail-title-read {
+  margin: 0;
+}
+
+.item-detail-editor .p-editor-toolbar {
+  border-color: var(--surface-border);
+  border-radius: var(--p-content-border-radius) var(--p-content-border-radius) 0 0;
+}
+
+.item-detail-editor .p-editor-content,
+.item-detail-editor .ql-container {
+  border-color: var(--surface-border);
+  border-radius: 0 0 var(--p-content-border-radius) var(--p-content-border-radius);
+  font-size: 0.875rem;
+}
+
+.item-description-html-read a {
+  color: var(--p-primary-color);
+}
+
+.item-detail-sidebar {
+  scrollbar-gutter: stable;
+}
+
+.item-detail-sidebar dl.item-detail-properties {
+  align-items: start;
+}
+
+.item-detail-sidebar dt {
+  align-self: center;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+}
+
+.item-detail-sidebar dd {
+  margin: 0;
+  min-width: 0;
+}

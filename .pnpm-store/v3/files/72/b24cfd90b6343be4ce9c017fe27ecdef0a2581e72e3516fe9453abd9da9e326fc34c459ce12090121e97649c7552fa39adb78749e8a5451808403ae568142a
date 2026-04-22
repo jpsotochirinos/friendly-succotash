@@ -1,0 +1,6 @@
+/**
+ * @param {Object} params - The parameters for translation.
+ * @returns {Object} The XML representation.
+ */
+export function translateShapeContainer(params: Object): Object;
+//# sourceMappingURL=translate-shape-container.d.ts.map

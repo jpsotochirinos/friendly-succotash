@@ -1,0 +1,14 @@
+import { Plugin } from 'prosemirror-state';
+/**
+ * Select-all-on-click plugin for inline StructuredContent nodes.
+ *
+ * When a click places a collapsed cursor inside an inline SDT and the previous
+ * selection was outside that SDT, the entire SDT content is selected. This
+ * matches Word's content control behavior: first click selects all for easy
+ * replacement, second click (cursor already inside) allows normal positioning.
+ *
+ * Uses appendTransaction so it works in both editing mode (PM DOM clicks) and
+ * presentation mode (PresentationEditor dispatched selections).
+ */
+export function createStructuredContentSelectPlugin(editor: any): Plugin<any>;
+//# sourceMappingURL=structured-content-select-plugin.d.ts.map

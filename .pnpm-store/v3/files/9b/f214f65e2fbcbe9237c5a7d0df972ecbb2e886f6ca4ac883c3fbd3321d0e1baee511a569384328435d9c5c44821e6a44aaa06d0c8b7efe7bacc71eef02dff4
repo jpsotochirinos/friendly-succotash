@@ -1,0 +1,2 @@
+export function markDeletion({ tr, from, to, user, date, id: providedId }: Transaction): Object;
+//# sourceMappingURL=markDeletion.d.ts.map

@@ -1,21 +1,22 @@
 <template>
-  <div class="p-6 space-y-6">
-    <div class="flex items-center justify-between flex-wrap gap-4">
-      <h1 class="text-2xl font-bold dark:text-gray-100">Dashboard</h1>
-      <div class="flex items-center gap-3">
-        <Dropdown
-          v-model="selectedTrackableId"
-          :options="trackableOptions"
-          option-label="label"
-          option-value="value"
-          placeholder="Todos los trackables"
-          show-clear
-          class="w-64"
-          @change="onFilterChange"
-        />
-        <Button icon="pi pi-refresh" text rounded @click="refreshAll" />
-      </div>
-    </div>
+  <div class="flex flex-col gap-6">
+    <PageHeader :title="t('dashboard.title')" :subtitle="t('dashboard.subtitle')">
+      <template #actions>
+        <div class="flex items-center gap-3">
+          <Dropdown
+            v-model="selectedTrackableId"
+            :options="trackableOptions"
+            option-label="label"
+            option-value="value"
+            placeholder="Todos los trackables"
+            show-clear
+            class="w-64"
+            @change="onFilterChange"
+          />
+          <Button icon="pi pi-refresh" size="small" text rounded @click="refreshAll" />
+        </div>
+      </template>
+    </PageHeader>
 
     <!-- Summary cards -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -23,7 +24,7 @@
         <template #content>
           <div class="text-center">
             <div class="text-3xl font-bold" :class="card.color">{{ card.value }}</div>
-            <div class="text-sm text-gray-500 dark:text-gray-100 mt-1">{{ card.label }}</div>
+            <div class="text-sm text-[var(--fg-muted)] mt-1">{{ card.label }}</div>
           </div>
         </template>
       </Card>
@@ -46,7 +47,7 @@
             <div v-for="t in progressData" :key="t.id" class="flex items-center gap-3">
               <span class="text-sm font-medium w-40 truncate">{{ t.title }}</span>
               <ProgressBar :value="Number(t.progress_pct)" class="flex-1" />
-              <span class="text-xs text-gray-500 w-10 text-right">{{ t.progress_pct }}%</span>
+              <span class="text-xs text-[var(--fg-muted)] w-10 text-right">{{ t.progress_pct }}%</span>
             </div>
           </div>
         </template>
@@ -102,9 +103,9 @@
               @change="loadGlobalActions"
             />
             <Dropdown
-              v-model="activityFilters.itemType"
+              v-model="activityFilters.kind"
               :options="typeOptions"
-              placeholder="Tipo"
+              placeholder="Tipo (kind)"
               show-clear
               class="w-36"
               @change="loadGlobalActions"
@@ -131,9 +132,9 @@
         >
           <Column field="title" header="Actividad" />
           <Column field="trackable_title" header="Trackable" />
-          <Column field="item_type" header="Tipo">
+          <Column field="kind" header="Tipo">
             <template #body="{ data }">
-              <Tag :value="data.item_type" />
+              <Tag :value="data.kind || '—'" />
             </template>
           </Column>
           <Column field="status" header="Estado">
@@ -157,6 +158,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Card from 'primevue/card';
 import Chart from 'primevue/chart';
 import DataTable from 'primevue/datatable';
@@ -167,7 +169,10 @@ import Dropdown from 'primevue/dropdown';
 import ToggleButton from 'primevue/togglebutton';
 import Button from 'primevue/button';
 import StatusBadge from '@/components/common/StatusBadge.vue';
+import PageHeader from '@/components/common/PageHeader.vue';
 import { apiClient } from '@/api/client';
+
+const { t } = useI18n();
 
 const trackableStats = ref<any[]>([]);
 const deadlines = ref<any[]>([]);
@@ -182,13 +187,13 @@ const trackableOptions = ref<{label: string; value: string}[]>([]);
 
 const activityFilters = ref({
   status: null as string | null,
-  itemType: null as string | null,
+  kind: null as string | null,
   overdue: false,
   page: 1,
 });
 
 const statusOptions = ['pending', 'active', 'in_progress', 'under_review', 'validated', 'closed', 'rejected'];
-const typeOptions = ['service', 'task', 'action'];
+const typeOptions = ['Fase', 'Actuacion', 'Diligencia', 'Escrito', 'Audiencia', 'Plazo'];
 
 const overdueCount = computed(() => overdueItems.value.length);
 
@@ -196,8 +201,8 @@ const summaryCards = computed(() => {
   const total = trackableStats.value.reduce((s, t) => s + parseInt(t.count), 0);
   const active = trackableStats.value.find((t) => t.status === 'active')?.count || 0;
   return [
-    { label: 'Total trackables', value: total, color: 'text-gray-800' },
-    { label: 'Activos', value: active, color: 'text-blue-600' },
+    { label: 'Total trackables', value: total, color: 'text-[var(--fg-default)]' },
+    { label: 'Activos', value: active, color: 'text-accent' },
     { label: 'Vencidos', value: overdueCount.value, color: 'text-red-600' },
     { label: 'Próximos 14 días', value: deadlines.value.length, color: 'text-amber-600' },
   ];
@@ -253,7 +258,7 @@ async function loadGlobalActions() {
   const { data } = await apiClient.get('/dashboard/global-actions', {
     params: {
       status: activityFilters.value.status || undefined,
-      itemType: activityFilters.value.itemType || undefined,
+      kind: activityFilters.value.kind || undefined,
       overdue: activityFilters.value.overdue || undefined,
       page: activityFilters.value.page,
       limit: 20,

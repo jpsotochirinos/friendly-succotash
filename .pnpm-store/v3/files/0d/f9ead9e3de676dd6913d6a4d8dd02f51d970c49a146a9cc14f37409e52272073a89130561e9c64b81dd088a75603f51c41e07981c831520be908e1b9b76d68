@@ -1,0 +1,7 @@
+export function handleBookmarkEndNode(params: import('../../v3/node-translator').SCEncoderConfig): Object;
+/**
+ * Bookmark end node handler entity
+ * @type {Object} Handler entity
+ */
+export const bookmarkEndNodeHandlerEntity: Object;
+//# sourceMappingURL=bookmarkEndImporter.d.ts.map

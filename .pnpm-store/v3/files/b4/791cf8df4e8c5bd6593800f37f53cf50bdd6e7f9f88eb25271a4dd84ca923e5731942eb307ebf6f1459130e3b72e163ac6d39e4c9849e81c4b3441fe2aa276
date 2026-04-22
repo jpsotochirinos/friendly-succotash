@@ -1,0 +1,5 @@
+/**
+ * @type {import("./docxImporter").NodeHandlerEntry}
+ */
+export const pageReferenceEntity: import('./docxImporter').NodeHandlerEntry;
+//# sourceMappingURL=pageReferenceImporter.d.ts.map

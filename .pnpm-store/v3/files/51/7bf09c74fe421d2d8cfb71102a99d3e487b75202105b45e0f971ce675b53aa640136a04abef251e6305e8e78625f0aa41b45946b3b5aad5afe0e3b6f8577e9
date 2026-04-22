@@ -1,0 +1,385 @@
+export declare const DEFAULT_TEXT_ALIGN_OPTIONS: readonly [{
+    readonly label: "Left";
+    readonly value: "left";
+}, {
+    readonly label: "Center";
+    readonly value: "center";
+}, {
+    readonly label: "Right";
+    readonly value: "right";
+}, {
+    readonly label: "Justify";
+    readonly value: "justify";
+}];
+export declare const DEFAULT_LINE_HEIGHT_OPTIONS: readonly [{
+    readonly label: "1.00";
+    readonly value: 1;
+}, {
+    readonly label: "1.15";
+    readonly value: 1.15;
+}, {
+    readonly label: "1.50";
+    readonly value: 1.5;
+}, {
+    readonly label: "2.00";
+    readonly value: 2;
+}, {
+    readonly label: "2.50";
+    readonly value: 2.5;
+}, {
+    readonly label: "3.00";
+    readonly value: 3;
+}];
+export declare const DEFAULT_ZOOM_OPTIONS: readonly [{
+    readonly label: "50%";
+    readonly value: 50;
+}, {
+    readonly label: "75%";
+    readonly value: 75;
+}, {
+    readonly label: "90%";
+    readonly value: 90;
+}, {
+    readonly label: "100%";
+    readonly value: 100;
+}, {
+    readonly label: "125%";
+    readonly value: 125;
+}, {
+    readonly label: "150%";
+    readonly value: 150;
+}, {
+    readonly label: "200%";
+    readonly value: 200;
+}];
+export declare const DEFAULT_DOCUMENT_MODE_OPTIONS: readonly [{
+    readonly label: "Editing";
+    readonly value: "editing";
+    readonly description: "Edit document directly";
+}, {
+    readonly label: "Suggesting";
+    readonly value: "suggesting";
+    readonly description: "Edits become suggestions";
+}, {
+    readonly label: "Viewing";
+    readonly value: "viewing";
+    readonly description: "View clean version of document only";
+}];
+export declare const DEFAULT_FONT_SIZE_OPTIONS: readonly [{
+    readonly label: "8";
+    readonly value: "8pt";
+}, {
+    readonly label: "9";
+    readonly value: "9pt";
+}, {
+    readonly label: "10";
+    readonly value: "10pt";
+}, {
+    readonly label: "11";
+    readonly value: "11pt";
+}, {
+    readonly label: "12";
+    readonly value: "12pt";
+}, {
+    readonly label: "14";
+    readonly value: "14pt";
+}, {
+    readonly label: "18";
+    readonly value: "18pt";
+}, {
+    readonly label: "24";
+    readonly value: "24pt";
+}, {
+    readonly label: "30";
+    readonly value: "30pt";
+}, {
+    readonly label: "36";
+    readonly value: "36pt";
+}, {
+    readonly label: "48";
+    readonly value: "48pt";
+}, {
+    readonly label: "60";
+    readonly value: "60pt";
+}, {
+    readonly label: "72";
+    readonly value: "72pt";
+}, {
+    readonly label: "96";
+    readonly value: "96pt";
+}];
+export declare const DEFAULT_FONT_FAMILY_OPTIONS: readonly [{
+    readonly label: "Aptos";
+    readonly value: "Aptos, Arial, sans-serif";
+}, {
+    readonly label: "Georgia";
+    readonly value: "Georgia, serif";
+}, {
+    readonly label: "Arial";
+    readonly value: "Arial, sans-serif";
+}, {
+    readonly label: "Courier New";
+    readonly value: "Courier New, monospace";
+}, {
+    readonly label: "Times New Roman";
+    readonly value: "Times New Roman, serif";
+}];
+export declare const DEFAULT_TEXT_COLOR_OPTIONS: readonly [{
+    readonly label: "Black";
+    readonly value: "#000000";
+}, {
+    readonly label: "Dark Gray";
+    readonly value: "#434343";
+}, {
+    readonly label: "Gray";
+    readonly value: "#666666";
+}, {
+    readonly label: "Light Gray";
+    readonly value: "#999999";
+}, {
+    readonly label: "Red";
+    readonly value: "#ff0000";
+}, {
+    readonly label: "Orange";
+    readonly value: "#ff9900";
+}, {
+    readonly label: "Yellow";
+    readonly value: "#ffff00";
+}, {
+    readonly label: "Green";
+    readonly value: "#00ff00";
+}, {
+    readonly label: "Cyan";
+    readonly value: "#00ffff";
+}, {
+    readonly label: "Blue";
+    readonly value: "#0000ff";
+}, {
+    readonly label: "Purple";
+    readonly value: "#9900ff";
+}, {
+    readonly label: "Magenta";
+    readonly value: "#ff00ff";
+}, {
+    readonly label: "None";
+    readonly value: "none";
+}];
+export declare const DEFAULT_HIGHLIGHT_COLOR_OPTIONS: readonly [{
+    readonly label: "Yellow";
+    readonly value: "#ffff00";
+}, {
+    readonly label: "Green";
+    readonly value: "#00ff00";
+}, {
+    readonly label: "Cyan";
+    readonly value: "#00ffff";
+}, {
+    readonly label: "Pink";
+    readonly value: "#ff00ff";
+}, {
+    readonly label: "Blue";
+    readonly value: "#0000ff";
+}, {
+    readonly label: "Red";
+    readonly value: "#ff0000";
+}, {
+    readonly label: "Orange";
+    readonly value: "#ff9900";
+}, {
+    readonly label: "None";
+    readonly value: "none";
+}];
+export declare const headlessToolbarConstants: {
+    readonly DEFAULT_TEXT_ALIGN_OPTIONS: readonly [{
+        readonly label: "Left";
+        readonly value: "left";
+    }, {
+        readonly label: "Center";
+        readonly value: "center";
+    }, {
+        readonly label: "Right";
+        readonly value: "right";
+    }, {
+        readonly label: "Justify";
+        readonly value: "justify";
+    }];
+    readonly DEFAULT_LINE_HEIGHT_OPTIONS: readonly [{
+        readonly label: "1.00";
+        readonly value: 1;
+    }, {
+        readonly label: "1.15";
+        readonly value: 1.15;
+    }, {
+        readonly label: "1.50";
+        readonly value: 1.5;
+    }, {
+        readonly label: "2.00";
+        readonly value: 2;
+    }, {
+        readonly label: "2.50";
+        readonly value: 2.5;
+    }, {
+        readonly label: "3.00";
+        readonly value: 3;
+    }];
+    readonly DEFAULT_ZOOM_OPTIONS: readonly [{
+        readonly label: "50%";
+        readonly value: 50;
+    }, {
+        readonly label: "75%";
+        readonly value: 75;
+    }, {
+        readonly label: "90%";
+        readonly value: 90;
+    }, {
+        readonly label: "100%";
+        readonly value: 100;
+    }, {
+        readonly label: "125%";
+        readonly value: 125;
+    }, {
+        readonly label: "150%";
+        readonly value: 150;
+    }, {
+        readonly label: "200%";
+        readonly value: 200;
+    }];
+    readonly DEFAULT_DOCUMENT_MODE_OPTIONS: readonly [{
+        readonly label: "Editing";
+        readonly value: "editing";
+        readonly description: "Edit document directly";
+    }, {
+        readonly label: "Suggesting";
+        readonly value: "suggesting";
+        readonly description: "Edits become suggestions";
+    }, {
+        readonly label: "Viewing";
+        readonly value: "viewing";
+        readonly description: "View clean version of document only";
+    }];
+    readonly DEFAULT_FONT_SIZE_OPTIONS: readonly [{
+        readonly label: "8";
+        readonly value: "8pt";
+    }, {
+        readonly label: "9";
+        readonly value: "9pt";
+    }, {
+        readonly label: "10";
+        readonly value: "10pt";
+    }, {
+        readonly label: "11";
+        readonly value: "11pt";
+    }, {
+        readonly label: "12";
+        readonly value: "12pt";
+    }, {
+        readonly label: "14";
+        readonly value: "14pt";
+    }, {
+        readonly label: "18";
+        readonly value: "18pt";
+    }, {
+        readonly label: "24";
+        readonly value: "24pt";
+    }, {
+        readonly label: "30";
+        readonly value: "30pt";
+    }, {
+        readonly label: "36";
+        readonly value: "36pt";
+    }, {
+        readonly label: "48";
+        readonly value: "48pt";
+    }, {
+        readonly label: "60";
+        readonly value: "60pt";
+    }, {
+        readonly label: "72";
+        readonly value: "72pt";
+    }, {
+        readonly label: "96";
+        readonly value: "96pt";
+    }];
+    readonly DEFAULT_FONT_FAMILY_OPTIONS: readonly [{
+        readonly label: "Aptos";
+        readonly value: "Aptos, Arial, sans-serif";
+    }, {
+        readonly label: "Georgia";
+        readonly value: "Georgia, serif";
+    }, {
+        readonly label: "Arial";
+        readonly value: "Arial, sans-serif";
+    }, {
+        readonly label: "Courier New";
+        readonly value: "Courier New, monospace";
+    }, {
+        readonly label: "Times New Roman";
+        readonly value: "Times New Roman, serif";
+    }];
+    readonly DEFAULT_TEXT_COLOR_OPTIONS: readonly [{
+        readonly label: "Black";
+        readonly value: "#000000";
+    }, {
+        readonly label: "Dark Gray";
+        readonly value: "#434343";
+    }, {
+        readonly label: "Gray";
+        readonly value: "#666666";
+    }, {
+        readonly label: "Light Gray";
+        readonly value: "#999999";
+    }, {
+        readonly label: "Red";
+        readonly value: "#ff0000";
+    }, {
+        readonly label: "Orange";
+        readonly value: "#ff9900";
+    }, {
+        readonly label: "Yellow";
+        readonly value: "#ffff00";
+    }, {
+        readonly label: "Green";
+        readonly value: "#00ff00";
+    }, {
+        readonly label: "Cyan";
+        readonly value: "#00ffff";
+    }, {
+        readonly label: "Blue";
+        readonly value: "#0000ff";
+    }, {
+        readonly label: "Purple";
+        readonly value: "#9900ff";
+    }, {
+        readonly label: "Magenta";
+        readonly value: "#ff00ff";
+    }, {
+        readonly label: "None";
+        readonly value: "none";
+    }];
+    readonly DEFAULT_HIGHLIGHT_COLOR_OPTIONS: readonly [{
+        readonly label: "Yellow";
+        readonly value: "#ffff00";
+    }, {
+        readonly label: "Green";
+        readonly value: "#00ff00";
+    }, {
+        readonly label: "Cyan";
+        readonly value: "#00ffff";
+    }, {
+        readonly label: "Pink";
+        readonly value: "#ff00ff";
+    }, {
+        readonly label: "Blue";
+        readonly value: "#0000ff";
+    }, {
+        readonly label: "Red";
+        readonly value: "#ff0000";
+    }, {
+        readonly label: "Orange";
+        readonly value: "#ff9900";
+    }, {
+        readonly label: "None";
+        readonly value: "none";
+    }];
+};
+//# sourceMappingURL=constants.d.ts.map

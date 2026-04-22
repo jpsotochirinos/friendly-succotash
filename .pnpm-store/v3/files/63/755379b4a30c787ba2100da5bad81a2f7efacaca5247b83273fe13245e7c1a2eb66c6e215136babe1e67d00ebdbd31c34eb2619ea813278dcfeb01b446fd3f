@@ -1,0 +1,11 @@
+import { Editor } from '../core/Editor.js';
+import { DocumentApiCapabilities } from '@superdoc/document-api';
+/**
+ * Builds a {@link DocumentApiCapabilities} snapshot by introspecting the editor's
+ * registered commands and schema marks.
+ *
+ * @param editor - The ProseMirror-backed editor instance to introspect.
+ * @returns A complete capability snapshot covering global flags and per-operation details.
+ */
+export declare function getDocumentApiCapabilities(editor: Editor): DocumentApiCapabilities;
+//# sourceMappingURL=capabilities-adapter.d.ts.map

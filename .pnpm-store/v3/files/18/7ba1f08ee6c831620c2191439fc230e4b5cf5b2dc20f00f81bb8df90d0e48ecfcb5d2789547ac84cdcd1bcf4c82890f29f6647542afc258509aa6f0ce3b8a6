@@ -1,0 +1,40 @@
+export function createCellBorders(borderSpec?: {}): CellBorders;
+/**
+ * Cell border configuration
+ */
+export type CellBorder = {
+    /**
+     * - Border width in pixels
+     */
+    size?: number | undefined;
+    /**
+     * - Border color
+     */
+    color?: string | undefined;
+    /**
+     * - Border style
+     */
+    style?: string | undefined;
+};
+/**
+ * Cell borders object
+ */
+export type CellBorders = {
+    /**
+     * - Top border
+     */
+    top?: CellBorder | undefined;
+    /**
+     * - Right border
+     */
+    right?: CellBorder | undefined;
+    /**
+     * - Bottom border
+     */
+    bottom?: CellBorder | undefined;
+    /**
+     * - Left border
+     */
+    left?: CellBorder | undefined;
+};
+//# sourceMappingURL=createCellBorders.d.ts.map

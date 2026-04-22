@@ -1,0 +1,5 @@
+export function encode(attributes: any): any;
+export function decode(attrs: any): any;
+/** @type {import('@translator').AttrConfig} */
+export const attrConfig: import('../../../../node-translator/index.js').AttrConfig;
+//# sourceMappingURL=w-theme-tint.d.ts.map

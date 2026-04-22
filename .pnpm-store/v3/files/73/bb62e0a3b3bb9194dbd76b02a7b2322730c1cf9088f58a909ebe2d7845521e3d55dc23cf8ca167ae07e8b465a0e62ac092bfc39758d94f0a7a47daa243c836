@@ -1,0 +1,31 @@
+import { ResolveRangeInput, ResolveRangeOutput, StoryLocator } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+/**
+ * Builds a complete `ResolveRangeOutput` from absolute PM positions.
+ *
+ * This is the shared core that both `resolveRange` (anchor-based) and the
+ * UI-selection bridge (`selection-range-resolver.ts`) use.
+ *
+ * When `expectedRevision` is provided, it is checked against the current
+ * document revision. When omitted (typical for UI-selection bridge calls),
+ * the current revision is read and returned as `evaluatedRevision`.
+ */
+export declare function resolveAbsoluteRange(editor: Editor, input: {
+    absFrom: number;
+    absTo: number;
+    expectedRevision?: string;
+    storyLocator?: StoryLocator;
+}): ResolveRangeOutput;
+/**
+ * Resolves two explicit anchors into a contiguous document range.
+ *
+ * Story-aware: resolves the target story from `input.in` and/or V4 ref
+ * anchors, then evaluates all anchors against the correct story editor's
+ * document state and revision counter.
+ *
+ * @param hostEditor - The body (host) editor — used to resolve story runtimes.
+ * @param input      - The range resolution input with anchors and optional story locator.
+ * @returns A transparent SelectionTarget, a mutation-ready ref, and preview metadata.
+ */
+export declare function resolveRange(hostEditor: Editor, input: ResolveRangeInput): ResolveRangeOutput;
+//# sourceMappingURL=range-resolver.d.ts.map

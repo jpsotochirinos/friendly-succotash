@@ -1,0 +1,15 @@
+import { Editor } from '../../core/Editor.js';
+import { Query, QueryResult, UnknownNodeDiagnostic } from '@superdoc/document-api';
+import { BlockIndex } from '../helpers/node-address-resolver.js';
+/**
+ * Executes a text-based search query using the editor's search command.
+ *
+ * @param editor - The editor instance (must expose `commands.search`).
+ * @param index - Pre-built block index for position resolution.
+ * @param query - The query with a text selector.
+ * @param diagnostics - Mutable array to collect diagnostics into.
+ * @returns Paginated query result with block matches and snippet context.
+ * @throws {DocumentApiAdapterError} If the editor's search command is unavailable.
+ */
+export declare function executeTextSelector(editor: Editor, index: BlockIndex, query: Query, diagnostics: UnknownNodeDiagnostic[]): QueryResult;
+//# sourceMappingURL=text-strategy.d.ts.map

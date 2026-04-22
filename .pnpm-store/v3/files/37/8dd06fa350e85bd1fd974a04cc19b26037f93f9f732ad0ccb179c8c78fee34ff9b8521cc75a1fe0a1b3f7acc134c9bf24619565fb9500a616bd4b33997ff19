@@ -1,0 +1,5 @@
+export function findPreviousTextDeleteRange(doc: import('prosemirror-model').Node, cursorPos: number, minPos: number): {
+    from: number;
+    to: number;
+} | null;
+//# sourceMappingURL=findPreviousTextDeleteRange.d.ts.map

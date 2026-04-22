@@ -1,0 +1,17 @@
+/**
+ * v2 handler that matches `w:pict` elements and delegates to the pict
+ * node-type strategy for import.
+ *
+ * NOTE: We intentionally avoid importing pict-translator here to prevent a
+ * circular initialisation chain:
+ *   pictNodeImporter → pict-translator → translate-content-block → exporter
+ *     → SuperConverter → docxImporter → pictNodeImporter
+ *
+ * @type {import("./types/index.js").NodeHandler}
+ */
+export const handlePictNode: import('./types/index.js').NodeHandler;
+/**
+ * @type {import("./types/index.js").NodeHandlerEntry}
+ */
+export const pictNodeHandlerEntity: import('./types/index.js').NodeHandlerEntry;
+//# sourceMappingURL=pictNodeImporter.d.ts.map

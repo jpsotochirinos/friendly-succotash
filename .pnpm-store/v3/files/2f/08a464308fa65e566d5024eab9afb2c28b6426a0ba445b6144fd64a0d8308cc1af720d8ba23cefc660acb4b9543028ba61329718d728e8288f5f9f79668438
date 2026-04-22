@@ -1,0 +1,103 @@
+import { Editor } from '../../core/Editor.js';
+import { BlockIndex } from './node-address-resolver.js';
+import { InlineIndex } from './inline-address-resolver.js';
+/** Snapshot of document-level counts derived from the current editor state. */
+export interface LiveDocumentCounts {
+    words: number;
+    characters: number;
+    paragraphs: number;
+    headings: number;
+    tables: number;
+    images: number;
+    comments: number;
+    trackedChanges: number;
+    sdtFields: number;
+    lists: number;
+    /** Page count from the layout engine, if pagination is active. */
+    pages?: number;
+}
+/**
+ * Computes live document counts from the current editor snapshot.
+ *
+ * The helper caches document-derived counts by immutable ProseMirror
+ * document snapshot. Repeated `doc.info()` reads against the same snapshot
+ * reuse the cached result instead of rescanning text, tracked changes, or
+ * content controls. Page count is merged in fresh on every call because
+ * layout can change without a ProseMirror doc mutation.
+ *
+ * Count semantics:
+ * - `words`: whitespace-delimited tokens from the Document API text projection
+ * - `characters`: full length of the Document API text projection (includes
+ *    inter-block newlines and one `'\n'` per non-text leaf node — "characters with spaces")
+ * - `paragraphs`: block-classified paragraphs (excludes headings and list items)
+ * - `headings`: block-classified headings (style-based detection)
+ * - `tables`: top-level table containers only (excludes rows and cells)
+ * - `images`: block images + inline images (dual-kind)
+ * - `comments`: unique anchored comment IDs from inline candidates
+ * - `trackedChanges`: grouped tracked-change entities from the current snapshot
+ * - `sdtFields`: field-like SDT/content-control nodes (text/date/checkbox/choice controls)
+ * - `lists`: unique list sequences, not individual list items. When list items
+ *    are visible but `numId` is unavailable, counts fall back to visible runs.
+ * - `pages`: layout page count (omitted when pagination is inactive)
+ */
+export declare function getLiveDocumentCounts(editor: Editor): LiveDocumentCounts;
+/**
+ * Counts whitespace-delimited words in a text projection.
+ * Uses `text.trim().match(/\S+/g)` — any non-whitespace run is one word.
+ */
+export declare function countWordsFromText(text: string): number;
+interface BlockNodeTypeCounts {
+    paragraphs: number;
+    headings: number;
+    tables: number;
+    blockImages: number;
+}
+/**
+ * Single-pass count of block-level node types from the cached block index.
+ *
+ * Only counts the four types relevant to `doc.info()`. Other block types
+ * (listItem, tableRow, tableCell, tableOfContents, sdt) are intentionally skipped.
+ */
+export declare function countBlockNodeTypes(blockIndex: BlockIndex): BlockNodeTypeCounts;
+/**
+ * Counts inline images from the cached inline index.
+ */
+export declare function countInlineImages(inlineIndex: InlineIndex): number;
+/**
+ * Counts unique anchored comment IDs from inline comment candidates.
+ *
+ * Preserves current semantics: comments are counted from inline anchors
+ * (marks and range nodes), deduplicated by resolved comment ID. This does
+ * NOT count from the entity store (which includes replies and unanchored entries).
+ */
+export declare function countUniqueCommentIds(inlineIndex: InlineIndex): number;
+/**
+ * Counts grouped tracked-change entities from the current editor snapshot.
+ *
+ * This matches `trackChanges.list().total`, not the raw number of PM marks.
+ */
+export declare function countTrackedChanges(editor: Editor): number;
+/**
+ * Counts field-like SDT/content-control nodes in the document.
+ *
+ * Structural container controls such as groups and repeating sections are
+ * intentionally excluded so this count tracks user-facing SDT "fields".
+ */
+export declare function countSdtFields(editor: Editor): number;
+/**
+ * Counts unique list sequences in document order.
+ *
+ * Multiple contiguous items in the same list count as one list. Numbered
+ * lists preserve the existing `listId`/sequence semantics. When imported
+ * list items are visibly rendered but do not yet expose a `numId`, the
+ * counter falls back to visible list runs so those lists still count.
+ */
+export declare function countLists(editor: Editor, blockIndex: BlockIndex): number;
+/**
+ * Returns the current page count when pagination is active.
+ * Delegates to `editor.currentTotalPages`, which returns `undefined`
+ * when no PresentationEditor exists or layout hasn't completed.
+ */
+export declare function countPages(editor: Editor): number | undefined;
+export {};
+//# sourceMappingURL=live-document-counts.d.ts.map

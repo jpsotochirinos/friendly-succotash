@@ -1,0 +1,77 @@
+import { ProofingConfig, ProofingStatus, ProofingError, StoredIssue, ProofingPaintSlice } from './types.js';
+import { PageResolver } from './segment-extractor.js';
+import { VisibilitySource } from './visibility-source.js';
+import { Node as PmNode } from 'prosemirror-model';
+import { Mapping } from 'prosemirror-transform';
+type ResolvedProofingConfig = Required<Pick<ProofingConfig, 'enabled' | 'debounceMs' | 'maxSuggestions' | 'visibleFirst' | 'allowIgnoreWord' | 'timeoutMs' | 'maxConcurrentRequests' | 'maxSegmentsPerBatch'>> & {
+    defaultLanguage: string | null;
+    ignoredWords: string[];
+    onProofingError: ((error: ProofingError) => void) | null;
+    onStatusChange: ((status: ProofingStatus) => void) | null;
+};
+export declare class ProofingSessionManager {
+    #private;
+    /**
+     * Called whenever the proofing store changes (new results, cleared, etc.).
+     * PresentationEditor hooks this to re-run the decoration pass.
+     */
+    onResultsChanged: (() => void) | null;
+    constructor(config?: ProofingConfig);
+    get status(): ProofingStatus;
+    get isEnabled(): boolean;
+    get config(): Readonly<ResolvedProofingConfig>;
+    setVisibilitySource(source: VisibilitySource | null): void;
+    setDocumentId(id: string | null): void;
+    setPageResolver(resolver: PageResolver | null): void;
+    /** Notify the manager of IME composition state changes. */
+    setComposing(composing: boolean): void;
+    /**
+     * Returns non-overlapping paint slices for rendering, filtered by suppression
+     * (ignored words) and restricted to spelling issues in v1.
+     *
+     * @param activeWordRange - Word range under the caret to suppress (prevents
+     *   stale underlines on the word being typed). Null to show all slices.
+     */
+    getPaintSlices(activeWordRange?: {
+        from: number;
+        to: number;
+    } | null): ProofingPaintSlice[];
+    /**
+     * Find the proofing issue at a given PM position (for context menu).
+     * Respects active-word suppression so the context menu doesn't show
+     * suggestions for a word the user is currently typing.
+     */
+    getIssueAtPosition(pmPos: number, activeWordRange?: {
+        from: number;
+        to: number;
+    } | null): StoredIssue | null;
+    /**
+     * Apply a partial config update. Follows the invalidation rules from the plan:
+     * - provider change → full recheck
+     * - defaultLanguage change → full recheck
+     * - enabled toggle → clear or full check
+     * - ignoredWords change → re-filter only (notify for repaint)
+     * - UI flags → no recheck
+     */
+    updateConfig(patch: Partial<ProofingConfig>, doc?: PmNode): void;
+    /**
+     * Called after a PM transaction that changes the document.
+     * Remaps dirty issues through the transaction mapping (keeps them visible)
+     * and schedules a debounced recheck.
+     */
+    onDocumentChanged(doc: PmNode, changedRanges: Array<{
+        from: number;
+        to: number;
+    }>, mapping: Mapping): void;
+    /**
+     * Trigger a full initial check (e.g., after document load or provider change).
+     */
+    runInitialCheck(doc: PmNode): void;
+    /** Add a word to the session ignore list. Re-filters displayed issues. */
+    ignoreWord(word: string): void;
+    /** Remove a word from the ignored list, re-surfacing any suppressed issues. */
+    removeIgnoredWord(word: string): void;
+    dispose(): void;
+}
+export {};
+//# sourceMappingURL=ProofingSessionManager.d.ts.map

@@ -1,0 +1,216 @@
+import { Editor } from '../core/Editor.js';
+import { CreateTableInput, CreateTableResult, MutationOptions, TableLocator, TableMutationResult, TablesMoveInput, TablesSetLayoutInput, TablesSetAltTextInput, TablesConvertFromTextInput, TablesSplitInput, TablesConvertToTextInput, TablesInsertRowInput, TablesDeleteRowInput, TablesSetRowHeightInput, TablesSetRowOptionsInput, TablesInsertColumnInput, TablesDeleteColumnInput, TablesSetColumnWidthInput, TablesDistributeColumnsInput, TablesInsertCellInput, TablesDeleteCellInput, TablesMergeCellsInput, TablesUnmergeCellsInput, TablesSplitCellInput, TablesSetCellPropertiesInput, TablesSortInput, TablesSetStyleInput, TablesClearStyleInput, TablesSetStyleOptionInput, TablesSetBorderInput, TablesClearBorderInput, TablesApplyBorderPresetInput, TablesSetShadingInput, TablesClearShadingInput, TablesSetTablePaddingInput, TablesSetCellPaddingInput, TablesSetCellSpacingInput, TablesClearCellSpacingInput, TablesGetInput, TablesGetOutput, TablesGetCellsInput, TablesGetCellsOutput, TablesGetPropertiesInput, TablesGetPropertiesOutput, TablesGetStylesInput, TablesGetStylesOutput, TablesSetDefaultStyleInput, TablesClearDefaultStyleInput, DocumentMutationResult, TablesApplyStyleInput, TablesSetBordersInput, TablesSetTableOptionsInput } from '@superdoc/document-api';
+/**
+ * tables.delete — delete an entire table.
+ */
+export declare function tablesDeleteAdapter(editor: Editor, input: TableLocator, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.clearContents — clear all text content from a table, keeping structure.
+ */
+export declare function tablesClearContentsAdapter(editor: Editor, input: TableLocator, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.move — move a table to a new document location.
+ */
+export declare function tablesMoveAdapter(editor: Editor, input: TablesMoveInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setLayout — update table layout properties.
+ */
+export declare function tablesSetLayoutAdapter(editor: Editor, input: TablesSetLayoutInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setAltText — update table alt text (caption/description).
+ */
+export declare function tablesSetAltTextAdapter(editor: Editor, input: TablesSetAltTextInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.insertRow — insert one or more rows above/below a reference row.
+ */
+export declare function tablesInsertRowAdapter(editor: Editor, input: TablesInsertRowInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.deleteRow — delete a row from a table.
+ * Follows the prosemirror-tables removeRow pattern for rowspan handling.
+ */
+export declare function tablesDeleteRowAdapter(editor: Editor, input: TablesDeleteRowInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setRowHeight — set the height and sizing rule of a row.
+ */
+export declare function tablesSetRowHeightAdapter(editor: Editor, input: TablesSetRowHeightInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.distributeRows — equalize all row heights in a table.
+ */
+export declare function tablesDistributeRowsAdapter(editor: Editor, input: TableLocator, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setRowOptions — set row-level options (allowBreakAcrossPages, repeatHeader).
+ */
+export declare function tablesSetRowOptionsAdapter(editor: Editor, input: TablesSetRowOptionsInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.insertColumn — insert one or more columns left/right of a reference column.
+ */
+export declare function tablesInsertColumnAdapter(editor: Editor, input: TablesInsertColumnInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.deleteColumn — delete a column from a table.
+ * Follows the prosemirror-tables removeColumn pattern for colspan handling.
+ */
+export declare function tablesDeleteColumnAdapter(editor: Editor, input: TablesDeleteColumnInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setColumnWidth — set the width of a column.
+ */
+export declare function tablesSetColumnWidthAdapter(editor: Editor, input: TablesSetColumnWidthInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.distributeColumns — equalize column widths across a table or a range.
+ */
+export declare function tablesDistributeColumnsAdapter(editor: Editor, input: TablesDistributeColumnsInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.convertFromText — convert one or more paragraphs into a table.
+ *
+ * The target must resolve to a paragraph node. Text is split by the chosen
+ * delimiter to form columns. Each paragraph becomes one row. If `columns`
+ * is supplied, excess tokens are joined; missing tokens produce empty cells.
+ */
+export declare function tablesConvertFromTextAdapter(editor: Editor, input: TablesConvertFromTextInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.split — split a table into two tables at a given row index.
+ *
+ * All rows from `rowIndex` onward are moved into a new table that is
+ * inserted immediately after the original.
+ */
+export declare function tablesSplitAdapter(editor: Editor, input: TablesSplitInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.convertToText — replace a table with text paragraphs.
+ *
+ * Each row becomes one paragraph. Cell text is joined with the specified
+ * delimiter (default: tab). When `delimiter` is `'paragraph'`, each cell
+ * becomes its own paragraph.
+ */
+export declare function tablesConvertToTextAdapter(editor: Editor, input: TablesConvertToTextInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.insertCell — insert a cell at a resolved position, shifting existing cells.
+ *
+ * `shiftRight`: inserts a new cell before the target and cascades overflow cells to
+ * subsequent rows in row-major order. If needed, appends a new trailing row so
+ * existing cell content is preserved without dropping the rightmost value.
+ *
+ * `shiftDown`: inserts a new cell at the same column in the row below (creating a row
+ * if needed). The last cell of the target column is removed to maintain row count.
+ */
+export declare function tablesInsertCellAdapter(editor: Editor, input: TablesInsertCellInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.deleteCell — delete a cell at a resolved position, shifting remaining cells.
+ *
+ * `shiftLeft`: removes the target cell and shifts remaining cells in the row left.
+ * This reduces the row cell count by one and avoids a synthetic trailing cell unless
+ * widening the remaining trailing cell would conflict with vertical merges.
+ *
+ * `shiftUp`: removes the target cell and appends a new empty cell at the same column
+ * in the last row to maintain row count.
+ */
+export declare function tablesDeleteCellAdapter(editor: Editor, input: TablesDeleteCellInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.mergeCells — merge a rectangular range of cells into a single cell.
+ *
+ * Concatenates content from all cells in the range into the top-left cell,
+ * then sets colspan/rowspan to cover the range and removes the other cells.
+ */
+export declare function tablesMergeCellsAdapter(editor: Editor, input: TablesMergeCellsInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.unmergeCells — unmerge a merged cell back into individual cells.
+ *
+ * The original content is kept in the top-left cell. All other cells in the
+ * previously spanned range are filled with empty cells.
+ */
+export declare function tablesUnmergeCellsAdapter(editor: Editor, input: TablesUnmergeCellsInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.splitCell — split a cell into a `rows × columns` grid.
+ *
+ * The original cell content is placed in the top-left cell of the resulting grid.
+ * All other cells are filled with empty content. If the cell currently spans
+ * multiple rows/columns, it is first reduced to span the target grid.
+ */
+export declare function tablesSplitCellAdapter(editor: Editor, input: TablesSplitCellInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setCellProperties — set cell-level properties (width, vertical alignment, wrap, fit).
+ */
+export declare function tablesSetCellPropertiesAdapter(editor: Editor, input: TablesSetCellPropertiesInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.sort — sort table rows by one or more column keys.
+ *
+ * Reorders rows in place. The first row is treated as data (not a header)
+ * unless the caller excludes it via their key configuration. Multi-key
+ * sorting is supported: earlier keys in the array take precedence.
+ */
+export declare function tablesSortAdapter(editor: Editor, input: TablesSortInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setStyle — assign a table style by ID.
+ */
+export declare function tablesSetStyleAdapter(editor: Editor, input: TablesSetStyleInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.clearStyle — remove the table style reference.
+ */
+export declare function tablesClearStyleAdapter(editor: Editor, input: TablesClearStyleInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setStyleOption — toggle a table style option flag.
+ *
+ * Maps API flags to OOXML `w:tblLook` attributes, inverting `bandedRows`
+ * and `bandedColumns` to the `noHBand`/`noVBand` semantics.
+ *
+ * Behavioral notes:
+ * - Returns NO_OP when the explicit tblLook already holds the requested value.
+ * - On first write to a table with no explicit `tblLook`, seeds a full baseline
+ *   from Word's effective defaults (0x04A0) before applying the mutation.
+ * - Deletes stale `w:val` bitmask on any mutation (explicit attrs are canonical).
+ */
+export declare function tablesSetStyleOptionAdapter(editor: Editor, input: TablesSetStyleOptionInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setBorder — set a border edge on a table or cell.
+ */
+export declare function tablesSetBorderAdapter(editor: Editor, input: TablesSetBorderInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.clearBorder — clear a border edge on a table or cell.
+ */
+export declare function tablesClearBorderAdapter(editor: Editor, input: TablesClearBorderInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.applyBorderPreset — apply a border preset to a table.
+ */
+export declare function tablesApplyBorderPresetAdapter(editor: Editor, input: TablesApplyBorderPresetInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setShading — set shading color on a table or cell.
+ */
+export declare function tablesSetShadingAdapter(editor: Editor, input: TablesSetShadingInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.clearShading — clear shading from a table or cell.
+ */
+export declare function tablesClearShadingAdapter(editor: Editor, input: TablesClearShadingInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setTablePadding — set default cell margins for the entire table.
+ */
+export declare function tablesSetTablePaddingAdapter(editor: Editor, input: TablesSetTablePaddingInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setCellPadding — set margins on a specific cell.
+ */
+export declare function tablesSetCellPaddingAdapter(editor: Editor, input: TablesSetCellPaddingInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setCellSpacing — set cell spacing for the table.
+ */
+export declare function tablesSetCellSpacingAdapter(editor: Editor, input: TablesSetCellSpacingInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.clearCellSpacing — remove cell spacing from the table.
+ */
+export declare function tablesClearCellSpacingAdapter(editor: Editor, input: TablesClearCellSpacingInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.applyStyle — apply a table style and/or style options in one call.
+ */
+export declare function tablesApplyStyleAdapter(editor: Editor, input: TablesApplyStyleInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setBorders — set borders on a table using a target set or per-edge patch.
+ */
+export declare function tablesSetBordersAdapter(editor: Editor, input: TablesSetBordersInput, options?: MutationOptions): TableMutationResult;
+/**
+ * tables.setTableOptions — set table-level default cell margins and/or cell spacing.
+ */
+export declare function tablesSetTableOptionsAdapter(editor: Editor, input: TablesSetTableOptionsInput, options?: MutationOptions): TableMutationResult;
+export declare function createTableAdapter(editor: Editor, input: CreateTableInput, options?: MutationOptions): CreateTableResult;
+export declare function tablesGetAdapter(editor: Editor, input: TablesGetInput): TablesGetOutput;
+export declare function tablesGetCellsAdapter(editor: Editor, input: TablesGetCellsInput): TablesGetCellsOutput;
+export declare function tablesGetPropertiesAdapter(editor: Editor, input: TablesGetPropertiesInput): TablesGetPropertiesOutput;
+export declare function tablesGetStylesAdapter(editor: Editor, _input?: TablesGetStylesInput): TablesGetStylesOutput;
+export declare function tablesSetDefaultStyleAdapter(editor: Editor, input: TablesSetDefaultStyleInput, options?: MutationOptions): DocumentMutationResult;
+export declare function tablesClearDefaultStyleAdapter(editor: Editor, _input?: TablesClearDefaultStyleInput, options?: MutationOptions): DocumentMutationResult;
+//# sourceMappingURL=tables-adapter.d.ts.map

@@ -1,0 +1,6 @@
+import { DocumentProtectionState, SetEditingRestrictionInput, ClearEditingRestrictionInput, ProtectionMutationResult, MutationOptions } from '@superdoc/document-api';
+import { Editor } from '../core/Editor.js';
+export declare function protectionGetAdapter(editor: Editor): DocumentProtectionState;
+export declare function protectionSetEditingRestrictionAdapter(editor: Editor, input: SetEditingRestrictionInput, options?: MutationOptions): ProtectionMutationResult;
+export declare function protectionClearEditingRestrictionAdapter(editor: Editor, _input?: ClearEditingRestrictionInput, options?: MutationOptions): ProtectionMutationResult;
+//# sourceMappingURL=protection-adapter.d.ts.map

@@ -21,7 +21,7 @@ export class ScrapingController {
   @RequirePermissions('scraping:trigger')
   async triggerScraping(
     @Body() dto: {
-      sourceType: 'source_a' | 'source_c';
+      sourceType: 'source_a' | 'source_c' | 'sinoe';
       trackableId?: string;
       url?: string;
     },
@@ -29,11 +29,17 @@ export class ScrapingController {
   ) {
     const job = await this.queue.add(`scrape-${dto.sourceType}`, {
       sourceType: dto.sourceType,
-      config: {
-        url: dto.url,
-        trackableId: dto.trackableId,
-        organizationId: user.organizationId,
-      },
+      config:
+        dto.sourceType === 'sinoe'
+          ? {
+              userId: user.id,
+              organizationId: user.organizationId,
+            }
+          : {
+              url: dto.url,
+              trackableId: dto.trackableId,
+              organizationId: user.organizationId,
+            },
     });
 
     return { message: 'Scraping job queued', jobId: job.id };

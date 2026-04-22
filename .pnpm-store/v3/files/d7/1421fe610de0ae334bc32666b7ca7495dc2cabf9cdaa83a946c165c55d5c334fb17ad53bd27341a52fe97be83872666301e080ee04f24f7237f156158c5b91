@@ -1,0 +1,2 @@
+export * from './node-translator.js';
+//# sourceMappingURL=index.d.ts.map

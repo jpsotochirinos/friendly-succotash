@@ -1,0 +1,25 @@
+import { SelectionTarget, SelectionPoint } from '@superdoc/document-api';
+import { Editor } from '../../core/Editor.js';
+export interface ResolvedSelectionTarget {
+    /** Absolute PM position of the selection start. */
+    absFrom: number;
+    /** Absolute PM position of the selection end. */
+    absTo: number;
+    /** The canonical text snapshot across the resolved range. */
+    text: string;
+}
+/**
+ * Resolves a single SelectionPoint to an absolute PM position.
+ *
+ * This is a convenience wrapper for callers that need to resolve an
+ * individual point without building a full ResolvedSelectionTarget.
+ */
+export declare function resolveSelectionPointPosition(editor: Editor, point: SelectionPoint): number;
+/**
+ * Resolves a SelectionTarget to absolute PM positions.
+ *
+ * Validates that the resolved `absFrom <= absTo` (normalizing the selection
+ * direction). Returns the resolved positions and a text snapshot.
+ */
+export declare function resolveSelectionTarget(editor: Editor, target: SelectionTarget): ResolvedSelectionTarget;
+//# sourceMappingURL=selection-target-resolver.d.ts.map

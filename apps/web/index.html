@@ -3,9 +3,29 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="icon" type="image/svg+xml" href="/brand/favicon-light.svg" data-alega-favicon />
+  <link rel="alternate icon" type="image/svg+xml" href="/brand/logo.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#F2F3FB" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0D0F2B" media="(prefers-color-scheme: dark)" />
   <title>Alega</title>
+  <script>
+    (function () {
+      try {
+        var stored = localStorage.getItem('alega-theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var isDark = stored === 'dark' || (stored !== 'light' && prefersDark);
+        var root = document.documentElement;
+        root.classList.toggle('dark', isDark);
+        root.style.colorScheme = isDark ? 'dark' : 'light';
+        root.style.backgroundColor = isDark ? '#0D0F2B' : '#F2F3FB';
+        var icon = document.querySelector('link[data-alega-favicon]');
+        if (icon) {
+          icon.href = isDark ? '/brand/favicon-dark.svg' : '/brand/favicon-light.svg';
+        }
+      } catch (_e) {}
+    })();
+  </script>
 </head>
 
 <body>

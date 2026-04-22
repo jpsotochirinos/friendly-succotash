@@ -1,0 +1,14 @@
+import { AttributesDiff } from '../algorithm/attributes-diffing';
+/**
+ * Applies an attribute diff to an attributes object.
+ *
+ * @param params Input bundle for applying attribute diffs.
+ * @param params.attrs Base attributes object to update.
+ * @param params.diff Attribute diff to apply.
+ * @returns Updated attributes object.
+ */
+export declare function applyAttrsDiff({ attrs, diff, }: {
+    attrs: Record<string, unknown>;
+    diff: AttributesDiff;
+}): Record<string, unknown>;
+//# sourceMappingURL=replay-attrs.d.ts.map

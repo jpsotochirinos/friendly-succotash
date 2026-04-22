@@ -1,0 +1,44 @@
+/**
+ *
+ * @param property
+ * @returns {PmMarkJson[]}
+ */
+export function parseMarks(property: any, unknownMarks?: any[], docx?: null): PmMarkJson[];
+export function handleStyleChangeMarksV2(rPrChange: any, currentMarks: any, params: any): {
+    type: string;
+    attrs: {
+        before: any[];
+        after: any[];
+        id: any;
+        sourceId: any;
+        date: any;
+        author: any;
+        authorEmail: any;
+    };
+}[];
+/**
+ *
+ * @param {XmlNode} rPr
+ * @param {PmMarkJson[]} currentMarks
+ * @returns {PmMarkJson[]} a trackMarksMark, or an empty array
+ */
+export function handleStyleChangeMarks(rPr: XmlNode, currentMarks: PmMarkJson[]): PmMarkJson[];
+/**
+ *
+ * @param {PmMarkJson[]} marks
+ * @returns {PmMarkJson[]}
+ */
+export function createImportMarks(marks: PmMarkJson[]): PmMarkJson[];
+/**
+ *
+ * @param {string} markType
+ * @param attributes
+ * @returns {*}
+ */
+export function getMarkValue(markType: string, attributes: any, docx: any): any;
+export function getFontFamilyValue(attributes: any, docx: any): any;
+export function getIndentValue(attributes: any): string | null;
+export function getLineHeightValue(attributes: any): string | null;
+export function getHighLightValue(attributes: any): string | null;
+export function getStrikeValue(attributes: any): "0" | "1";
+//# sourceMappingURL=markImporter.d.ts.map

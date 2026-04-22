@@ -1,0 +1,28 @@
+import { EditorState } from 'prosemirror-state';
+import { ConverterContext } from '@superdoc/pm-adapter';
+import { FootnoteReference, FootnotesLayoutInput } from '../types.js';
+export type { FootnoteReference, FootnotesLayoutInput };
+/** Minimal shape of a converter object containing footnote data. */
+export type ConverterLike = {
+    footnotes?: Array<{
+        id?: unknown;
+        content?: unknown[];
+    }>;
+};
+/**
+ * Builds footnote layout input from editor state and converter data.
+ *
+ * Traverses the document to find footnote references, then builds layout
+ * blocks for each referenced footnote with superscript markers prepended.
+ *
+ * No external side effects, no DOM access, no callbacks.
+ * Note: Mutates blocks internally when adding footnote markers.
+ *
+ * @param editorState - The ProseMirror editor state
+ * @param converter - Converter with footnote data
+ * @param converterContext - Context with footnote numbering info
+ * @param themeColors - Theme colors for styling
+ * @returns FootnotesLayoutInput if footnotes exist, null otherwise
+ */
+export declare function buildFootnotesInput(editorState: EditorState | null | undefined, converter: ConverterLike | null | undefined, converterContext: ConverterContext | undefined, themeColors: unknown): FootnotesLayoutInput | null;
+//# sourceMappingURL=FootnotesBuilder.d.ts.map

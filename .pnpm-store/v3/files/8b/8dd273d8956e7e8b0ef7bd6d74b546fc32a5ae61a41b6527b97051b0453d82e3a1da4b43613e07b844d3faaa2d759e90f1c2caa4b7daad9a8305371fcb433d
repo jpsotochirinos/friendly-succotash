@@ -1,0 +1,110 @@
+import { Extension } from '../../core/Extension.js';
+/**
+ * @typedef {Object} StructuredContentInlineInsert
+ * @property {string} [text] - Text content to insert
+ * @property {Object} [json] - ProseMirror JSON
+ * @property {Object} [attrs] - Node attributes
+ * @property {string} [attrs.group] - Group identifier for linking multiple fields (auto-encoded to JSON tag)
+ */
+/**
+ * @typedef {Object} StructuredContentBlockInsert
+ * @property {string} [html] - HTML content to insert
+ * @property {Object} [json] - ProseMirror JSON
+ * @property {Object} [attrs] - Node attributes
+ * @property {string} [attrs.group] - Group identifier for linking multiple fields (auto-encoded to JSON tag)
+ */
+/**
+ * @typedef {Object} StructuredContentUpdate
+ * @property {string} [text] - Replace content with text (only for structured content inline)
+ * @property {string} [html] - Replace content with HTML (only for structured content block)
+ * @property {Object} [json] - Replace content with ProseMirror JSON (overrides html)
+ * @property {Object} [attrs] - Update attributes only (preserves content)
+ * @property {boolean} [keepTextNodeStyles] - When true, preserves marks from the first text node (only applies with text option)
+ */
+/**
+ * @typedef {Object} StructuredContentTableAppendRowsOptions
+ * @property {string} id - Structured content block identifier
+ * @property {number} [tableIndex=0] - Index of the table inside the block
+ * @property {Array<string[]>|Array<string>} rows - Cell values to append
+ * @property {boolean} [copyRowStyle=false] - Clone the last row's styling when true
+ */
+export const StructuredContentCommands: Extension<Record<string, never>, Record<string, never>>;
+export type StructuredContentInlineInsert = {
+    /**
+     * - Text content to insert
+     */
+    text?: string | undefined;
+    /**
+     * - ProseMirror JSON
+     */
+    json?: Object | undefined;
+    /**
+     * - Node attributes
+     */
+    attrs?: {
+        /**
+         * - Group identifier for linking multiple fields (auto-encoded to JSON tag)
+         */
+        group?: string | undefined;
+    } | undefined;
+};
+export type StructuredContentBlockInsert = {
+    /**
+     * - HTML content to insert
+     */
+    html?: string | undefined;
+    /**
+     * - ProseMirror JSON
+     */
+    json?: Object | undefined;
+    /**
+     * - Node attributes
+     */
+    attrs?: {
+        /**
+         * - Group identifier for linking multiple fields (auto-encoded to JSON tag)
+         */
+        group?: string | undefined;
+    } | undefined;
+};
+export type StructuredContentUpdate = {
+    /**
+     * - Replace content with text (only for structured content inline)
+     */
+    text?: string | undefined;
+    /**
+     * - Replace content with HTML (only for structured content block)
+     */
+    html?: string | undefined;
+    /**
+     * - Replace content with ProseMirror JSON (overrides html)
+     */
+    json?: Object | undefined;
+    /**
+     * - Update attributes only (preserves content)
+     */
+    attrs?: Object | undefined;
+    /**
+     * - When true, preserves marks from the first text node (only applies with text option)
+     */
+    keepTextNodeStyles?: boolean | undefined;
+};
+export type StructuredContentTableAppendRowsOptions = {
+    /**
+     * - Structured content block identifier
+     */
+    id: string;
+    /**
+     * - Index of the table inside the block
+     */
+    tableIndex?: number | undefined;
+    /**
+     * - Cell values to append
+     */
+    rows: Array<string[]> | Array<string>;
+    /**
+     * - Clone the last row's styling when true
+     */
+    copyRowStyle?: boolean | undefined;
+};
+//# sourceMappingURL=structured-content-commands.d.ts.map

@@ -1,0 +1,29 @@
+export function calculateTabStyle(nodeSize: any, view: any, pos: any, blockParent: any, paragraphContext: any, coordCache?: null, domPosCache?: null): string | null | undefined;
+export function findParagraphContext($pos: any, cache: any, helpers: any): any;
+/**
+ * Extract paragraph context for tab layout calculations.
+ *
+ * @param {import('prosemirror-model').Node} node - The paragraph node
+ * @param {number} startPos - Document position where the paragraph starts
+ * @param {any} helpers - Helper functions for document operations
+ * @param {number} [depth=0] - Nesting depth of the paragraph
+ * @returns {Object} Paragraph context with tabStops, indent, and flattened content
+ */
+export function extractParagraphContext(node: import('prosemirror-model').Node, startPos: number, helpers: any, depth?: number): Object;
+export function flattenParagraph(paragraph: any, paragraphStartPos: any): {
+    entries: any[];
+    positionMap: Map<any, any>;
+};
+export function findNextTabIndex(flattened: any, fromIndex: any): any;
+export function findDecimalBreakPos(flattened: any, startIndex: any, breakChar: any): any;
+export function measureRangeWidth(view: any, from: any, to: any, coordCache?: null, domPosCache?: null): number;
+export function getIndentWidth(view: any, paragraphStartPos: any, indentAttrs?: {}, coordCache?: null, domPosCache?: null): number;
+export function getBlockNodeWidth(view: any, blockStartPos: any): number;
+export function calculateIndentFallback(indentAttrs?: {}): number;
+export function getLeftCoord(view: any, pos: any, coordCache?: null, domPosCache?: null): any;
+export function getCachedDomAtPos(view: any, pos: any, domPosCache?: null): any;
+export function calcTabHeight(blockParent: any): string;
+export const defaultTabDistance: 48;
+export const defaultLineLength: 816;
+export function getTabDecorations(doc: any, view: any, helpers: any, from?: number, to?: null): any[];
+//# sourceMappingURL=tabDecorations.d.ts.map

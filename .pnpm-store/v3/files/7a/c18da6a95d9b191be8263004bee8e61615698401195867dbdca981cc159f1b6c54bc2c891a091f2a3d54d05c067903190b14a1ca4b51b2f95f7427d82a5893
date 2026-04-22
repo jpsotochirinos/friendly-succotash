@@ -1,0 +1,21 @@
+/**
+ * Handles VML shape elements with v:textpath (text watermarks).
+ *
+ * This handles the common text watermark pattern where text is placed diagonally
+ * across the page in headers using VML:
+ * <w:pict>
+ *   <v:shape type="#_x0000_t136">
+ *     <v:path textpathok="t"/>
+ *     <v:textpath on="t" fitshape="t" string="DRAFT MARK"/>
+ *     <v:fill opacity="0.5"/>
+ *   </v:shape>
+ * </w:pict>
+ *
+ * Converts text watermarks to SVG images so they can be rendered using the
+ * existing Image extension, which handles positioning correctly in headers.
+ *
+ * @param {Object} options
+ * @returns {Object|null}
+ */
+export function handleShapeTextWatermarkImport({ pict }: Object): Object | null;
+//# sourceMappingURL=handle-shape-text-watermark-import.d.ts.map

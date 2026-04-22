@@ -1,0 +1,38 @@
+/**
+ * Resolve the chart part path from a relationship ID.
+ *
+ * Looks up the relationship in the owning story part's rels file
+ * (e.g., `word/_rels/header1.xml.rels`), falling back to `document.xml.rels`.
+ * The target path is normalized to handle producer-specific variants.
+ *
+ * @param {Object} docx - The document zip contents
+ * @param {string} chartRelId - The r:id value from c:chart element
+ * @param {string} [filename] - Current document part filename (e.g., "document.xml", "header1.xml")
+ * @returns {{ chartPartPath: string, chartRel: Object }|null}
+ */
+export function resolveChartPart(docx: Object, chartRelId: string, filename?: string): {
+    chartPartPath: string;
+    chartRel: Object;
+} | null;
+/**
+ * Parse a chart XML part into a normalized ChartModel.
+ *
+ * @param {Object} chartXml - Parsed XML of word/charts/chartN.xml
+ * @returns {import('@superdoc/contracts').ChartModel|null}
+ */
+export function parseChartXml(chartXml: Object): import('@superdoc/contracts').ChartModel | null;
+/**
+ * Chart OOXML parsing helpers.
+ *
+ * Extracts chart data from OOXML chart XML parts (word/charts/chartN.xml)
+ * and converts them into a normalized ChartModel for rendering.
+ *
+ * Supported chart types: bar/line/area/pie/doughnut/scatter/bubble/radar/stock/surface.
+ * Data is read from cached values (c:strCache / c:numCache) to avoid
+ * needing the embedded Excel workbook.
+ */
+/** OOXML namespace URI for chart graphic data. */
+export const CHART_URI: "http://schemas.openxmlformats.org/drawingml/2006/chart";
+/** OOXML relationship type for chart parts. */
+export const CHART_RELATIONSHIP_TYPE: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart";
+//# sourceMappingURL=chart-helpers.d.ts.map

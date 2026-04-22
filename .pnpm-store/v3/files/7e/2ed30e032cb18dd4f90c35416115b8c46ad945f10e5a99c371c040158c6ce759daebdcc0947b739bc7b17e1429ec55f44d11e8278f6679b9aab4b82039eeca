@@ -1,0 +1,17 @@
+import { Editor } from '../../../super-editor/src/index.js';
+export function getSchemaIntrospection(options?: SchemaIntrospectionOptions): Promise<import('../../../super-editor/src/editors/v1/core/types/EditorSchema').SchemaSummaryJSON>;
+export type SchemaIntrospectionOptions = {
+    /**
+     * - Existing Editor instance to introspect.
+     */
+    editor?: Editor | undefined;
+    /**
+     * - Extension list to build a schema from.
+     */
+    extensions?: any[] | undefined;
+    /**
+     * - Editor mode when building a schema. Defaults to 'docx'.
+     */
+    mode?: "text" | "html" | "docx" | undefined;
+};
+//# sourceMappingURL=schema-introspection.d.ts.map

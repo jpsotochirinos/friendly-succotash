@@ -1,0 +1,565 @@
+const require_rolldown_runtime = require("./rolldown-runtime-C34Jxks9.cjs");
+const require_dist = require("./dist-kRpWoWUg.cjs");
+const require_errors = require("./errors-BXWr2TvO.cjs");
+const require_detect_container = require("./detect-container-BWk9sj6a.cjs");
+const CFB_SIGNATURE = new Uint8Array([
+	208,
+	207,
+	17,
+	224,
+	161,
+	177,
+	26,
+	225
+]);
+const CFB_HEADER_SIZE = 512;
+const CFB_DIRECTORY_ENTRY_SIZE = 128;
+const CFB_HEADER_DIFAT_ENTRY_COUNT = 109;
+const CFB_VERSION_3_SECTOR_SIZE = 512;
+const CFB_VERSION_4_SECTOR_SIZE = 4096;
+const CFB_FREE_SECTOR = 4294967295;
+const CFB_END_OF_CHAIN = 4294967294;
+const CFB_DIFAT_SECTOR = 4294967292;
+const CFB_NO_STREAM = 4294967295;
+const CFB_OBJECT_TYPE = {
+	STORAGE: 1,
+	STREAM: 2,
+	ROOT: 5
+};
+const CFB_BYTE_ORDER = 65534;
+const CFB_VERSION_3 = 3;
+const CFB_VERSION_4 = 4;
+function concatUint8Arrays(chunks) {
+	const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+	const result = new Uint8Array(totalLength);
+	let offset = 0;
+	for (const chunk of chunks) {
+		result.set(chunk, offset);
+		offset += chunk.length;
+	}
+	return result;
+}
+function getSectorOffset(sectorId, sectorSize) {
+	return (sectorId + 1) * sectorSize;
+}
+function readUint16LE$1(view, offset) {
+	return view.getUint16(offset, true);
+}
+function readUint32LE(view, offset) {
+	return view.getUint32(offset, true);
+}
+function readUint64LE(view, offset) {
+	const low = BigInt(view.getUint32(offset, true));
+	return BigInt(view.getUint32(offset + 4, true)) << 32n | low;
+}
+var utf16LeDecoder = new TextDecoder("utf-16le");
+function decodeUtf16Le(bytes) {
+	return utf16LeDecoder.decode(bytes).replace(/\u0000+$/g, "");
+}
+function createDataView(bytes) {
+	return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+}
+function ensureAvailable(bytes, offset, length, label) {
+	if (offset < 0 || length < 0 || offset + length > bytes.length) throw new Error(`CFB ${label} exceeds available data`);
+}
+function parseHeader(bytes) {
+	if (bytes.length < 512) throw new Error(`CFB header is truncated (${bytes.length} bytes)`);
+	for (let i = 0; i < CFB_SIGNATURE.length; i++) if (bytes[i] !== CFB_SIGNATURE[i]) throw new Error("Invalid CFB signature");
+	const view = createDataView(bytes);
+	const majorVersion = readUint16LE$1(view, 26);
+	const byteOrder = readUint16LE$1(view, 28);
+	const sectorShift = readUint16LE$1(view, 30);
+	const miniSectorShift = readUint16LE$1(view, 32);
+	const sectorSize = 1 << sectorShift;
+	const miniSectorSize = 1 << miniSectorShift;
+	if (byteOrder !== 65534) throw new Error(`Unsupported CFB byte order: 0x${byteOrder.toString(16)}`);
+	if (!(majorVersion === 3 && sectorSize === 512 || majorVersion === 4 && sectorSize === 4096)) throw new Error(`Unsupported CFB major version ${majorVersion} with sector size ${sectorSize}`);
+	const difatEntries = [];
+	for (let i = 0; i < 109; i++) {
+		const sectorId = readUint32LE(view, 76 + i * 4);
+		if (sectorId !== 4294967295) difatEntries.push(sectorId);
+	}
+	return {
+		sectorSize,
+		miniSectorSize,
+		numberOfFatSectors: readUint32LE(view, 44),
+		firstDirectorySector: readUint32LE(view, 48),
+		miniStreamCutoffSize: readUint32LE(view, 56),
+		firstMiniFatSector: readUint32LE(view, 60),
+		numberOfMiniFatSectors: readUint32LE(view, 64),
+		firstDifatSector: readUint32LE(view, 68),
+		numberOfDifatSectors: readUint32LE(view, 72),
+		difatEntries
+	};
+}
+function readSector(bytes, header, sectorId) {
+	if (sectorId >= 4294967292) throw new Error(`Invalid sector id 0x${sectorId.toString(16)}`);
+	const offset = getSectorOffset(sectorId, header.sectorSize);
+	ensureAvailable(bytes, offset, header.sectorSize, `sector ${sectorId}`);
+	return bytes.subarray(offset, offset + header.sectorSize);
+}
+function readDifatEntries(bytes, header) {
+	const difatEntries = [...header.difatEntries];
+	let nextDifatSector = header.firstDifatSector;
+	for (let i = 0; i < header.numberOfDifatSectors; i++) {
+		if (nextDifatSector === 4294967294 || nextDifatSector === 4294967295) break;
+		const view = createDataView(readSector(bytes, header, nextDifatSector));
+		const entriesPerDifatSector = header.sectorSize / 4 - 1;
+		for (let entryIndex = 0; entryIndex < entriesPerDifatSector; entryIndex++) {
+			const fatSectorId = readUint32LE(view, entryIndex * 4);
+			if (fatSectorId !== 4294967295) difatEntries.push(fatSectorId);
+		}
+		nextDifatSector = readUint32LE(view, header.sectorSize - 4);
+	}
+	if (difatEntries.length < header.numberOfFatSectors) throw new Error(`CFB DIFAT only exposed ${difatEntries.length} FAT sectors, expected ${header.numberOfFatSectors}`);
+	return difatEntries.slice(0, header.numberOfFatSectors);
+}
+function readFat(bytes, header) {
+	const fatSectorIds = readDifatEntries(bytes, header);
+	const fatEntries = [];
+	for (const fatSectorId of fatSectorIds) {
+		const view = createDataView(readSector(bytes, header, fatSectorId));
+		const entriesPerSector = header.sectorSize / 4;
+		for (let i = 0; i < entriesPerSector; i++) fatEntries.push(readUint32LE(view, i * 4));
+	}
+	return fatEntries;
+}
+function readSectorChain(bytes, header, fat, startSector) {
+	if (startSector === 4294967294 || startSector === 4294967295) return new Uint8Array(0);
+	const chunks = [];
+	const visited = /* @__PURE__ */ new Set();
+	let sectorId = startSector;
+	while (sectorId !== CFB_END_OF_CHAIN) {
+		if (visited.has(sectorId)) throw new Error(`CFB sector chain loop detected at sector ${sectorId}`);
+		if (sectorId >= fat.length) throw new Error(`CFB sector ${sectorId} is out of FAT bounds`);
+		visited.add(sectorId);
+		chunks.push(readSector(bytes, header, sectorId));
+		const nextSector = fat[sectorId];
+		if (nextSector == null) throw new Error(`CFB FAT missing next sector for sector ${sectorId}`);
+		sectorId = nextSector;
+	}
+	return concatUint8Arrays(chunks);
+}
+function parseStreamSize(view, offset) {
+	const streamSize = readUint64LE(view, offset);
+	if (streamSize > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error(`CFB stream is too large to fit in a JavaScript number: ${streamSize.toString()}`);
+	return Number(streamSize);
+}
+function parseDirectoryEntries(directoryBytes) {
+	const entries = [];
+	for (let offset = 0; offset + 128 <= directoryBytes.length; offset += 128) {
+		const slice = directoryBytes.subarray(offset, offset + 128);
+		const view = createDataView(slice);
+		const nameLength = readUint16LE$1(view, 64);
+		const rawNameBytes = slice.subarray(0, Math.max(0, Math.min(nameLength, 64) - 2));
+		entries.push({
+			name: decodeUtf16Le(rawNameBytes),
+			objectType: slice[66],
+			leftSiblingId: readUint32LE(view, 68),
+			rightSiblingId: readUint32LE(view, 72),
+			childId: readUint32LE(view, 76),
+			startSector: readUint32LE(view, 116),
+			streamSize: parseStreamSize(view, 120)
+		});
+	}
+	return entries;
+}
+function forEachSiblingTree(entries, entryId, visitor, visited = /* @__PURE__ */ new Set()) {
+	if (entryId === 4294967295) return false;
+	if (entryId >= entries.length) throw new Error(`CFB directory entry id ${entryId} is out of bounds`);
+	if (visited.has(entryId)) throw new Error(`CFB directory tree loop detected at entry id ${entryId}`);
+	visited.add(entryId);
+	const entry = entries[entryId];
+	if (forEachSiblingTree(entries, entry.leftSiblingId, visitor, visited)) return true;
+	if (visitor(entry) === true) return true;
+	if (forEachSiblingTree(entries, entry.rightSiblingId, visitor, visited)) return true;
+	return false;
+}
+function findEntryByPath(entries, path) {
+	const components = path.split("/").map((component) => component.trim()).filter(Boolean);
+	let currentEntry = entries[0];
+	for (const component of components) {
+		if (currentEntry.objectType !== CFB_OBJECT_TYPE.ROOT && currentEntry.objectType !== CFB_OBJECT_TYPE.STORAGE) return null;
+		let nextEntry = null;
+		forEachSiblingTree(entries, currentEntry.childId, (candidate) => {
+			if (candidate.name.toLowerCase() === component.toLowerCase()) {
+				nextEntry = candidate;
+				return true;
+			}
+			return false;
+		});
+		if (!nextEntry) return null;
+		currentEntry = nextEntry;
+	}
+	return currentEntry;
+}
+function readMiniStream(rootEntry, bytes, header, fat) {
+	if (rootEntry.streamSize === 0 || rootEntry.startSector === 4294967294) return new Uint8Array(0);
+	return readSectorChain(bytes, header, fat, rootEntry.startSector).subarray(0, rootEntry.streamSize);
+}
+function readMiniFat(bytes, header, fat) {
+	if (header.numberOfMiniFatSectors === 0 || header.firstMiniFatSector === 4294967294) return [];
+	const miniFatBytes = readSectorChain(bytes, header, fat, header.firstMiniFatSector);
+	const view = createDataView(miniFatBytes);
+	const entryCount = Math.floor(miniFatBytes.length / 4);
+	const entries = [];
+	for (let i = 0; i < entryCount; i++) entries.push(readUint32LE(view, i * 4));
+	return entries;
+}
+function readMiniSectorChain(miniStream, miniFat, miniSectorSize, startSector) {
+	if (startSector === 4294967294 || startSector === 4294967295) return new Uint8Array(0);
+	const chunks = [];
+	const visited = /* @__PURE__ */ new Set();
+	let sectorId = startSector;
+	while (sectorId !== CFB_END_OF_CHAIN) {
+		if (visited.has(sectorId)) throw new Error(`CFB mini sector chain loop detected at mini sector ${sectorId}`);
+		if (sectorId >= miniFat.length) throw new Error(`CFB mini sector ${sectorId} is out of MiniFAT bounds`);
+		visited.add(sectorId);
+		const offset = sectorId * miniSectorSize;
+		ensureAvailable(miniStream, offset, miniSectorSize, `mini sector ${sectorId}`);
+		chunks.push(miniStream.subarray(offset, offset + miniSectorSize));
+		const nextSector = miniFat[sectorId];
+		if (nextSector == null) throw new Error(`CFB MiniFAT missing next sector for mini sector ${sectorId}`);
+		sectorId = nextSector;
+	}
+	return concatUint8Arrays(chunks);
+}
+function createCfbReader(data) {
+	const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+	const header = parseHeader(bytes);
+	const fat = readFat(bytes, header);
+	const directoryEntries = parseDirectoryEntries(readSectorChain(bytes, header, fat, header.firstDirectorySector));
+	if (directoryEntries.length === 0 || directoryEntries[0].objectType !== CFB_OBJECT_TYPE.ROOT) throw new Error("CFB root directory entry is missing");
+	const rootEntry = directoryEntries[0];
+	const miniFat = readMiniFat(bytes, header, fat);
+	const miniStream = readMiniStream(rootEntry, bytes, header, fat);
+	return { getStream(path) {
+		const entry = findEntryByPath(directoryEntries, path);
+		if (!entry || entry.objectType !== CFB_OBJECT_TYPE.STREAM) return null;
+		if (entry.streamSize < header.miniStreamCutoffSize) return readMiniSectorChain(miniStream, miniFat, header.miniSectorSize, entry.startSector).subarray(0, entry.streamSize);
+		return readSectorChain(bytes, header, fat, entry.startSector).subarray(0, entry.streamSize);
+	} };
+}
+function extractEncryptionStreams(data) {
+	const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+	let reader;
+	try {
+		reader = createCfbReader(bytes);
+	} catch (err) {
+		throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, "Failed to parse OLE/CFB container", err instanceof Error ? err : void 0);
+	}
+	const encryptionInfo = reader.getStream("/EncryptionInfo");
+	if (!encryptionInfo) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, "CFB container missing EncryptionInfo stream");
+	const encryptedPackage = reader.getStream("/EncryptedPackage");
+	if (!encryptedPackage) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, "CFB container missing EncryptedPackage stream");
+	return {
+		encryptionInfo,
+		encryptedPackage
+	};
+}
+var AGILE_VERSION = 4;
+var AGILE_RESERVED = 4;
+var STANDARD_VERSION_3 = 3;
+var STANDARD_VERSION_4 = 4;
+var STANDARD_RESERVED = 3;
+var MIN_HEADER_SIZE = 8;
+function readUint16LE(data, offset) {
+	return data[offset] | data[offset + 1] << 8;
+}
+function extractElementAttrs(xml, localName) {
+	const tagPattern = /* @__PURE__ */ new RegExp(`<(?:\\w+:)?${localName}\\b([^>]*)/?>`);
+	const match = xml.match(tagPattern);
+	if (!match) return null;
+	const attrs = {};
+	const attrPattern = /(\w+)="([^"]*)"/g;
+	let attrMatch;
+	while ((attrMatch = attrPattern.exec(match[1])) !== null) attrs[attrMatch[1]] = attrMatch[2];
+	return attrs;
+}
+function base64ToBytes(b64) {
+	if (typeof atob === "function") {
+		const raw = atob(b64);
+		const bytes = new Uint8Array(raw.length);
+		for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+		return bytes;
+	}
+	return new Uint8Array(require_dist.Buffer.from(b64, "base64"));
+}
+function requireAttr(attrs, name, label) {
+	const value = attrs?.[name];
+	if (value == null) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, `Missing required attribute "${name}" on <${label}>`);
+	return value;
+}
+function requireBase64Attr(attrs, name, label) {
+	return base64ToBytes(requireAttr(attrs, name, label));
+}
+function requireIntAttr(attrs, name, label) {
+	const value = parseInt(requireAttr(attrs, name, label), 10);
+	if (Number.isNaN(value)) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, `Invalid integer for attribute "${name}" on <${label}>`);
+	return value;
+}
+function parseAgileXml(xmlBytes) {
+	const xml = new TextDecoder("utf-8").decode(xmlBytes);
+	const keyData = extractElementAttrs(xml, "keyData");
+	const dataIntegrity = extractElementAttrs(xml, "dataIntegrity");
+	const encryptedKey = extractElementAttrs(xml, "encryptedKey");
+	return {
+		keySalt: requireBase64Attr(keyData, "saltValue", "keyData"),
+		keyBits: requireIntAttr(keyData, "keyBits", "keyData"),
+		hashAlgorithm: requireAttr(keyData, "hashAlgorithm", "keyData"),
+		hashSize: requireIntAttr(keyData, "hashSize", "keyData"),
+		blockSize: requireIntAttr(keyData, "blockSize", "keyData"),
+		cipherAlgorithm: requireAttr(keyData, "cipherAlgorithm", "keyData"),
+		cipherChaining: requireAttr(keyData, "cipherChaining", "keyData"),
+		spinCount: requireIntAttr(encryptedKey, "spinCount", "encryptedKey"),
+		passwordSalt: requireBase64Attr(encryptedKey, "saltValue", "encryptedKey"),
+		passwordHashAlgorithm: requireAttr(encryptedKey, "hashAlgorithm", "encryptedKey"),
+		passwordKeyBits: requireIntAttr(encryptedKey, "keyBits", "encryptedKey"),
+		passwordBlockSize: requireIntAttr(encryptedKey, "blockSize", "encryptedKey"),
+		encryptedVerifierHashInput: requireBase64Attr(encryptedKey, "encryptedVerifierHashInput", "encryptedKey"),
+		encryptedVerifierHashValue: requireBase64Attr(encryptedKey, "encryptedVerifierHashValue", "encryptedKey"),
+		encryptedKeyValue: requireBase64Attr(encryptedKey, "encryptedKeyValue", "encryptedKey"),
+		encryptedHmacKey: requireBase64Attr(dataIntegrity, "encryptedHmacKey", "dataIntegrity"),
+		encryptedHmacValue: requireBase64Attr(dataIntegrity, "encryptedHmacValue", "dataIntegrity")
+	};
+}
+function parseEncryptionInfo(data) {
+	if (data.length < MIN_HEADER_SIZE) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, `EncryptionInfo too short: ${data.length} bytes (minimum ${MIN_HEADER_SIZE})`);
+	const version = readUint16LE(data, 0);
+	const reserved = readUint16LE(data, 2);
+	if (version === AGILE_VERSION && reserved === AGILE_RESERVED) return {
+		type: "agile",
+		params: parseAgileXml(data.subarray(MIN_HEADER_SIZE))
+	};
+	if ((version === STANDARD_VERSION_3 || version === STANDARD_VERSION_4) && reserved === STANDARD_RESERVED) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.ENCRYPTION_UNSUPPORTED, "Standard Encryption (Office 2007) is not yet supported. Only Agile Encryption (Office 2010+) is supported.");
+	if (version <= 2) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.ENCRYPTION_UNSUPPORTED, "Legacy RC4 encryption is not supported. Only Agile Encryption (Office 2010+) is supported.");
+	throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.ENCRYPTION_UNSUPPORTED, `Unrecognized EncryptionInfo version=${version} reserved=${reserved}`);
+}
+var BLOCK_KEY_VERIFIER_INPUT = new Uint8Array([
+	254,
+	167,
+	210,
+	118,
+	59,
+	75,
+	158,
+	121
+]);
+var BLOCK_KEY_VERIFIER_VALUE = new Uint8Array([
+	215,
+	170,
+	15,
+	109,
+	48,
+	97,
+	52,
+	78
+]);
+var BLOCK_KEY_ENCRYPTED_KEY = new Uint8Array([
+	20,
+	110,
+	11,
+	231,
+	171,
+	172,
+	208,
+	214
+]);
+var BLOCK_KEY_HMAC_KEY = new Uint8Array([
+	95,
+	178,
+	173,
+	1,
+	12,
+	185,
+	225,
+	246
+]);
+var BLOCK_KEY_HMAC_VALUE = new Uint8Array([
+	160,
+	103,
+	127,
+	2,
+	178,
+	44,
+	132,
+	51
+]);
+var SEGMENT_SIZE = 4096;
+var PACKAGE_HEADER_SIZE = 8;
+function getSubtleCrypto() {
+	const subtle = globalThis.crypto?.subtle;
+	if (!subtle) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, "Web Crypto API (SubtleCrypto) is not available in this environment");
+	return subtle;
+}
+function toWebCryptoHash(ooxmlName) {
+	const mapped = {
+		SHA1: "SHA-1",
+		"SHA-1": "SHA-1",
+		SHA256: "SHA-256",
+		"SHA-256": "SHA-256",
+		SHA384: "SHA-384",
+		"SHA-384": "SHA-384",
+		SHA512: "SHA-512",
+		"SHA-512": "SHA-512"
+	}[ooxmlName];
+	if (!mapped) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, `Unsupported hash algorithm: ${ooxmlName}`);
+	return mapped;
+}
+function encodeUtf16le(str) {
+	const buf = new Uint8Array(str.length * 2);
+	for (let i = 0; i < str.length; i++) {
+		const code = str.charCodeAt(i);
+		buf[i * 2] = code & 255;
+		buf[i * 2 + 1] = code >> 8 & 255;
+	}
+	return buf;
+}
+function concat(...arrays) {
+	const totalLength = arrays.reduce((sum, a) => sum + a.length, 0);
+	const result = new Uint8Array(totalLength);
+	let offset = 0;
+	for (const arr of arrays) {
+		result.set(arr, offset);
+		offset += arr.length;
+	}
+	return result;
+}
+function uint32LE(value) {
+	const buf = new Uint8Array(4);
+	buf[0] = value & 255;
+	buf[1] = value >>> 8 & 255;
+	buf[2] = value >>> 16 & 255;
+	buf[3] = value >>> 24 & 255;
+	return buf;
+}
+function toBuffer(arr) {
+	return arr.buffer.slice(arr.byteOffset, arr.byteOffset + arr.byteLength);
+}
+async function hash(algorithm, data) {
+	const digest = await getSubtleCrypto().digest(algorithm, toBuffer(data));
+	return new Uint8Array(digest);
+}
+async function decryptAesCbc(keyBytes, iv, ciphertext) {
+	const subtle = getSubtleCrypto();
+	const blockSize = 16;
+	const key = await subtle.importKey("raw", toBuffer(keyBytes), { name: "AES-CBC" }, false, ["encrypt", "decrypt"]);
+	const lastBlock = ciphertext.subarray(ciphertext.length - blockSize);
+	const pkcs7Plaintext = new Uint8Array(blockSize);
+	pkcs7Plaintext.fill(blockSize);
+	const paddingBlock = new Uint8Array(await subtle.encrypt({
+		name: "AES-CBC",
+		iv: toBuffer(lastBlock)
+	}, key, pkcs7Plaintext)).subarray(0, blockSize);
+	const withPadding = new Uint8Array(ciphertext.length + blockSize);
+	withPadding.set(ciphertext);
+	withPadding.set(paddingBlock, ciphertext.length);
+	const decrypted = await subtle.decrypt({
+		name: "AES-CBC",
+		iv: toBuffer(iv)
+	}, key, withPadding);
+	return new Uint8Array(decrypted).subarray(0, ciphertext.length);
+}
+async function deriveKey(password, salt, spinCount, keyBits, hashAlgorithm, blockKey) {
+	const algo = toWebCryptoHash(hashAlgorithm);
+	let h = await hash(algo, concat(salt, encodeUtf16le(password)));
+	for (let i = 0; i < spinCount; i++) h = await hash(algo, concat(uint32LE(i), h));
+	const hDerived = await hash(algo, concat(h, blockKey));
+	const requiredBytes = keyBits / 8;
+	if (hDerived.length >= requiredBytes) return hDerived.subarray(0, requiredBytes);
+	const padded = new Uint8Array(requiredBytes);
+	padded.set(hDerived);
+	padded.fill(54, hDerived.length);
+	return padded;
+}
+async function generateIV(hashAlgorithm, salt, blockKey, blockSize) {
+	let ivSource;
+	if (blockKey) ivSource = await hash(toWebCryptoHash(hashAlgorithm), concat(salt, blockKey));
+	else ivSource = salt;
+	if (ivSource.length >= blockSize) return ivSource.subarray(0, blockSize);
+	const padded = new Uint8Array(blockSize);
+	padded.set(ivSource);
+	padded.fill(54, ivSource.length);
+	return padded;
+}
+async function verifyPasswordAndGetKey(password, params) {
+	const { passwordSalt, spinCount, passwordHashAlgorithm, passwordKeyBits, passwordBlockSize } = params;
+	const keyVerifierInput = await deriveKey(password, passwordSalt, spinCount, passwordKeyBits, passwordHashAlgorithm, BLOCK_KEY_VERIFIER_INPUT);
+	const keyVerifierValue = await deriveKey(password, passwordSalt, spinCount, passwordKeyBits, passwordHashAlgorithm, BLOCK_KEY_VERIFIER_VALUE);
+	const keyEncryptedKey = await deriveKey(password, passwordSalt, spinCount, passwordKeyBits, passwordHashAlgorithm, BLOCK_KEY_ENCRYPTED_KEY);
+	const passwordVerifierIv = await generateIV(passwordHashAlgorithm, passwordSalt, void 0, passwordBlockSize);
+	const verifierHashInput = await decryptAesCbc(keyVerifierInput, passwordVerifierIv, params.encryptedVerifierHashInput);
+	const verifierHashValue = await decryptAesCbc(keyVerifierValue, passwordVerifierIv, params.encryptedVerifierHashValue);
+	const computedHash = await hash(toWebCryptoHash(passwordHashAlgorithm), verifierHashInput);
+	if (!constantTimeEqual(computedHash, verifierHashValue.subarray(0, computedHash.length))) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.PASSWORD_INVALID, "The password is incorrect");
+	return decryptAesCbc(keyEncryptedKey, passwordVerifierIv, params.encryptedKeyValue);
+}
+function constantTimeEqual(a, b) {
+	if (a.length !== b.length) return false;
+	let diff = 0;
+	for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+	return diff === 0;
+}
+async function decryptPackageSegments(encryptionKey, params, encryptedPackage) {
+	const { keySalt, hashAlgorithm, blockSize } = params;
+	const algo = toWebCryptoHash(hashAlgorithm);
+	if (encryptedPackage.length < PACKAGE_HEADER_SIZE) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, "EncryptedPackage too short to contain size header");
+	const plaintextSize = encryptedPackage[0] | encryptedPackage[1] << 8 | encryptedPackage[2] << 16 | encryptedPackage[3] << 24 >>> 0;
+	const encryptedData = encryptedPackage.subarray(PACKAGE_HEADER_SIZE);
+	const segmentCount = Math.ceil(encryptedData.length / SEGMENT_SIZE);
+	const decryptedChunks = [];
+	for (let i = 0; i < segmentCount; i++) {
+		const segmentStart = i * SEGMENT_SIZE;
+		const segmentEnd = Math.min(segmentStart + SEGMENT_SIZE, encryptedData.length);
+		const segment = encryptedData.subarray(segmentStart, segmentEnd);
+		const ivHash = await hash(algo, concat(keySalt, uint32LE(i)));
+		const decrypted = await decryptAesCbc(encryptionKey, ivHash.length >= blockSize ? ivHash.subarray(0, blockSize) : ivHash, segment);
+		decryptedChunks.push(decrypted);
+	}
+	return concat(...decryptedChunks).subarray(0, plaintextSize);
+}
+async function verifyDataIntegrity(encryptionKey, params, encryptedPackage) {
+	const { keySalt, hashAlgorithm, blockSize, hashSize } = params;
+	const algo = toWebCryptoHash(hashAlgorithm);
+	const subtle = getSubtleCrypto();
+	const hmacKey = (await decryptAesCbc(encryptionKey, await generateIV(hashAlgorithm, keySalt, BLOCK_KEY_HMAC_KEY, blockSize), params.encryptedHmacKey)).subarray(0, hashSize);
+	const expectedHmac = await decryptAesCbc(encryptionKey, await generateIV(hashAlgorithm, keySalt, BLOCK_KEY_HMAC_VALUE, blockSize), params.encryptedHmacValue);
+	const cryptoKey = await subtle.importKey("raw", toBuffer(hmacKey), {
+		name: "HMAC",
+		hash: algo
+	}, false, ["sign"]);
+	const computedHmac = new Uint8Array(await subtle.sign("HMAC", cryptoKey, toBuffer(encryptedPackage)));
+	if (!constantTimeEqual(computedHmac, expectedHmac.subarray(0, computedHmac.length))) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, "Data integrity check failed — the encrypted package may be corrupt or tampered with");
+}
+async function decryptAgilePackage(password, params, encryptedPackage) {
+	try {
+		const encryptionKey = await verifyPasswordAndGetKey(password, params);
+		await verifyDataIntegrity(encryptionKey, params, encryptedPackage);
+		return await decryptPackageSegments(encryptionKey, params, encryptedPackage);
+	} catch (err) {
+		if (err instanceof require_errors.DocxEncryptionError) throw err;
+		throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, "Decryption failed unexpectedly", err instanceof Error ? err : void 0);
+	}
+}
+function validateDecryptedOutput(data) {
+	if (require_detect_container.detectContainerType(data) !== "zip") throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, "Decrypted output is not a valid ZIP archive — the file may be corrupt");
+}
+async function decryptDocxIfNeeded(data, options) {
+	const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+	const containerType = require_detect_container.detectContainerType(bytes);
+	if (containerType === "zip") return {
+		data: bytes,
+		wasEncrypted: false
+	};
+	if (containerType === "unknown") throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.DECRYPTION_FAILED, "Unrecognized file format — expected a .docx (ZIP) or encrypted .docx (OLE/CFB)");
+	if (!options?.password) throw new require_errors.DocxEncryptionError(require_errors.DocxEncryptionErrorCode.PASSWORD_REQUIRED, "This document is password-protected. A password is required to open it.");
+	const streams = extractEncryptionStreams(bytes);
+	const { params } = parseEncryptionInfo(streams.encryptionInfo);
+	const decryptedZip = await decryptAgilePackage(options.password, params, streams.encryptedPackage);
+	validateDecryptedOutput(decryptedZip);
+	return {
+		data: decryptedZip,
+		wasEncrypted: true
+	};
+}
+exports.decryptDocxIfNeeded = decryptDocxIfNeeded;

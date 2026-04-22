@@ -1,0 +1,2 @@
+export function deleteSkipEmptyRun(): import('./types').Command;
+//# sourceMappingURL=deleteSkipEmptyRun.d.ts.map

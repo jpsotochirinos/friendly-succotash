@@ -1,0 +1,17 @@
+import { Editor } from '../../core/Editor.js';
+type ReceiptInsert = {
+    kind: 'entity';
+    entityType: 'trackedChange';
+    entityId: string;
+};
+/**
+ * Collects tracked-insert mark references within a document range.
+ *
+ * @param editor - The editor instance to query.
+ * @param from - Start position in the document.
+ * @param to - End position in the document.
+ * @returns Deduplicated tracked-change entity refs, or `undefined` if none found.
+ */
+export declare function collectTrackInsertRefsInRange(editor: Editor, from: number, to: number): ReceiptInsert[] | undefined;
+export {};
+//# sourceMappingURL=tracked-change-refs.d.ts.map

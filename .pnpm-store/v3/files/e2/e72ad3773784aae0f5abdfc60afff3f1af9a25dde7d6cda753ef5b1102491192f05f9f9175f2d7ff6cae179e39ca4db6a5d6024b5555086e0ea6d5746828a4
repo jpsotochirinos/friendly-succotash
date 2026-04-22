@@ -1,0 +1,6 @@
+export function updateAttributes(typeOrName: any | any | string, attrs?: Record<string, any>): (params: {
+    tr: import('prosemirror-state').Transaction;
+    state: import('prosemirror-state').EditorState;
+    dispatch?: (tr: import('prosemirror-state').Transaction) => void;
+}) => boolean;
+//# sourceMappingURL=updateAttributes.d.ts.map

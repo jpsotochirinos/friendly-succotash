@@ -1,0 +1,13 @@
+/**
+ * EditorStyleInjector — Idempotent style injection for editor-owned CSS.
+ *
+ * These styles are behavioural concerns that belong to the editor, not the
+ * painter. Each function injects its CSS once per document lifetime using a
+ * module-level boolean guard — the same pattern used by the painter's own
+ * style helpers in `@superdoc/painter-dom`.
+ */
+export declare function ensureEditorNativeSelectionStyles(doc: Document | null | undefined): void;
+export declare function ensureEditorFieldAnnotationInteractionStyles(doc: Document | null | undefined): void;
+/** @internal Reset injection flags for testing. */
+export declare function _resetEditorStyleFlags(): void;
+//# sourceMappingURL=EditorStyleInjector.d.ts.map

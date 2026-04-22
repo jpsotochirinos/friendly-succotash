@@ -1,0 +1,6 @@
+/**
+ * The NodeTranslator instance for the w:lvl element.
+ * @type {import('@translator').NodeTranslator}
+ */
+export const translator: import('../../../node-translator/index.js').NodeTranslator;
+//# sourceMappingURL=lvl-translator.d.ts.map

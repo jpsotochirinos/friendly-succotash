@@ -1,0 +1,2 @@
+export * from './tblDescription-translator.js';
+//# sourceMappingURL=index.d.ts.map

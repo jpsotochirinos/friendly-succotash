@@ -1,0 +1,2 @@
+export { DocumentStatField } from './document-stat-field.js';
+//# sourceMappingURL=index.d.ts.map

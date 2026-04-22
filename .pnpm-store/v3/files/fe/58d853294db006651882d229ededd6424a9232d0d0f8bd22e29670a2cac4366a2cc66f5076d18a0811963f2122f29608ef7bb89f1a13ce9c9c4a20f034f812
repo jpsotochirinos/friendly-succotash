@@ -1,0 +1,9 @@
+/**
+ * @type {import("./docxImporter").NodeHandlerEntry}
+ */
+export const permStartHandlerEntity: import('./docxImporter').NodeHandlerEntry;
+export function handlePermStartNode(params: import('./docxImporter').NodeHandlerParams): {
+    nodes: any[];
+    consumed: number;
+};
+//# sourceMappingURL=permStartImporter.d.ts.map
