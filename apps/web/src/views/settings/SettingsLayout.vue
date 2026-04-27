@@ -1,7 +1,7 @@
 <template>
-  <div class="flex flex-col lg:flex-row gap-8 lg:gap-12 -mx-2 sm:-mx-4">
+  <div class="-mx-2 flex min-h-0 flex-1 flex-col gap-8 sm:-mx-4 lg:flex-row lg:gap-12">
     <nav
-      class="shrink-0 lg:w-56 space-y-0.5"
+      class="shrink-0 space-y-0.5 lg:sticky lg:top-0 lg:z-10 lg:w-56 lg:max-h-[calc(100vh-7rem)] lg:self-start lg:overflow-y-auto"
       :aria-label="t('settings.title')"
     >
       <p class="text-xs font-semibold uppercase tracking-wide mb-3 px-2 text-fg-subtle">
@@ -16,16 +16,17 @@
       >
         <a
           :href="href"
-          class="settings-nav-item block rounded-lg px-3 py-2.5 text-sm transition-colors text-fg"
+          class="settings-nav-item flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors text-fg"
           :class="isActive ? 'is-active' : ''"
           @click="(e) => { navigate(e); }"
         >
-          {{ item.label }}
+          <i :class="[item.icon, 'text-base opacity-80']" aria-hidden="true" />
+          <span>{{ item.label }}</span>
         </a>
       </RouterLink>
     </nav>
 
-    <div class="flex-1 min-w-0 pb-8">
+    <div class="min-h-0 min-w-0 flex-1 overflow-y-auto pb-8 lg:max-h-[calc(100vh-7rem)]">
       <RouterView v-slot="{ Component }">
         <Transition name="view-fade" mode="out-in">
           <component :is="Component" />
@@ -59,29 +60,23 @@ const canRoleManage = computed(() => permissions.value.includes('role:manage'));
 const canSinoe = computed(() => permissions.value.includes('sinoe:manage'));
 const canWhatsApp = computed(() => permissions.value.includes('trackable:read'));
 const canCalendarSettings = computed(() => permissions.value.includes('trackable:read'));
-const canWorkflowRules = computed(() => permissions.value.includes('workflow:update'));
-const canWorkflowDefinitions = computed(() => permissions.value.includes('workflow:update'));
+const canBlueprint = computed(() => permissions.value.includes('blueprint:read'));
 const canBillingRead = computed(() => permissions.value.includes('billing:read'));
 const canImportManage = computed(() => permissions.value.includes('import:manage'));
 const canFeedManage = computed(() => permissions.value.includes('feed:manage'));
 
 const allNavItems = computed(() => [
-  { to: '/settings/general', label: t('settings.sections.general'), show: true },
-  { to: '/settings/account', label: t('settings.sections.account'), show: true },
-  { to: '/settings/migration', label: t('settings.sections.migration'), show: canImportManage.value },
-  { to: '/settings/calendar', label: t('settings.sections.calendar'), show: canCalendarSettings.value },
-  { to: '/settings/sinoe', label: t('settings.sections.sinoe'), show: canSinoe.value },
-  { to: '/settings/whatsapp', label: t('settings.sections.whatsapp'), show: canWhatsApp.value },
-  { to: '/settings/privacy', label: t('settings.sections.privacy'), show: true },
-  { to: '/settings/billing', label: t('settings.sections.billing'), show: canBillingRead.value },
-  { to: '/settings/credits', label: t('settings.sections.credits'), show: canBillingRead.value },
-  { to: '/settings/plan', label: t('settings.sections.plan'), show: canBillingRead.value },
-  { to: '/settings/users', label: t('settings.sections.users'), show: canUserRead.value },
-  { to: '/settings/roles', label: t('settings.sections.roles'), show: canRoleManage.value },
-  { to: '/settings/feed-sources', label: t('settings.sections.feedSources'), show: canFeedManage.value },
-  { to: '/settings/workflow-templates', label: t('settings.sections.flowTemplates'), show: true },
-  { to: '/settings/workflows', label: t('settings.sections.workflowDefinitions'), show: canWorkflowDefinitions.value },
-  { to: '/settings/workflow-rules', label: t('settings.sections.workflowRules'), show: canWorkflowRules.value },
+  { to: '/settings/general', label: t('settings.sections.generalAccount'), icon: 'pi pi-user', show: true },
+  { to: '/settings/blueprints', label: t('blueprint.title'), icon: 'pi pi-sitemap', show: canBlueprint.value },
+  { to: '/settings/migration', label: t('settings.sections.migration'), icon: 'pi pi-upload', show: canImportManage.value },
+  { to: '/settings/calendar', label: t('settings.sections.calendar'), icon: 'pi pi-calendar', show: canCalendarSettings.value },
+  { to: '/settings/sinoe', label: t('settings.sections.sinoe'), icon: 'pi pi-cloud-download', show: canSinoe.value },
+  { to: '/settings/whatsapp', label: t('settings.sections.whatsapp'), icon: 'pi pi-comments', show: canWhatsApp.value },
+  { to: '/settings/privacy', label: t('settings.sections.privacy'), icon: 'pi pi-shield', show: true },
+  { to: '/settings/subscription', label: t('settings.sections.subscriptionBilling'), icon: 'pi pi-credit-card', show: canBillingRead.value },
+  { to: '/settings/users', label: t('settings.sections.users'), icon: 'pi pi-users', show: canUserRead.value },
+  { to: '/settings/roles', label: t('settings.sections.roles'), icon: 'pi pi-lock', show: canRoleManage.value },
+  { to: '/settings/feed-sources', label: t('settings.sections.feedSources'), icon: 'pi pi-rss', show: canFeedManage.value },
 ]);
 
 const visibleNavItems = computed(() => allNavItems.value.filter((i) => i.show));

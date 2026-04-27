@@ -58,3 +58,30 @@ export { WhatsAppEventOptIn } from './whatsapp-event-opt-in.entity';
 export { FeedItem, FeedItemKind } from './feed-item.entity';
 export { FeedSource } from './feed-source.entity';
 export { UserFeedRead } from './user-feed-read.entity';
+export { SignatureProfile } from './signature-profile.entity';
+export { SignatureRequest } from './signature-request.entity';
+export {
+  SignatureRequestSigner,
+  type SignatureZone,
+} from './signature-request-signer.entity';
+export { SignatureEvent } from './signature-event.entity';
+export { SignatureOtp, SignatureOtpChannel } from './signature-otp.entity';
+export { LegalDeadline } from './legal-deadline.entity';
+export { LegalProcessStageLog } from './legal-process-stage-log.entity';
+export { Blueprint } from './blueprint.entity';
+export { BlueprintVersion } from './blueprint-version.entity';
+export { StageTemplate } from './stage-template.entity';
+export { ActivityTemplate } from './activity-template.entity';
+export { DeadlineRule } from './deadline-rule.entity';
+export { DocumentSuggestion } from './document-suggestion.entity';
+export { SinoeKeywordRule } from './sinoe-keyword-rule.entity';
+export { BlueprintOverride } from './blueprint-override.entity';
+export { ProcessTrack } from './process-track.entity';
+export { StageInstance } from './stage-instance.entity';
+export { ActivityInstance } from './activity-instance.entity';
+export { ActivityInstanceComment } from './activity-instance-comment.entity';
+export { ComputedDeadline } from './computed-deadline.entity';
+export { SinoeProposal } from './sinoe-proposal.entity';
+export { ProcessTrackEvent } from './process-track-event.entity';
+export { CourtClosure } from './court-closure.entity';
+export { BlueprintResolvedSnapshot } from './blueprint-resolved-snapshot.entity';

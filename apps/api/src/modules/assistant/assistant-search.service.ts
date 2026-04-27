@@ -6,7 +6,6 @@ import { ClientsService } from '../clients/clients.service';
 import { FoldersService } from '../folders/folders.service';
 import { SearchService } from '../search/search.service';
 import { UsersService } from '../users/users.service';
-import { WorkflowItemsService } from '../workflow-items/workflow-items.service';
 
 export type AssistantSearchSource =
   | 'trackables'
@@ -25,7 +24,6 @@ export class AssistantSearchService {
     private readonly folders: FoldersService,
     private readonly searchSvc: SearchService,
     private readonly users: UsersService,
-    private readonly workflowItems: WorkflowItemsService,
   ) {}
 
   async searchEntities(
@@ -137,21 +135,29 @@ export class AssistantSearchService {
         if (!opts.trackableId) {
           throw new BadRequestException('trackableId requerido para source=workflow_items');
         }
-        const res = await this.workflowItems.findAll(
-          { trackable: opts.trackableId, organization: organizationId } as any,
-          { page: 1, limit },
-          { populate: ['assignedTo'] as any },
-        );
-        const data = res.data ?? [];
+        const conn = this.em.getConnection();
+        const rows = (await conn.execute(
+          `
+          SELECT ai.id, ai.title, ai.kind
+          FROM activity_instances ai
+          INNER JOIN stage_instances si ON si.id = ai.stage_instance_id
+          INNER JOIN process_tracks pt ON pt.id = si.process_track_id
+          WHERE ai.organization_id = ?
+            AND pt.trackable_id = ?
+          ORDER BY ai.updated_at DESC
+          LIMIT ?
+        `,
+          [organizationId, opts.trackableId, limit * 2],
+        )) as Array<{ id: string; title: string; kind: string | null }>;
         const filtered = query
-          ? data.filter((w: any) =>
+          ? rows.filter((w) =>
               String(w.title || '')
                 .toLowerCase()
                 .includes(query.toLowerCase()),
             )
-          : data;
+          : rows;
         return {
-          items: filtered.slice(0, limit).map((w: any) => ({
+          items: filtered.slice(0, limit).map((w) => ({
             id: w.id,
             label: w.title ?? w.id,
             description: w.kind ?? null,

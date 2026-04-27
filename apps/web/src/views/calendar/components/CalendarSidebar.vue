@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full xl:w-[300px] lg:w-[272px] shrink-0">
+  <div class="flex min-h-0 max-h-full w-full shrink-0 flex-col self-stretch lg:w-[272px] xl:w-[300px]">
     <Button
       v-show="!isXlUp"
       type="button"
@@ -16,7 +16,7 @@
     <aside
       v-show="sidebarPanelVisible"
       :id="resolvedPanelId"
-      class="rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-4 space-y-4 shadow-sm"
+      class="min-h-0 max-h-full flex-1 overflow-y-auto overscroll-contain rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-4 shadow-sm space-y-4"
     >
       <div>
         <div class="flex items-center justify-between gap-2 mb-2">
@@ -46,27 +46,27 @@
         </DatePicker>
       </div>
 
-      <div v-if="kpis" class="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:grid-cols-1">
-        <div class="rounded-lg border border-[var(--surface-border)] bg-[var(--surface-sunken)]/40 p-3">
-          <div class="flex items-center gap-2 text-[var(--fg-muted)]">
-            <i class="pi pi-briefcase text-sky-600" />
-            <span class="text-xs font-semibold uppercase tracking-wide">{{ t('globalCalendar.kindHearing') }}</span>
+      <div v-if="kpis" class="grid grid-cols-3 gap-2">
+        <div class="min-w-0 rounded-lg border border-[var(--surface-border)] bg-[var(--surface-sunken)]/40 p-2">
+          <div class="flex items-center gap-1.5 text-[var(--fg-muted)]">
+            <i class="pi pi-briefcase shrink-0 text-sky-600 text-[0.7rem] leading-none" />
+            <span class="line-clamp-2 text-[10px] font-semibold uppercase leading-tight tracking-wide">{{ t('globalCalendar.kindHearing') }}</span>
           </div>
-          <p class="mt-1 text-2xl font-semibold tabular-nums text-[var(--fg-default)] m-0">{{ kpis.hearings }}</p>
+          <p class="mt-0.5 m-0 text-lg font-semibold tabular-nums text-[var(--fg-default)]">{{ kpis.hearings }}</p>
         </div>
-        <div class="rounded-lg border border-[var(--surface-border)] bg-[var(--surface-sunken)]/40 p-3">
-          <div class="flex items-center gap-2 text-[var(--fg-muted)]">
-            <i class="pi pi-flag text-amber-600" />
-            <span class="text-xs font-semibold uppercase tracking-wide">{{ t('globalCalendar.kpiDeadlines') }}</span>
+        <div class="min-w-0 rounded-lg border border-[var(--surface-border)] bg-[var(--surface-sunken)]/40 p-2">
+          <div class="flex items-center gap-1.5 text-[var(--fg-muted)]">
+            <i class="pi pi-flag shrink-0 text-amber-600 text-[0.7rem] leading-none" />
+            <span class="line-clamp-2 text-[10px] font-semibold uppercase leading-tight tracking-wide">{{ t('globalCalendar.kpiDeadlines') }}</span>
           </div>
-          <p class="mt-1 text-2xl font-semibold tabular-nums text-[var(--fg-default)] m-0">{{ kpis.deadlinesToday }}</p>
+          <p class="mt-0.5 m-0 text-lg font-semibold tabular-nums text-[var(--fg-default)]">{{ kpis.deadlinesToday }}</p>
         </div>
-        <div class="rounded-lg border border-[var(--surface-border)] bg-[var(--surface-sunken)]/40 p-3">
-          <div class="flex items-center gap-2 text-[var(--fg-muted)]">
-            <i class="pi pi-calendar-plus text-amber-700" />
-            <span class="text-xs font-semibold uppercase tracking-wide">{{ t('globalCalendar.kpiDeadlinesNextDays') }}</span>
+        <div class="min-w-0 rounded-lg border border-[var(--surface-border)] bg-[var(--surface-sunken)]/40 p-2">
+          <div class="flex items-center gap-1.5 text-[var(--fg-muted)]">
+            <i class="pi pi-calendar-plus shrink-0 text-amber-700 text-[0.7rem] leading-none" />
+            <span class="line-clamp-2 text-[10px] font-semibold uppercase leading-tight tracking-wide">{{ t('globalCalendar.kpiDeadlinesNextDays') }}</span>
           </div>
-          <p class="mt-1 text-2xl font-semibold tabular-nums text-[var(--fg-default)] m-0">{{ kpis.deadlinesNext3 }}</p>
+          <p class="mt-0.5 m-0 text-lg font-semibold tabular-nums text-[var(--fg-default)]">{{ kpis.deadlinesNext3 }}</p>
         </div>
       </div>
 

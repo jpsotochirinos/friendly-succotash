@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { User } from '@tracker/db';
+import { clearExpiredUserDisable } from '../user-access.util';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -25,8 +26,17 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       { populate: ['organization', 'role', 'role.permissions'] as any, filters: false },
     );
 
-    if (!user || !user.isActive) {
+    if (!user) {
       throw new UnauthorizedException('User not found or inactive');
+    }
+
+    const cleared = clearExpiredUserDisable(user);
+    const now = new Date();
+    if (!user.isActive || (user.disabledUntil && user.disabledUntil > now)) {
+      throw new UnauthorizedException('User not found or inactive');
+    }
+    if (cleared) {
+      await this.em.flush();
     }
 
     return {

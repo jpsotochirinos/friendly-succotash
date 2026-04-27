@@ -22,7 +22,6 @@ import { SearchModule } from './modules/search/search.module';
 import { ScrapingModule } from './modules/scraping/scraping.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { RolesModule } from './modules/roles/roles.module';
-import { WorkflowTemplatesModule } from './modules/workflow-templates/workflow-templates.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { LlmModule } from './modules/llm/llm.module';
@@ -36,8 +35,14 @@ import { BillingModule } from './modules/billing/billing.module';
 import { WorkflowDefinitionsModule } from './modules/workflow-definitions/workflow-definitions.module';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module';
 import { FeedModule } from './modules/feed/feed.module';
+import { SignaturesModule } from './modules/signatures/signatures.module';
+import { LegalProcessModule } from './modules/legal/legal-process.module';
+import { BlueprintsModule } from './modules/blueprints/blueprints.module';
+import { ProcessTracksModule } from './modules/process-tracks/process-tracks.module';
+import { SinoeProposalsModule } from './modules/sinoe-proposals/sinoe-proposals.module';
 import { TenantInterceptor } from './common/interceptors/tenant.interceptor';
 import { ActivityLogInterceptor } from './common/interceptors/activity-log.interceptor';
+import { EmailModule } from './common/email/email.module';
 
 @Module({
   imports: [
@@ -45,6 +50,7 @@ import { ActivityLogInterceptor } from './common/interceptors/activity-log.inter
       isGlobal: true,
       envFilePath: '../../.env',
     }),
+    EmailModule,
     MikroOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
@@ -81,7 +87,6 @@ import { ActivityLogInterceptor } from './common/interceptors/activity-log.inter
     ScrapingModule,
     OrganizationsModule,
     RolesModule,
-    WorkflowTemplatesModule,
     InvitationsModule,
     LlmModule,
     AssistantModule,
@@ -94,6 +99,11 @@ import { ActivityLogInterceptor } from './common/interceptors/activity-log.inter
     WorkflowDefinitionsModule,
     WhatsAppModule,
     FeedModule,
+    SignaturesModule,
+    LegalProcessModule,
+    BlueprintsModule,
+    ProcessTracksModule,
+    SinoeProposalsModule,
   ],
   providers: [
     { provide: APP_INTERCEPTOR, useClass: TenantInterceptor },

@@ -7,11 +7,15 @@ import { computed } from 'vue';
 import Tag from 'primevue/tag';
 
 const props = defineProps<{
-  status: string;
+  status?: string | null;
   size?: 'small' | 'normal';
 }>();
 
+const normalizedStatus = computed(() => (props.status ?? '').trim());
+
 const severity = computed(() => {
+  const s = normalizedStatus.value;
+  if (!s) return 'secondary';
   const map: Record<string, string> = {
     pending: 'secondary',
     active: 'info',
@@ -30,8 +34,12 @@ const severity = computed(() => {
     submitted: 'success',
     revision_needed: 'warn',
   };
-  return map[props.status] || 'secondary';
+  return map[s] || 'secondary';
 });
 
-const label = computed(() => props.status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
+const label = computed(() => {
+  const s = normalizedStatus.value;
+  if (!s) return '—';
+  return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+});
 </script>

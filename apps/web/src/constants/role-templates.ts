@@ -9,8 +9,8 @@ export const ALL_PERMISSION_CODES = [
   'workflow_item:update',
   'workflow_item:delete',
   'workflow_item:comment',
-  'workflow_template:read',
-  'workflow_template:manage',
+  'blueprint:read',
+  'blueprint:manage',
   'document:create',
   'document:read',
   'document:update',
@@ -66,7 +66,7 @@ export function codesForTemplate(id: RoleTemplateId): string[] {
           c === 'workflow_item:comment',
       );
     case 'read_only':
-      return all.filter((c) => c.endsWith(':read') || c === 'workflow_template:read');
+      return all.filter((c) => c.endsWith(':read'));
     default:
       return [];
   }

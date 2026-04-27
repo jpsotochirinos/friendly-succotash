@@ -167,7 +167,8 @@
 
     <main class="flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-app">
       <div
-        class="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col overflow-y-auto overscroll-contain px-6 py-6 sm:px-8 sm:py-8"
+        class="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col px-6 py-6 sm:px-8 sm:py-8"
+        :class="isSettingsRoute ? 'overflow-hidden overscroll-contain' : 'overflow-y-auto overscroll-contain'"
       >
         <RouterView v-slot="{ Component, route }">
           <Transition name="view-fade" mode="out-in">
@@ -206,6 +207,9 @@ const sidebarNavOrderStore = useSidebarNavOrderStore();
 const { mode: themeMode, isDark, cycle: cycleTheme } = useTheme();
 const collapsed = ref(localStorage.getItem('sidebar-collapsed') === 'true');
 const { unreadCount: feedUnreadCount } = useFeedUnread();
+
+/** Settings uses an inner scroll (sidebar sticky); avoid scrolling the whole main column. */
+const isSettingsRoute = computed(() => route.path.startsWith('/settings'));
 
 const userMenuPanel = ref<InstanceType<typeof Popover> | null>(null);
 const userMenuOpen = ref(false);

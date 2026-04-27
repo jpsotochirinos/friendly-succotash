@@ -14,7 +14,12 @@
     "docker:up": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml up -d",
     "docker:down": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml down",
     "docker:reset": "docker compose -f infra/docker-compose.yml -f infra/docker-compose.dev.yml down -v && pnpm docker:up",
-    "setup": "bash scripts/setup-dev.sh"
+    "setup": "bash scripts/setup-dev.sh",
+    "verify:google-oauth": "bash scripts/verify-google-oauth-env.sh",
+    "reset:pilot": "node scripts/reset-pilot.mjs",
+    "db:seed:system-blueprints": "pnpm --filter @tracker/db seed:system-blueprints",
+    "db:migrate:workflow-to-activities": "pnpm --filter @tracker/db migrate:data:workflow-to-activities",
+    "test:brevo-email": "node --env-file=.env scripts/test-brevo-email.mjs"
   },
   "devDependencies": {
     "turbo": "latest",

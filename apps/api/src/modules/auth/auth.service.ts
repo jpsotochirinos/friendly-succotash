@@ -8,6 +8,8 @@ import { PlanTier } from '@tracker/shared';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { EmailService } from '../../common/email/email.service';
+import { assertUserCanAuthenticate, clearExpiredUserDisable } from './user-access.util';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +17,7 @@ export class AuthService {
     private readonly em: EntityManager,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly email: EmailService,
   ) {}
 
   /** Public signup flow: whether this email can register (not already in use). */
@@ -79,12 +82,21 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (clearExpiredUserDisable(user)) {
+      await this.em.flush();
+    }
+    assertUserCanAuthenticate(user);
+
     user.lastLoginAt = new Date();
     await this.em.flush();
 
     return this.generateAuthResponse(user);
   }
 
+  /**
+   * Google OAuth callback: find user by googleId or email; link googleId to existing
+   * email; create org + Owner role for new users. MVP: see docs/auth-google-oauth.md.
+   */
   async googleLogin(googleProfile: {
     googleId: string;
     email: string;
@@ -106,7 +118,9 @@ export class AuthService {
         user.avatarUrl = googleProfile.avatarUrl;
       }
       user.lastLoginAt = new Date();
+      clearExpiredUserDisable(user);
       await this.em.flush();
+      assertUserCanAuthenticate(user);
     } else {
       const org = this.em.create(Organization, {
         name: `${googleProfile.firstName || googleProfile.email}'s Organization`,
@@ -156,24 +170,7 @@ export class AuthService {
 
     const magicLinkUrl = `${this.config.get('FRONTEND_URL')}/auth/magic-link?token=${token}`;
 
-    const nodemailer = await import('nodemailer');
-    const transporter = nodemailer.createTransport({
-      host: this.config.get('SMTP_HOST', 'localhost'),
-      port: this.config.get('SMTP_PORT', 1025),
-      secure: false,
-    });
-
-    await transporter.sendMail({
-      from: this.config.get('SMTP_FROM', 'noreply@tracker.local'),
-      to: email,
-      subject: 'Your login link - Tracker',
-      html: `
-        <h2>Login to Tracker</h2>
-        <p>Click the link below to log in. This link expires in 15 minutes.</p>
-        <a href="${magicLinkUrl}">Log in to Tracker</a>
-        <p>If you didn't request this, you can safely ignore this email.</p>
-      `,
-    });
+    await this.email.sendMagicLinkEmail(email, magicLinkUrl);
   }
 
   async verifyMagicLink(token: string): Promise<AuthResponseDto> {
@@ -192,9 +189,12 @@ export class AuthService {
         { populate: ['organization', 'role'] as any, filters: false },
       );
 
-      if (!user || !user.isActive) {
+      if (!user) {
         throw new UnauthorizedException('User not found or inactive');
       }
+      clearExpiredUserDisable(user);
+      await this.em.flush();
+      assertUserCanAuthenticate(user);
 
       user.lastLoginAt = new Date();
       await this.em.flush();
@@ -205,6 +205,75 @@ export class AuthService {
     }
   }
 
+  /**
+   * Password reset: JWT signed with MAGIC_LINK_SECRET, type `password-reset`.
+   * In non-production, response may include `devResetUrl` for Mailpit-free local testing.
+   */
+  async requestPasswordReset(email: string): Promise<{ message: string; devResetUrl?: string }> {
+    const trimmed = email?.trim();
+    if (!trimmed) {
+      return { message: 'If the email exists, a reset link has been sent' };
+    }
+
+    const user = await this.em.findOne(User, { email: trimmed }, { filters: false });
+    if (!user) {
+      return { message: 'If the email exists, a reset link has been sent' };
+    }
+
+    const token = this.jwtService.sign(
+      { sub: user.id, email: user.email, type: 'password-reset' },
+      {
+        secret: this.config.getOrThrow('MAGIC_LINK_SECRET'),
+        expiresIn: this.config.get('PASSWORD_RESET_EXPIRES_IN', '30m'),
+      },
+    );
+
+    const base = this.config.get('FRONTEND_URL', 'http://localhost:5173').replace(/\/$/, '');
+    const resetUrl = `${base}/auth/reset-password?token=${encodeURIComponent(token)}`;
+
+    await this.email.sendPasswordResetEmail(trimmed, resetUrl);
+
+    const devResetUrl =
+      this.config.get('NODE_ENV', 'development') !== 'production' ? resetUrl : undefined;
+
+    return { message: 'If the email exists, a reset link has been sent', devResetUrl };
+  }
+
+  async resetPassword(token: string, plainPassword: string): Promise<AuthResponseDto> {
+    try {
+      const payload = this.jwtService.verify<{ sub: string; type?: string }>(token, {
+        secret: this.config.getOrThrow('MAGIC_LINK_SECRET'),
+      });
+
+      if (payload.type !== 'password-reset') {
+        throw new UnauthorizedException('Invalid token type');
+      }
+
+      const user = await this.em.findOne(
+        User,
+        { id: payload.sub },
+        { populate: ['organization', 'role'] as any, filters: false },
+      );
+
+      if (!user) {
+        throw new UnauthorizedException('User not found or inactive');
+      }
+
+      clearExpiredUserDisable(user);
+      await this.em.flush();
+      assertUserCanAuthenticate(user);
+
+      user.passwordHash = await bcrypt.hash(plainPassword, 12);
+      user.refreshToken = undefined;
+      user.lastLoginAt = new Date();
+      await this.em.flush();
+
+      return this.generateAuthResponse(user);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired reset link');
+    }
+  }
+
   async refreshTokens(userId: string, oldRefreshToken: string): Promise<AuthResponseDto> {
     const user = await this.em.findOne(
       User,
@@ -212,9 +281,13 @@ export class AuthService {
       { populate: ['organization', 'role'] as any, filters: false },
     );
 
-    if (!user || !user.isActive || user.refreshToken !== oldRefreshToken) {
+    if (!user || user.refreshToken !== oldRefreshToken) {
       throw new UnauthorizedException('Invalid refresh token');
     }
+
+    clearExpiredUserDisable(user);
+    await this.em.flush();
+    assertUserCanAuthenticate(user);
 
     return this.generateAuthResponse(user);
   }
@@ -234,9 +307,12 @@ export class AuthService {
       { id: userId },
       { populate: ['organization', 'role'] as any, filters: false },
     );
-    if (!user || !user.isActive) {
+    if (!user) {
       throw new UnauthorizedException('User not found or inactive');
     }
+    clearExpiredUserDisable(user);
+    await this.em.flush();
+    assertUserCanAuthenticate(user);
     return this.generateAuthResponse(user);
   }
 

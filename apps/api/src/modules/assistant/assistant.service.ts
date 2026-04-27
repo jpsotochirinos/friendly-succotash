@@ -330,39 +330,69 @@ export class AssistantService {
         const forLlm = sanitizeAssistantHistory(
           windowed as ChatMessage[],
         ) as ChatMessage[];
-        const data = (await this.llm.chatCompletionJson({
+        const llmRequestBase = {
           messages: prepareMessagesForLlm(forLlm as ChatMessage[], channel) as unknown[],
           tools: openAiTools.length ? openAiTools : undefined,
-          tool_choice: openAiTools.length ? 'auto' : undefined,
+          tool_choice: openAiTools.length ? ('auto' as const) : undefined,
           options: {
-            temperature: 0.5,
+            temperature: 0.7,
             maxTokens: Number(this.config.get('ASSISTANT_MAX_TOKENS')) || 4096,
             model: this.config.get<string>('ASSISTANT_MODEL') || undefined,
           },
-        })) as {
-          choices?: Array<{
-            message?: ChatMessage;
-          }>;
         };
 
-        const msg = data.choices?.[0]?.message;
+        let data = (await this.llm.chatCompletionJson(
+          llmRequestBase,
+        )) as { choices?: Array<{ message?: ChatMessage }> };
+        let msg = data.choices?.[0]?.message;
         if (!msg) {
           write({ type: 'error', message: 'Empty model response' });
           sseDone();
           return;
         }
 
-        const toolCalls = msg.tool_calls || [];
+        let toolCalls = msg.tool_calls || [];
         if (!toolCalls.length) {
-          const text = msg.content || '';
-          if (text) {
-            const step = 28;
-            for (let i = 0; i < text.length; i += step) {
-              write({ type: 'assistant_delta', chunk: text.slice(i, i + step) });
+          let text = String(msg.content ?? '').trim();
+          if (!text) {
+            console.warn(
+              '[assistant] model returned no text and no tool_calls; retrying LLM once',
+            );
+            data = (await this.llm.chatCompletionJson({
+              ...llmRequestBase,
+              options: { ...llmRequestBase.options, temperature: 0.55 },
+            })) as { choices?: Array<{ message?: ChatMessage }> };
+            const msg2 = data.choices?.[0]?.message;
+            if (msg2) {
+              msg = msg2;
+              toolCalls = msg2.tool_calls || [];
+              if (toolCalls.length) {
+                working.push({
+                  role: 'assistant',
+                  content: msg2.content ?? null,
+                  tool_calls: toolCalls,
+                });
+                continue;
+              }
+              text = String(msg2.content ?? '').trim();
             }
-            write({ type: 'assistant_message', content: text });
-            working.push({ role: 'assistant', content: text });
           }
+          if (!text) {
+            write({
+              type: 'error',
+              message:
+                'El modelo no generó una respuesta. Intenta de nuevo o reformula la pregunta.',
+            });
+            await persistSnapshot();
+            sseDone();
+            return;
+          }
+          const step = 28;
+          for (let i = 0; i < text.length; i += step) {
+            write({ type: 'assistant_delta', chunk: text.slice(i, i + step) });
+          }
+          write({ type: 'assistant_message', content: text });
+          working.push({ role: 'assistant', content: text });
           await persistSnapshot();
           sseDone();
           return;

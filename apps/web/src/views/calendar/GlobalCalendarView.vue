@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-6 min-h-0 pb-20 md:pb-0">
+  <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-hidden pb-20 md:pb-0">
     <div v-if="!authReady" class="flex justify-center py-20">
       <ProgressSpinner />
     </div>
@@ -10,6 +10,7 @@
       </div>
     </template>
     <template v-else>
+      <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden pb-4 md:pb-0">
       <PageHeader :title="t('globalCalendar.pageTitle')" :subtitle="t('globalCalendar.pageSubtitle')">
         <template #actions>
           <SelectButton
@@ -31,7 +32,7 @@
         </template>
       </PageHeader>
 
-      <div class="flex flex-col xl:flex-row gap-4 min-h-0">
+      <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden xl:flex-row">
         <CalendarSidebar
           v-model="navDate"
           :kpis="kpiCards"
@@ -42,8 +43,8 @@
           @select-date="onSidebarDate"
         />
 
-        <div class="flex-1 min-w-0 flex flex-col gap-3">
-          <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden">
+          <div class="flex shrink-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div class="flex flex-wrap items-center gap-2 min-w-0">
               <ButtonGroup class="[&_.p-button]:py-1.5">
                 <Button
@@ -96,6 +97,7 @@
           </div>
 
           <DaySummaryBar
+            class="shrink-0"
             :conflicts="summaryConflicts"
             :due-today="summaryDueToday"
             :unassigned="summaryUnassigned"
@@ -103,11 +105,11 @@
             @open-conflicts="showConflictDialog = true"
           />
 
-          <p v-if="loadError" class="text-sm text-red-600 dark:text-red-400 m-0">{{ loadError }}</p>
+          <p v-if="loadError" class="m-0 shrink-0 text-sm text-red-600 dark:text-red-400">{{ loadError }}</p>
 
           <div
             v-if="viewMode !== 'team'"
-            class="relative rounded-xl border border-[var(--surface-border)] overflow-hidden bg-[var(--surface-raised)] p-1 min-h-[480px]"
+            class="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-0.5 sm:p-1"
           >
             <div
               v-if="fcReady && !calendarFirstSuccessfulLoad"
@@ -115,13 +117,19 @@
               aria-hidden="true"
             >
               <div class="h-8 w-1/3 rounded-md bg-[var(--surface-sunken)]" />
-              <div class="flex-1 min-h-[320px] rounded-lg bg-[var(--surface-sunken)]/80" />
+              <div class="min-h-[320px] flex-1 rounded-lg bg-[var(--surface-sunken)]/80" />
             </div>
-            <FullCalendar v-if="fcReady" ref="fcRef" class="relative z-[2]" :options="fcOptions" />
+            <FullCalendar
+              v-if="fcReady"
+              ref="fcRef"
+              class="global-calendar-fc relative z-[2] h-full min-h-0"
+              :options="fcOptions"
+            />
           </div>
 
           <TeamTimelineView
             v-else
+            class="min-h-0 flex-1 overflow-auto"
             :title="t('globalCalendar.teamViewTitle')"
             :day="navDate"
             :users="teamUsers"
@@ -129,6 +137,7 @@
             @select="onTimelineSelect"
           />
         </div>
+      </div>
       </div>
 
       <EventComposerDialog
@@ -147,6 +156,27 @@
         :user-options="userOptions"
         @updated="onDrawerUpdated"
       />
+
+      <Dialog
+        v-model:visible="showDayOverflowDialog"
+        :header="dayOverflowDialogTitle"
+        modal
+        :style="{ width: 'min(520px, 95vw)' }"
+        @hide="clearDayOverflowDialog"
+      >
+        <ul v-if="dayOverflowRows.length" class="m-0 max-h-[min(60vh,28rem)] list-none space-y-2 overflow-y-auto p-0 text-sm">
+          <li v-for="row in dayOverflowRows" :key="row.id">
+            <button
+              type="button"
+              class="w-full rounded-lg border border-[var(--surface-border)] bg-[var(--surface-raised)] px-3 py-2 text-left transition hover:bg-[var(--surface-sunken)]"
+              @click="onDayOverflowRowClick(row)"
+            >
+              <span class="font-medium text-[var(--fg-default)]">{{ row.title }}</span>
+            </button>
+          </li>
+        </ul>
+        <p v-else class="m-0 text-sm text-[var(--fg-muted)]">{{ t('globalCalendar.noEventsThisDay') }}</p>
+      </Dialog>
 
       <Dialog
         v-model:visible="showConflictDialog"
@@ -212,7 +242,12 @@ import { apiClient } from '@/api/client';
 import { usePermissions } from '@/composables/usePermissions';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCalendarStore } from '@/stores/calendar.store';
-import { apiEventToFullCalendar, parseWorkflowItemIdFromEventId, type ApiCalendarEvent } from '@/composables/useCalendarAdapter';
+import {
+  apiEventToFullCalendar,
+  parseActivityIdFromEventId,
+  parseWorkflowItemIdFromEventId,
+  type ApiCalendarEvent,
+} from '@/composables/useCalendarAdapter';
 import { useCalendarShortcuts } from '@/composables/useCalendarShortcuts';
 import { matchesCalendarFilters, classifyApiEvent, type CalendarFilterKind } from '@/composables/calendarEventKind';
 import { countHearingOverlapPairs, listHearingOverlapPairs } from '@/composables/calendarOverlap';
@@ -261,6 +296,20 @@ const showHelp = ref(false);
 const drawerVisible = ref(false);
 const selectedApiEvent = ref<ApiCalendarEvent | null>(null);
 const showConflictDialog = ref(false);
+const showDayOverflowDialog = ref(false);
+const dayOverflowDate = ref<Date | null>(null);
+const dayOverflowRows = ref<Array<{ id: string; title: string }>>([]);
+
+const dayOverflowDialogTitle = computed(() => {
+  const d = dayOverflowDate.value;
+  if (!d) return t('globalCalendar.dayActivitiesModalTitle');
+  return d.toLocaleDateString(i18nLocale.value, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+});
 
 const trackableOptions = ref<Array<{ label: string; value: string }>>([]);
 const usersList = ref<Array<{ id: string; email: string; firstName?: string }>>([]);
@@ -511,14 +560,63 @@ watch(
   { deep: true },
 );
 
+function clearDayOverflowDialog() {
+  dayOverflowRows.value = [];
+  dayOverflowDate.value = null;
+}
+
+function handleMoreLinkClick(info: { date: Date; allSegs: Array<{ event: EventApi }>; jsEvent: UIEvent }) {
+  info.jsEvent.preventDefault();
+  dayOverflowDate.value = info.date;
+  const seen = new Set<string>();
+  const rows: { id: string; title: string }[] = [];
+  for (const seg of info.allSegs) {
+    const ev = seg.event;
+    const id = String(ev.id);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    rows.push({ id, title: (ev.title || '').trim() || t('globalCalendar.untitledActivity') });
+  }
+  dayOverflowRows.value = rows;
+  showDayOverflowDialog.value = true;
+}
+
+function onDayOverflowRowClick(row: { id: string; title: string }) {
+  const raw = rawEvents.value.find((r) => r.id === row.id);
+  if (raw) {
+    selectedApiEvent.value = raw;
+    drawerVisible.value = true;
+    showDayOverflowDialog.value = false;
+    clearDayOverflowDialog();
+    return;
+  }
+  const api = fcRef.value?.getApi();
+  const fe = api?.getEventById(row.id);
+  if (fe) {
+    const xp = fe.extendedProps as Record<string, unknown>;
+    selectedApiEvent.value = {
+      id: String(fe.id),
+      source: String(xp.source || 'workflow'),
+      title: fe.title || '',
+      start: fe.start?.toISOString() || '',
+      end: fe.end?.toISOString() || '',
+      allDay: !!fe.allDay,
+      extendedProps: { ...xp },
+    };
+    drawerVisible.value = true;
+    showDayOverflowDialog.value = false;
+    clearDayOverflowDialog();
+  }
+}
+
 async function handleReschedule(arg: EventDropArg | { event: EventApi; revert: () => void }) {
-  const id = parseWorkflowItemIdFromEventId(arg.event.id);
-  if (!id) {
+  const raw = String(arg.event.id);
+  if (!parseActivityIdFromEventId(raw) && !parseWorkflowItemIdFromEventId(raw) && !/^[0-9a-f-]{36}$/i.test(raw)) {
     arg.revert();
     return;
   }
   try {
-    await apiClient.patch(`/calendar/events/${id}/reschedule`, {
+    await apiClient.patch(`/calendar/events/${encodeURIComponent(raw)}/reschedule`, {
       startDate: arg.event.start?.toISOString(),
       dueDate: arg.event.end?.toISOString(),
       allDay: arg.event.allDay,
@@ -538,13 +636,16 @@ function buildFcOptions(): CalendarOptions {
     initialView: initial,
     headerToolbar: false,
     locale: i18nLocale.value.startsWith('es') ? esLocale : 'en',
-    height: 'auto',
+    height: '100%',
+    fixedWeekCount: true,
+    expandRows: true,
+    dayMaxEvents: 3,
+    moreLinkClick: handleMoreLinkClick,
     editable: canUpdate.value,
     eventStartEditable: canUpdate.value,
     eventDurationEditable: canUpdate.value,
     selectable: canCreate.value,
     selectMirror: true,
-    dayMaxEvents: true,
     events: (info, successCallback, failureCallback) => {
       void (async () => {
         try {
@@ -604,6 +705,13 @@ function buildFcOptions(): CalendarOptions {
 }
 
 const fcOptions = shallowRef<CalendarOptions>(buildFcOptions());
+
+watch([canUpdate, canCreate, i18nLocale], () => {
+  fcOptions.value = buildFcOptions();
+  void nextTick(() => {
+    fcRef.value?.getApi()?.updateSize();
+  });
+});
 
 function onViewModeSelect(v: GridViewMode) {
   void setViewMode(v);
@@ -722,3 +830,89 @@ onMounted(async () => {
   }
 });
 </script>
+
+<style scoped>
+/* Evita scroll vertical interno en vista mes: las filas se reparten con expandRows. */
+.global-calendar-fc :deep(.fc) {
+  height: 100% !important;
+  /* Escala ligeramente el contenido del calendario según ancho/alto de ventana. */
+  font-size: clamp(0.7rem, 0.2vw + 0.65rem, 0.875rem);
+}
+.global-calendar-fc :deep(.fc-scroller) {
+  overflow: hidden !important;
+}
+.global-calendar-fc :deep(.fc-daygrid-body) {
+  width: 100% !important;
+}
+
+/* Cabecera de días (vista mes) */
+.global-calendar-fc :deep(.fc-col-header-cell) {
+  padding: 0.35rem 0.15rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.global-calendar-fc :deep(.fc-col-header-cell-cushion) {
+  padding: 0.1rem 0.15rem;
+}
+
+/* Celdas y números de día */
+.global-calendar-fc :deep(.fc-daygrid-day-frame) {
+  min-height: 0;
+}
+.global-calendar-fc :deep(.fc-daygrid-day-number) {
+  padding: 0.1rem 0.25rem 0.15rem;
+  font-size: 0.95em;
+}
+
+/* Eventos en rejilla (mes) */
+.global-calendar-fc :deep(.fc-h-event) {
+  line-height: 1.15;
+  font-size: 0.88em;
+  margin-top: 1px;
+  border-radius: 0.2rem;
+}
+.global-calendar-fc :deep(.fc-h-event .fc-event-main) {
+  padding: 0 0.1rem 0.05rem;
+}
+.global-calendar-fc :deep(.fc-daygrid-more-link) {
+  font-size: 0.85em;
+  padding: 0 0.1rem;
+}
+
+/* Semana / día: reloj y slots un poco más compactos */
+.global-calendar-fc :deep(.fc-timegrid-axis-cushion) {
+  font-size: 0.8em;
+}
+.global-calendar-fc :deep(.fc-timegrid-slot-label) {
+  font-size: 0.78em;
+  vertical-align: top;
+}
+.global-calendar-fc :deep(.fc-timegrid-col-events) {
+  font-size: 0.9em;
+}
+
+/* Vista agenda (lista) */
+.global-calendar-fc :deep(.fc-list-day-cushion),
+.global-calendar-fc :deep(.fc-list-event-time) {
+  font-size: 0.95em;
+}
+.global-calendar-fc :deep(.fc-list-event-title) {
+  line-height: 1.3;
+  font-size: 0.95em;
+}
+
+/* Pantallas estrejas o poco altas: un escalón más compacto */
+@media (max-width: 1400px) {
+  .global-calendar-fc :deep(.fc) {
+    font-size: clamp(0.65rem, 0.18vw + 0.58rem, 0.8rem);
+  }
+}
+@media (max-height: 850px) {
+  .global-calendar-fc :deep(.fc) {
+    font-size: clamp(0.65rem, 0.1vw + 0.6rem, 0.8rem);
+  }
+  .global-calendar-fc :deep(.fc-col-header-cell) {
+    padding: 0.3rem 0.1rem;
+  }
+}
+</style>

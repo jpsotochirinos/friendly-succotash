@@ -28,4 +28,7 @@ export * from './import/index';
 export * from './whatsapp/notification-events';
 export * from './billing/plan-catalog';
 export * from './workflow/resolve';
+export * from './legal-calendar/deadline-calculator';
+export * from './blueprint/resolve-tree';
+export * from './process-track/stage-work';
 export * from './integrations/sinoe/types';

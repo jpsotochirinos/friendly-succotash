@@ -40,6 +40,10 @@ export class User extends TenantBaseEntity {
   @Property({ default: true })
   isActive: boolean = true;
 
+  /** When set and in the future, user cannot access the app until this instant (or admin re-enables). */
+  @Property({ nullable: true })
+  disabledUntil?: Date | null;
+
   @Property({ nullable: true })
   lastLoginAt?: Date;
 

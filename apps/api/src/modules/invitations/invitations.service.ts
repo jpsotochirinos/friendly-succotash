@@ -13,6 +13,7 @@ import { UsersService } from '../users/users.service';
 import { AuthService } from '../auth/auth.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { AcceptInvitationDto } from './dto/accept-invitation.dto';
+import { EmailService } from '../../common/email/email.service';
 
 function hashInviteToken(plain: string): string {
   return createHash('sha256').update(plain, 'utf8').digest('hex');
@@ -33,6 +34,7 @@ export class InvitationsService {
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
     private readonly config: ConfigService,
+    private readonly email: EmailService,
   ) {}
 
   private inviteTtlMs(): number {
@@ -44,27 +46,6 @@ export class InvitationsService {
   private buildInviteUrl(plainToken: string): string {
     const base = this.config.get('FRONTEND_URL', 'http://localhost:5173').replace(/\/$/, '');
     return `${base}/auth/invite?token=${encodeURIComponent(plainToken)}`;
-  }
-
-  private async sendInvitationEmail(to: string, inviteUrl: string, organizationName: string): Promise<void> {
-    const nodemailer = await import('nodemailer');
-    const transporter = nodemailer.createTransport({
-      host: this.config.get('SMTP_HOST', 'localhost'),
-      port: this.config.get('SMTP_PORT', 1025),
-      secure: false,
-    });
-
-    await transporter.sendMail({
-      from: this.config.get('SMTP_FROM', 'noreply@tracker.local'),
-      to,
-      subject: `Invitation to join ${organizationName} — Alega`,
-      html: `
-        <h2>You've been invited</h2>
-        <p>You were invited to join <strong>${organizationName}</strong> on Alega.</p>
-        <p><a href="${inviteUrl}">Accept invitation</a></p>
-        <p>If you did not expect this, you can ignore this email.</p>
-      `,
-    });
   }
 
   async getRoleOptions(organizationId: string): Promise<{ id: string; name: string }[]> {
@@ -178,7 +159,7 @@ export class InvitationsService {
 
     const orgName = inv.organization?.name ?? 'your organization';
     const inviteUrl = this.buildInviteUrl(plainToken);
-    await this.sendInvitationEmail(inv.email, inviteUrl, orgName);
+    await this.email.sendInvitationEmail(inv.email, inviteUrl, orgName);
 
     return { inviteUrl };
   }

@@ -1,6 +1,7 @@
 <template>
   <div class="max-w-4xl flex flex-col gap-8">
     <PageHeader
+      v-if="!embedded"
       :title="t('settings.sections.billing')"
       :subtitle="t('settings.billingUi.billingPageSubtitle')"
     />
@@ -114,6 +115,8 @@ import {
   type PaymentMethodDto,
 } from '@/api/billing';
 import { useAuthStore } from '@/stores/auth.store';
+
+withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
 
 const { t } = useI18n();
 const toast = useToast();

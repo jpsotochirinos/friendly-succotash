@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { MagicLinkRequestDto } from './dto/magic-link.dto';
+import { RequestPasswordResetDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
@@ -97,6 +98,22 @@ export class AuthController {
   async requestMagicLink(@Body() dto: MagicLinkRequestDto) {
     await this.authService.sendMagicLink(dto.email);
     return { message: 'If the email exists, a magic link has been sent' };
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() dto: RequestPasswordResetDto) {
+    return this.authService.requestPasswordReset(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: ResetPasswordDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.resetPassword(dto.token, dto.password);
+    this.setRefreshTokenCookie(res, result.refreshToken);
+    return result;
   }
 
   @Public()

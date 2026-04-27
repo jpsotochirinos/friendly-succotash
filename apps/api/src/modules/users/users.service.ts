@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { User } from '@tracker/db';
 import * as bcrypt from 'bcrypt';
@@ -38,6 +38,47 @@ export class UsersService extends BaseCrudService<User> {
   /**
    * Fuzzy name search for assistant assignee resolution (typo-tolerant).
    */
+  /**
+   * Disable user for a period (`until` ISO) or indefinitely (`until` null), or re-enable (`enable: true`).
+   */
+  async setUserAccess(
+    organizationId: string,
+    actorUserId: string,
+    targetUserId: string,
+    body: { until?: string | null; enable?: boolean },
+  ): Promise<User> {
+    if (targetUserId === actorUserId) {
+      throw new BadRequestException('Cannot change your own access status');
+    }
+    const user = await this.em.findOne(
+      User,
+      { id: targetUserId, organization: organizationId } as any,
+      { filters: false },
+    );
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (body.enable === true) {
+      user.isActive = true;
+      user.disabledUntil = null;
+    } else {
+      user.isActive = false;
+      if (body.until != null && body.until !== '') {
+        const d = new Date(body.until);
+        if (Number.isNaN(d.getTime())) {
+          throw new BadRequestException('Invalid until date');
+        }
+        user.disabledUntil = d;
+      } else {
+        user.disabledUntil = null;
+      }
+    }
+
+    await this.em.flush();
+    return user;
+  }
+
   async searchUsersForAssignee(
     organizationId: string,
     query: string,

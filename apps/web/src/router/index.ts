@@ -9,11 +9,39 @@ export const router = createRouter({
       path: '/auth',
       children: [
         { path: 'login', name: 'login', component: () => import('../views/auth/LoginView.vue') },
+        {
+          path: 'forgot-password',
+          name: 'forgot-password',
+          component: () => import('../views/auth/ForgotPasswordView.vue'),
+        },
+        {
+          path: 'reset-password',
+          name: 'reset-password',
+          component: () => import('../views/auth/ResetPasswordView.vue'),
+        },
         { path: 'register', name: 'register', component: () => import('../views/auth/RegisterView.vue') },
         { path: 'callback', name: 'auth-callback', component: () => import('../views/auth/AuthCallback.vue') },
         { path: 'magic-link', name: 'magic-link', component: () => import('../views/auth/MagicLinkVerify.vue') },
         { path: 'invite', name: 'invite-accept', component: () => import('../views/auth/InviteAcceptView.vue') },
       ],
+      meta: { public: true },
+    },
+    {
+      path: '/sign',
+      name: 'signature-external',
+      component: () => import('../views/signatures/SignatureExternalView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/verify-req/:id',
+      name: 'verify-req',
+      component: () => import('../views/signatures/SignatureVerifyView.vue'),
+      meta: { public: true },
+    },
+    {
+      path: '/verify/:hash',
+      name: 'verify-hash',
+      component: () => import('../views/signatures/SignatureVerifyView.vue'),
       meta: { public: true },
     },
     {
@@ -24,6 +52,12 @@ export const router = createRouter({
       meta: { requiresAuth: true, requiresPermission: 'document:read' },
     },
     {
+      path: '/onboarding',
+      name: 'onboarding',
+      component: () => import('../views/onboarding/OnboardingWizard.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/',
       component: AppLayout,
       meta: { requiresAuth: true },
@@ -32,6 +66,18 @@ export const router = createRouter({
           path: '',
           name: 'home',
           component: () => import('../views/HomeView.vue'),
+        },
+        {
+          path: 'sinoe-proposals',
+          name: 'sinoe-inbox',
+          component: () => import('../views/sinoe/SinoeInboxView.vue'),
+          meta: { requiresPermission: 'trackable:read' },
+        },
+        {
+          path: 'trackables/new',
+          name: 'trackable-wizard',
+          component: () => import('../views/trackables/NewTrackableWizardView.vue'),
+          meta: { requiresPermission: 'trackable:create' },
         },
         {
           path: 'trackables',
@@ -86,16 +132,22 @@ export const router = createRouter({
           meta: { requiresPermission: 'document:read' },
         },
         {
+          path: 'signatures',
+          name: 'signatures',
+          component: () => import('../views/signatures/SignatureRequestsView.vue'),
+          meta: { requiresPermission: 'signature:sign' },
+        },
+        {
+          path: 'signatures/:requestId/sign',
+          name: 'signature-sign',
+          component: () => import('../views/signatures/SignatureSignView.vue'),
+          meta: { requiresPermission: 'signature:sign' },
+        },
+        {
           path: 'templates',
           name: 'templates',
           component: () => import('../views/documents/TemplateSearchView.vue'),
           meta: { requiresPermission: 'document:read' },
-        },
-        {
-          path: 'workflow-templates/:id/edit',
-          name: 'workflow-template-edit',
-          component: () => import('../views/templates/WorkflowTemplateEditView.vue'),
-          props: true,
         },
         {
           path: 'settings',
@@ -105,12 +157,14 @@ export const router = createRouter({
             {
               path: 'general',
               name: 'settings-general',
-              component: () => import('../views/settings/SettingsGeneralView.vue'),
+              component: () => import('../views/settings/SettingsGeneralAccountView.vue'),
             },
             {
               path: 'account',
-              name: 'settings-account',
-              component: () => import('../views/settings/SettingsAccountView.vue'),
+              redirect: (to) => ({
+                path: '/settings/general',
+                query: { ...to.query, tab: 'account' },
+              }),
             },
             {
               path: 'migration',
@@ -131,6 +185,19 @@ export const router = createRouter({
               meta: { requiresPermission: 'sinoe:manage' },
             },
             {
+              path: 'blueprints',
+              name: 'settings-blueprints',
+              component: () => import('../views/blueprints/BlueprintsListView.vue'),
+              meta: { requiresPermission: 'blueprint:read' },
+            },
+            {
+              path: 'blueprints/:id',
+              name: 'settings-blueprint-editor',
+              component: () => import('../views/blueprints/BlueprintEditorView.vue'),
+              meta: { requiresPermission: 'blueprint:read' },
+              props: true,
+            },
+            {
               path: 'whatsapp',
               name: 'settings-whatsapp',
               component: () => import('../views/settings/SettingsWhatsAppView.vue'),
@@ -142,22 +209,31 @@ export const router = createRouter({
               component: () => import('../views/settings/SettingsComingSoonView.vue'),
             },
             {
-              path: 'billing',
-              name: 'settings-billing',
-              component: () => import('../views/settings/SettingsBillingView.vue'),
+              path: 'subscription',
+              name: 'settings-subscription',
+              component: () => import('../views/settings/SettingsSubscriptionView.vue'),
               meta: { requiresPermission: 'billing:read' },
+            },
+            {
+              path: 'billing',
+              redirect: (to) => ({
+                path: '/settings/subscription',
+                query: { ...to.query, tab: 'billing' },
+              }),
             },
             {
               path: 'credits',
-              name: 'settings-credits',
-              component: () => import('../views/settings/SettingsCreditsView.vue'),
-              meta: { requiresPermission: 'billing:read' },
+              redirect: (to) => ({
+                path: '/settings/subscription',
+                query: { ...to.query, tab: 'credits' },
+              }),
             },
             {
               path: 'plan',
-              name: 'settings-plan',
-              component: () => import('../views/settings/SettingsPlanView.vue'),
-              meta: { requiresPermission: 'billing:read' },
+              redirect: (to) => ({
+                path: '/settings/subscription',
+                query: { ...to.query, tab: 'plan' },
+              }),
             },
             {
               path: 'users',
@@ -175,35 +251,9 @@ export const router = createRouter({
               component: () => import('../views/settings/SettingsFeedSourcesView.vue'),
               meta: { requiresPermission: 'feed:manage' },
             },
-            {
-              path: 'workflow-templates',
-              name: 'settings-workflow-templates',
-              component: () => import('../views/templates/WorkflowTemplatesView.vue'),
-            },
-            {
-              path: 'workflow-rules',
-              name: 'settings-workflow-rules',
-              component: () => import('../views/settings/SettingsWorkflowRulesView.vue'),
-              meta: { requiresPermission: 'workflow:update' },
-            },
-            {
-              path: 'workflows',
-              name: 'settings-workflows',
-              component: () => import('../views/settings/WorkflowsListView.vue'),
-              meta: { requiresPermission: 'workflow:update' },
-            },
-            {
-              path: 'workflows/:id/edit',
-              name: 'settings-workflow-edit',
-              component: () => import('../views/settings/WorkflowEditView.vue'),
-              props: true,
-              meta: { requiresPermission: 'workflow:update' },
-            },
-            { path: 'workflow', redirect: { name: 'settings-workflows' } },
           ],
         },
         { path: 'roles', redirect: { name: 'settings-roles' } },
-        { path: 'workflow-templates', redirect: { name: 'settings-workflow-templates' } },
         {
           path: 'trash',
           redirect: { path: '/trackables', query: { scope: 'trash' } },
@@ -228,9 +278,9 @@ export const router = createRouter({
           meta: { requiresPermission: 'import:manage' },
         },
         {
-          path: 'onboarding',
-          name: 'onboarding',
-          component: () => import('../views/onboarding/OnboardingWizard.vue'),
+          path: 'dev/confirm-dialog-base',
+          name: 'dev-confirm-dialog-base',
+          component: () => import('../views/dev/ConfirmDialogBaseShowcaseView.vue'),
         },
       ],
     },
@@ -270,6 +320,10 @@ router.beforeEach(async (to) => {
     if (!perms.includes(required)) {
       return { name: 'settings-general', query: { missingPermission: required } };
     }
+  }
+
+  if (typeof window !== 'undefined' && import.meta.env.DEV) {
+    console.debug('[analytics:view]', { name: to.name, path: to.path, view_loaded: true });
   }
 
   return true;

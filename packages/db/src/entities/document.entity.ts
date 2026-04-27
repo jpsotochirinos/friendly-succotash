@@ -16,10 +16,23 @@ import type { DocumentWorkflowParticipation } from './document-workflow-particip
 import type { DocumentVersion } from './document-version.entity';
 import type { DocumentChunk } from './document-chunk.entity';
 import type { Evaluation } from './evaluation.entity';
+import type { SignatureRequest } from './signature-request.entity';
+import type { StageInstance } from './stage-instance.entity';
+import type { ActivityInstance } from './activity-instance.entity';
 
 @Entity({ tableName: 'documents' })
 export class Document extends TenantBaseEntity {
-  [OptionalProps]?: 'currentVersion' | 'reviewStatus' | 'isTemplate' | 'tags' | 'deletedAt' | 'createdAt' | 'updatedAt';
+  [OptionalProps]?:
+    | 'currentVersion'
+    | 'reviewStatus'
+    | 'isTemplate'
+    | 'tags'
+    | 'deletedAt'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'pdfMinioKey'
+    | 'lockedForSigning'
+    | 'classifiedStageInstance';
 
   @Property({ length: 500 })
   title!: string;
@@ -32,6 +45,13 @@ export class Document extends TenantBaseEntity {
 
   @Property({ nullable: true })
   minioKey?: string;
+
+  /** PDF generated for digital signing (DOCX → PDF). Working copy is overwritten until completion. */
+  @Property({ nullable: true })
+  pdfMinioKey?: string;
+
+  @Property({ default: false })
+  lockedForSigning: boolean = false;
 
   @Property({ type: 'text', nullable: true })
   contentText?: string;
@@ -60,6 +80,12 @@ export class Document extends TenantBaseEntity {
   @ManyToOne('WorkflowItem', { nullable: true })
   workflowItem?: WorkflowItem;
 
+  @ManyToOne('ActivityInstance', { nullable: true, fieldName: 'activity_instance_id' })
+  activityInstance?: ActivityInstance;
+
+  @ManyToOne('StageInstance', { nullable: true, fieldName: 'classified_stage_instance_id' })
+  classifiedStageInstance?: StageInstance;
+
   @ManyToOne('User', { nullable: true })
   uploadedBy?: User;
 
@@ -74,4 +100,7 @@ export class Document extends TenantBaseEntity {
 
   @OneToMany('Evaluation', 'document')
   evaluations = new Collection<Evaluation>(this);
+
+  @OneToMany('SignatureRequest', 'document')
+  signatureRequests = new Collection<SignatureRequest>(this);
 }

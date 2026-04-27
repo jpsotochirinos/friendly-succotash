@@ -1,6 +1,10 @@
 <template>
   <div class="max-w-xl flex flex-col gap-6">
-    <PageHeader :title="t('settings.sections.account')" :subtitle="t('settings.accountSubtitle')" />
+    <PageHeader
+      v-if="!embedded"
+      :title="t('settings.sections.account')"
+      :subtitle="t('settings.accountSubtitle')"
+    />
 
     <div
       class="rounded-xl border p-4 mb-6 flex flex-col sm:flex-row sm:items-end gap-4"
@@ -37,6 +41,60 @@
         <span class="text-sm" :style="{ color: 'var(--fg-default)' }">{{ roleName || '—' }}</span>
       </div>
     </div>
+
+    <template v-if="can('signature:sign')">
+      <h3 class="text-base font-semibold mt-8 mb-1" :style="{ color: 'var(--fg-default)' }">
+        {{ t('settings.digitalSignatureTitle') }}
+      </h3>
+      <p class="text-sm mb-4" :style="{ color: 'var(--fg-muted)' }">{{ t('settings.digitalSignatureHint') }}</p>
+      <div
+        class="rounded-xl border p-4 flex flex-col sm:flex-row sm:items-start gap-4"
+        :style="{ borderColor: 'var(--surface-border)', backgroundColor: 'var(--surface-raised)' }"
+      >
+        <div
+          v-if="signatureProfile?.previewUrl"
+          class="shrink-0 rounded border overflow-hidden bg-white flex items-center justify-center"
+          :style="{ borderColor: 'var(--surface-border)', minHeight: '5rem', minWidth: '8rem' }"
+        >
+          <img
+            :src="signatureProfile.previewUrl"
+            :alt="t('settings.digitalSignatureTitle')"
+            class="max-h-24 max-w-full object-contain"
+          />
+        </div>
+        <p v-else class="text-sm m-0" :style="{ color: 'var(--fg-muted)' }">
+          {{ t('settings.digitalSignatureNoProfile') }}
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <input
+            ref="signatureFileInput"
+            type="file"
+            class="hidden"
+            accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+            @change="onSignatureFile"
+          />
+          <Button
+            type="button"
+            :label="t('settings.digitalSignatureUpload')"
+            icon="pi pi-upload"
+            size="small"
+            :loading="signatureSaving"
+            @click="openSignatureFilePicker"
+          />
+          <Button
+            v-if="signatureProfile?.previewUrl"
+            type="button"
+            :label="t('settings.digitalSignatureDelete')"
+            icon="pi pi-trash"
+            size="small"
+            severity="danger"
+            outlined
+            :loading="signatureDeleting"
+            @click="removeSignature"
+          />
+        </div>
+      </div>
+    </template>
 
     <h3 class="text-base font-semibold mt-8 mb-1" :style="{ color: 'var(--fg-default)' }">{{ t('settings.documentTrashRetentionTitle') }}</h3>
     <p class="text-sm mb-4" :style="{ color: 'var(--fg-muted)' }">{{ t('settings.documentTrashRetentionHint') }}</p>
@@ -113,12 +171,15 @@ import Calendar from 'primevue/calendar';
 import InputNumber from 'primevue/inputnumber';
 import { useToast } from 'primevue/usetoast';
 import { apiClient } from '@/api/client';
+import { signaturesApi } from '@/api/signatures';
 import { usePermissions } from '@/composables/usePermissions';
 import { useMigrationVisibility } from '@/composables/useMigrationVisibility';
 import { applySidebarNavOrder, getDefaultSidebarNavItems, type SidebarNavItem } from '@/navigation/sidebar-nav';
 import { useSidebarNavOrderStore } from '@/stores/sidebar-nav-order.store';
 import { useAuthStore } from '@/stores/auth.store';
 import PageHeader from '@/components/common/PageHeader.vue';
+
+withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
 
 const { t } = useI18n();
 const toast = useToast();
@@ -138,6 +199,10 @@ const trashRetentionLoading = ref(true);
 const trashRetentionSaving = ref(false);
 const birthDate = ref<Date | null>(null);
 const birthSaving = ref(false);
+const signatureFileInput = ref<HTMLInputElement | null>(null);
+const signatureProfile = ref<{ previewUrl: string | null; id?: string } | null>(null);
+const signatureSaving = ref(false);
+const signatureDeleting = ref(false);
 
 const user = ref<{
   email?: string;
@@ -187,6 +252,50 @@ async function saveBirthDate() {
   }
 }
 
+function openSignatureFilePicker() {
+  signatureFileInput.value?.click();
+}
+
+async function loadSignatureProfile() {
+  if (!can('signature:sign')) return;
+  try {
+    const { data } = await signaturesApi.getMyProfile();
+    signatureProfile.value = data && typeof data === 'object' ? (data as typeof signatureProfile.value) : null;
+  } catch {
+    signatureProfile.value = null;
+  }
+}
+
+async function onSignatureFile(ev: Event) {
+  const input = ev.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = '';
+  if (!file) return;
+  signatureSaving.value = true;
+  try {
+    await signaturesApi.uploadProfile(file);
+    await loadSignatureProfile();
+    toast.add({ severity: 'success', summary: t('settings.digitalSignatureSaved'), life: 3000 });
+  } catch {
+    toast.add({ severity: 'error', summary: t('settings.digitalSignatureError'), life: 4000 });
+  } finally {
+    signatureSaving.value = false;
+  }
+}
+
+async function removeSignature() {
+  signatureDeleting.value = true;
+  try {
+    await signaturesApi.deleteProfile();
+    signatureProfile.value = null;
+    toast.add({ severity: 'success', summary: t('settings.digitalSignatureRemoved'), life: 3000 });
+  } catch {
+    toast.add({ severity: 'error', summary: t('settings.digitalSignatureRemoveError'), life: 4000 });
+  } finally {
+    signatureDeleting.value = false;
+  }
+}
+
 async function saveTrashRetention() {
   trashRetentionSaving.value = true;
   try {
@@ -232,5 +341,6 @@ onMounted(async () => {
   } finally {
     trashRetentionLoading.value = false;
   }
+  void loadSignatureProfile();
 });
 </script>

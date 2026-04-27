@@ -26,7 +26,15 @@
           class="flex-1 min-w-[12rem]"
           :placeholder="$t('onboarding.currentToolPlaceholder')"
         />
-        <Button type="button" size="small" outlined :label="$t('onboarding.currentToolNone')" @click="toolModel = ''" />
+        <Button
+          type="button"
+          size="small"
+          :outlined="!toolEmpty"
+          :severity="toolEmpty ? 'primary' : 'secondary'"
+          :label="$t('onboarding.currentToolNone')"
+          :aria-pressed="toolEmpty"
+          @click="clearCurrentTool"
+        />
       </div>
     </div>
   </div>
@@ -58,8 +66,14 @@ const roleModel = computed({
 
 const toolModel = computed({
   get: () => props.modelValue.currentTool,
-  set: (v) => emit('update:modelValue', { ...props.modelValue, currentTool: v }),
+  set: (v) => emit('update:modelValue', { ...props.modelValue, currentTool: v ?? '' }),
 });
+
+const toolEmpty = computed(() => !String(props.modelValue.currentTool ?? '').trim());
+
+function clearCurrentTool() {
+  emit('update:modelValue', { ...props.modelValue, currentTool: '' });
+}
 
 const roleOpts = computed(() => ROLE_KEYS.map((value) => ({ value, label: t(`onboarding.roles.${value}`) })));
 </script>

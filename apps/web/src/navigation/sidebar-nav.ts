@@ -22,6 +22,9 @@ export function getDefaultSidebarNavItems(
       { to: '/notifications', label: t('nav.notifications'), icon: 'pi pi-inbox' },
     );
   }
+  if (can('trackable:read')) {
+    items.push({ to: '/sinoe-proposals', label: t('sinoeInbox.title'), icon: 'pi pi-send' });
+  }
   if (can('feed:read')) {
     items.push({ to: '/novedades', label: t('nav.feed'), icon: 'pi pi-megaphone' });
   }
@@ -36,6 +39,9 @@ export function getDefaultSidebarNavItems(
       { to: '/reviews', label: t('nav.reviews'), icon: 'pi pi-check-square' },
       { to: '/templates', label: t('nav.templates'), icon: 'pi pi-file' },
     );
+  }
+  if (can('signature:sign')) {
+    items.push({ to: '/signatures', label: t('nav.signatures'), icon: 'pi pi-pencil' });
   }
   return items;
 }

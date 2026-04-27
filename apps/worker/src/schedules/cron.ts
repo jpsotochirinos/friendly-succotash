@@ -4,6 +4,7 @@ import { trashPurgeQueue } from '../queues/trash-purge.queue';
 import { whatsappBriefingQueue } from '../queues/whatsapp-briefing.queue';
 import { whatsappActivityCleanupQueue } from '../queues/whatsapp-activity-cleanup.queue';
 import { feedIngestQueue } from '../queues/feed-ingest.queue';
+import { signaturesExpireQueue } from '../queues/signatures-expire.queue';
 
 function envFlagDisabled(name: string): boolean {
   const v = process.env[name]?.trim().toLowerCase();
@@ -20,6 +21,7 @@ export async function setupCronJobs() {
   const whatsappCleanupCron = process.env.WHATSAPP_ACTIVITY_CLEANUP_CRON || '5 2 * * *';
   const feedIngestCron = process.env.FEED_INGEST_CRON || '0 * * * *';
   const feedIngestEnabled = !envFlagDisabled('FEED_INGEST_ENABLED');
+  const signatureExpireCron = process.env.SIGNATURE_EXPIRE_CRON || '0 1 * * *';
 
   await deadlineNotificationsQueue.upsertJobScheduler(
     'deadline-notifications-daily',
@@ -31,6 +33,13 @@ export async function setupCronJobs() {
   );
 
   console.log(`Deadline notifications cron: ${deadlineCron}`);
+
+  await signaturesExpireQueue.upsertJobScheduler(
+    'signatures-expire-daily',
+    { pattern: signatureExpireCron },
+    { name: 'expire-signature-requests', data: {} },
+  );
+  console.log(`Signatures expire cron: ${signatureExpireCron}`);
 
   await trashPurgeQueue.upsertJobScheduler(
     'trash-purge-daily',

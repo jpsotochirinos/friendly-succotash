@@ -16,7 +16,10 @@
     "migrate:data:workflows": "ts-node src/seeds/migrate-data-workflows.ts",
     "validate:workflow-readiness": "ts-node src/seeds/validate-workflow-readiness.ts",
     "diagnose:workflows": "ts-node src/seeds/diagnose-workflows.ts",
-    "seed:full": "ts-node src/seeds/seed-data.ts"
+    "seed:full": "ts-node src/seeds/seed-data.ts",
+    "seed:legal-process": "ts-node src/seeds/run-legal-process.ts",
+    "seed:system-blueprints": "ts-node src/seeds/run-system-blueprints-only.ts",
+    "migrate:data:workflow-to-activities": "ts-node -T src/seeds/migrate-workflow-items-to-activities.ts"
   },
   "mikro-orm": {
     "useTsNode": true,

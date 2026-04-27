@@ -1,4 +1,7 @@
 export const MAX_WORKFLOW_DEPTH = 8;
+
+/** Ítem raíz de expediente que lleva `workflow` + `currentState` del flujo procesal. */
+export const LEGAL_PROCESS_ROOT_KIND = 'Proceso';
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 export const JWT_ACCESS_EXPIRY = '15m';
@@ -17,3 +20,6 @@ export function normalizeDocumentTrashRetentionDays(value: unknown): number {
     Math.max(MIN_DOCUMENT_TRASH_RETENTION_DAYS, Math.round(n)),
   );
 }
+
+/** SYSTEM blueprint `code` seeded as single empty stage; used for “estilo libre” process tracks. */
+export const SYSTEM_BLUEPRINT_CODE_FREEFORM = 'freeform-estilo-libre' as const;

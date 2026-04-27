@@ -1,6 +1,5 @@
 import { MikroORM } from '@mikro-orm/postgresql';
 import config from '../mikro-orm.config';
-import { seedLegalSystemTemplates } from './legal-templates.seed';
 import { seedSystemWorkflows } from './workflows.seed';
 
 async function main() {
@@ -8,7 +7,6 @@ async function main() {
   const em = orm.em.fork();
   try {
     await seedSystemWorkflows(em);
-    await seedLegalSystemTemplates(em);
   } finally {
     await orm.close();
   }

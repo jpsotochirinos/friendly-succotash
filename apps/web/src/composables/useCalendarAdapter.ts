@@ -16,7 +16,8 @@ function sourceClass(source: string): string {
 
 export function apiEventToFullCalendar(ev: ApiCalendarEvent): EventInput {
   const wi = ev.extendedProps?.workflowItemId as string | undefined;
-  const editable = ev.source === 'workflow' && !!wi;
+  const ai = ev.extendedProps?.activityInstanceId as string | undefined;
+  const editable = ev.source === 'workflow' && (!!wi || !!ai);
 
   const classNames: string[] = [sourceClass(ev.source)];
 
@@ -60,7 +61,17 @@ function slugKind(k: string): string {
     .slice(0, 32);
 }
 
-export function parseWorkflowItemIdFromEventId(id: string): string | null {
-  if (id.startsWith('wi:')) return id.slice(3);
+/**
+ * Calendario: ids `ai:uuid` (motor v2) o `wi:uuid` (legacy). El PATCH /calendar/events/... acepta el id con prefijo.
+ */
+export function parseActivityIdFromEventId(id: string): { kind: 'ai' | 'wi'; id: string } | null {
+  if (id.startsWith('ai:')) return { kind: 'ai', id: id.slice(3) };
+  if (id.startsWith('wi:')) return { kind: 'wi', id: id.slice(3) };
   return null;
+}
+
+/** @deprecated Usar parseActivityIdFromEventId; se mantiene el uuid sin prefijo para código que busca en listas. */
+export function parseWorkflowItemIdFromEventId(id: string): string | null {
+  const p = parseActivityIdFromEventId(id);
+  return p ? p.id : null;
 }

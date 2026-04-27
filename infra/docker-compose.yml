@@ -55,6 +55,15 @@ services:
       - "8025:8025"
       - "1025:1025"
 
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: tracker-gotenberg
+    command:
+      - gotenberg
+      - --api-timeout=120s
+    ports:
+      - "3001:3000"
+
 volumes:
   pgdata:
   redisdata:

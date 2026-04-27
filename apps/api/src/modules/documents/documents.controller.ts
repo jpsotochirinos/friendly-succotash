@@ -24,6 +24,9 @@ export class DocumentsController {
       folderId: string;
       trackableId: string;
       workflowItemId?: string;
+      activityInstanceId?: string;
+      /** Optional: classify under a process-track stage (same trackable as `trackableId`). */
+      classifiedStageInstanceId?: string;
       isTemplate?: string;
     },
     @CurrentUser() user: any,
@@ -33,6 +36,8 @@ export class DocumentsController {
       folderId: dto.folderId,
       trackableId: dto.trackableId,
       workflowItemId: dto.workflowItemId,
+      activityInstanceId: dto.activityInstanceId,
+      classifiedStageInstanceId: dto.classifiedStageInstanceId,
       organizationId: user.organizationId,
       userId: user.id,
       isTemplate: dto.isTemplate === 'true',
@@ -47,6 +52,7 @@ export class DocumentsController {
       folderId: string;
       trackableId: string;
       workflowItemId?: string;
+      activityInstanceId?: string;
     },
     @CurrentUser() user: any,
   ) {
@@ -74,7 +80,12 @@ export class DocumentsController {
   @RequirePermissions('document:create')
   async copyAsTemplate(
     @Param('id') sourceId: string,
-    @Body() dto: { targetFolderId: string; targetWorkflowItemId?: string; trackableId: string },
+    @Body() dto: {
+      targetFolderId: string;
+      targetWorkflowItemId?: string;
+      targetActivityInstanceId?: string;
+      trackableId: string;
+    },
     @CurrentUser() user: any,
   ) {
     return this.documentsService.copyAsTemplate(
@@ -84,6 +95,7 @@ export class DocumentsController {
       user.id,
       user.organizationId,
       dto.trackableId,
+      dto.targetActivityInstanceId,
     );
   }
 
@@ -204,11 +216,20 @@ export class DocumentsController {
     return this.documentsService.findTrashed(user.organizationId);
   }
 
+  @Get('suggested-types/:stageInstanceId')
+  @RequirePermissions('document:read')
+  async suggestedTypes(
+    @Param('stageInstanceId') stageInstanceId: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.documentsService.suggestedTypesForStage(stageInstanceId, user.organizationId);
+  }
+
   @Get(':id')
   @RequirePermissions('document:read')
   async findOne(@Param('id') id: string) {
     return this.documentsService.findOne(id, {
-      populate: ['folder', 'workflowItem', 'uploadedBy', 'evaluations'] as any,
+      populate: ['folder', 'workflowItem', 'activityInstance', 'uploadedBy', 'evaluations'] as any,
     });
   }
 
@@ -217,6 +238,7 @@ export class DocumentsController {
   async findAll(
     @Query('folderId') folderId?: string,
     @Query('workflowItemId') workflowItemId?: string,
+    @Query('activityInstanceId') activityInstanceId?: string,
     @Query('trackableId') trackableId?: string,
     @Query('isTemplate') isTemplate?: string,
     @Query('page') page?: number,
@@ -225,7 +247,9 @@ export class DocumentsController {
     const where: any = { deletedAt: null };
     if (folderId) where.folder = folderId;
     if (workflowItemId) where.workflowItem = workflowItemId;
-    if (trackableId && !folderId) {
+    if (activityInstanceId) {
+      where.activityInstance = activityInstanceId;
+    } else if (trackableId && !folderId) {
       where.folder = { trackable: trackableId };
     }
     if (isTemplate !== undefined) where.isTemplate = isTemplate === 'true';
@@ -233,6 +257,9 @@ export class DocumentsController {
     const populate: string[] = ['uploadedBy'];
     if (folderId || trackableId || workflowItemId) {
       populate.push('workflowItem');
+    }
+    if (activityInstanceId) {
+      populate.push('activityInstance');
     }
     if (isTemplate === 'true') {
       populate.push('folder', 'folder.trackable');
@@ -252,6 +279,16 @@ export class DocumentsController {
     });
   }
 
+  @Patch(':id/classify')
+  @RequirePermissions('document:update')
+  async classify(
+    @Param('id') id: string,
+    @Body() body: { stageInstanceId: string | null },
+    @CurrentUser() user: any,
+  ) {
+    return this.documentsService.classifyDocument(id, body.stageInstanceId ?? null, user.organizationId);
+  }
+
   @Patch(':id')
   @RequirePermissions('document:update')
   async update(
@@ -262,6 +299,7 @@ export class DocumentsController {
       isTemplate?: boolean;
       tags?: string[];
       workflowItemId?: string | null;
+      activityInstanceId?: string | null;
     },
     @CurrentUser() user: any,
   ) {
@@ -288,10 +326,10 @@ export class DocumentsController {
   @RequirePermissions('document:update')
   async linkWorkflowItem(
     @Param('id') id: string,
-    @Body() body: { workflowItemId: string | null },
+    @Body() body: { workflowItemId?: string | null; activityInstanceId?: string | null },
     @CurrentUser() user: any,
   ) {
-    return this.documentsService.linkWorkflowItem(id, body.workflowItemId ?? null, user.organizationId);
+    return this.documentsService.linkWorkflowItem(id, body, user.organizationId);
   }
 
   @Post(':id/evaluate')

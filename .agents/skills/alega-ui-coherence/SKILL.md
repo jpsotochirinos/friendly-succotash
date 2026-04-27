@@ -13,6 +13,8 @@ description: >
 
 2. **Tier 2 — Herramienta (resto de rutas bajo `AppLayout`):** cabecera compacta uniforme con el componente compartido `PageHeader`, subtítulo obligatorio, CTA primario `size="small"`, sin padding en el root de la vista (el shell ya aplica padding). Referencia: [apps/web/src/components/common/PageHeader.vue](apps/web/src/components/common/PageHeader.vue).
 
+3. **Auth público (rutas `/auth/*` fuera de `AppLayout`):** split card con marca + **visual de producto Alega** (mock de expediente / etapas), no dashboards genéricos. **Recuperación de contraseña** y **reset** van **sin panel derecho**: `AuthShell` con `showShowcase=false` (tarjeta centrada). Referencia: [AuthShell.vue](../../apps/web/src/components/auth/AuthShell.vue), [LoginShowcasePanel.vue](../../apps/web/src/components/auth/LoginShowcasePanel.vue).
+
 **Criterio:** si la pantalla es un “listado / herramienta / configuración”, es Tier 2. Si es el “feed del despacho hoy”, es Tier 1.
 
 ## Anatomía canónica Tier 2
@@ -25,9 +27,9 @@ description: >
         <Button … size="small" />
       </template>
     </PageHeader>
-    <!-- Toolbar: filtros, pestañas, búsqueda -->
+    <!-- Toolbar: filtros, pestañas, búsqueda (panel con borde y surface-raised, full width en móvil) -->
     <div class="flex flex-wrap gap-2 items-center">…</div>
-    <!-- Contenido -->
+    <!-- Contenido (p. ej. DataTable en .app-card) -->
     …
   </section>
 </template>
@@ -89,9 +91,24 @@ rg 'font-mono|JetBrains|--font-mono' apps/web/src
 4. Pasar los greps anteriores en los archivos tocados.
 5. Probar en tema claro y oscuro.
 
+## DataTable en listados (Tier 2)
+
+- Misma sección vertical: `PageHeader` → barra de filtros/tabs → **tabla en** `.app-card` con `overflow-hidden` para alinear con cards del resto de la app.
+- Si `DataTable` carga sin filas previas, mostrar skeleton manual con `primevue/skeleton`; evita tabla vacía con spinner y mantiene altura estable.
+- En expedientes, primera columna rica: emoji/ícono del expediente, título y metadata secundaria; evitar columnas sueltas de baja señal como estado/vencimiento si el resumen compacto comunica mejor el trabajo pendiente.
+- Listado de referencia: [TrackablesListView.vue](../../apps/web/src/views/trackables/TrackablesListView.vue) (expedientes y papelera de documentos).
+
+## Confirmaciones destructivas y reversibles
+
+- **Reversible** (archivar, ocultar): `ConfirmDialogBase` con `variant="warning"`, consecuencias claras y `subject` con el nombre del expediente o documento.
+- **Irreversible** (borrado permanente): `variant="danger"`, misma anatomía + `typedConfirmPhrase` (palabra en i18n por idioma) antes de habilitar el botón principal.
+- **Positiva** (reactivar): `variant="success"` o `info` según el tono; mismo patrón de `subject` y consecuencias.
+- Referencia: [docs/frontend-confirm-patterns.md](../../../docs/frontend-confirm-patterns.md), componente `apps/web/src/components/common/ConfirmDialogBase.vue`.
+
 ## Composición con otras skills
 
-- **[alega-ui-context](.agents/skills/alega-ui-context/SKILL.md)** — dónde viven marca, tokens y Prime preset; cargar **siempre** junto con esta skill para trabajo UI en Alega.
+- **[alega-ui-context](../alega-ui-context/SKILL.md)** — dónde viven marca, tokens y Prime preset; cargar **siempre** junto con esta skill para trabajo UI en Alega.
+- **[alega-onboarding-stepper](../alega-onboarding-stepper/SKILL.md)** — aplicar cuando una vista Tier 2 incluya onboarding, setup inicial o asistente paso-a-paso.
 - **frontend-design** — calidad visual sin romper tokens.
 - **web-design-guidelines** — accesibilidad y patrones (WIG).
 - **theme-factory** — variantes de color; mapear siempre a `brand.*` / `alegaPreset`.

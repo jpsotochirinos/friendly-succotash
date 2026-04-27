@@ -46,14 +46,15 @@ export class CalendarController {
     return this.calendar.updateBirthDate(user.id, user.organizationId, dto.birthDate);
   }
 
-  @Patch('events/:workflowItemId/reschedule')
+  /** `:eventId` puede ser `ai:uuid`, `wi:uuid` o un UUID (se intenta actividad primero). */
+  @Patch('events/:eventId/reschedule')
   @RequirePermissions('workflow_item:update')
   async reschedule(
-    @Param('workflowItemId') workflowItemId: string,
+    @Param('eventId') eventId: string,
     @Body() dto: RescheduleEventDto,
     @CurrentUser() user: { organizationId: string; permissions: string[] },
   ) {
-    return this.calendar.reschedule(user.organizationId, workflowItemId, dto, user.permissions);
+    return this.calendar.reschedule(user.organizationId, decodeURIComponent(eventId), dto, user.permissions);
   }
 
   @Get('feed/regenerate')

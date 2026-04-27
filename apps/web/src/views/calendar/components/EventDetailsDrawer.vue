@@ -122,7 +122,7 @@ import Tag from 'primevue/tag';
 import Dropdown from 'primevue/dropdown';
 import { apiClient } from '@/api/client';
 import type { ApiCalendarEvent } from '@/composables/useCalendarAdapter';
-import { parseWorkflowItemIdFromEventId } from '@/composables/useCalendarAdapter';
+import { parseActivityIdFromEventId } from '@/composables/useCalendarAdapter';
 import { classifyApiEvent } from '@/composables/calendarEventKind';
 
 const props = defineProps<{
@@ -154,9 +154,15 @@ const drawerStyle = computed(() =>
 
 const isWorkflow = computed(() => props.event?.source === 'workflow');
 
+const activityInstanceId = computed(
+  () => (props.event?.extendedProps?.activityInstanceId as string) || null,
+);
 const workflowItemId = computed(() => {
-  const id = props.event?.id ? parseWorkflowItemIdFromEventId(props.event.id) : null;
-  return id || (props.event?.extendedProps?.workflowItemId as string) || null;
+  if (!props.event?.id) return (props.event?.extendedProps?.workflowItemId as string) || null;
+  const parsed = parseActivityIdFromEventId(props.event.id);
+  if (parsed?.kind === 'ai') return null;
+  if (parsed?.kind === 'wi') return parsed.id;
+  return (props.event?.extendedProps?.workflowItemId as string) || null;
 });
 
 const trackableId = computed(() => String(props.event?.extendedProps?.trackableId || ''));
@@ -164,7 +170,15 @@ const trackableId = computed(() => String(props.event?.extendedProps?.trackableI
 const trackableTitle = computed(() => String(props.event?.extendedProps?.trackableTitle || ''));
 
 const flowLink = computed(() => {
-  if (!workflowItemId.value || !trackableId.value) return null;
+  if (!trackableId.value) return null;
+  if (activityInstanceId.value) {
+    return {
+      name: 'expediente' as const,
+      params: { id: trackableId.value },
+      query: { activityInstanceId: activityInstanceId.value, tab: '1' },
+    };
+  }
+  if (!workflowItemId.value) return null;
   return {
     name: 'expediente' as const,
     params: { id: trackableId.value },

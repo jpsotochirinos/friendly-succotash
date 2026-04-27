@@ -1,5 +1,7 @@
 /** Domain event type strings stored on NotificationEvent.type */
 export const NOTIFICATION_TYPES = {
+  /** Solicitud de firma digital pendiente (destinatario interno) */
+  SIGNATURE_REQUEST: 'signature_request',
   /** Plazo / recordatorio generado por el scheduler */
   DEADLINE_REMINDER: 'deadline_reminder',
   /** Ítem creado desde fuente externa (scraping, etc.) */

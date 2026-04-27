@@ -11,6 +11,9 @@ import {
   Folder,
   Organization,
   WorkflowItem,
+  StageInstance,
+  ProcessTrack,
+  ActivityInstance,
 } from '@tracker/db';
 import {
   DocumentReviewStatus,
@@ -25,6 +28,7 @@ import { StorageService } from '../storage/storage.service';
 import { LlmService } from '../llm/llm.service';
 import { SearchService } from '../search/search.service';
 import { BaseCrudService } from '../../common/services/base-crud.service';
+import { BlueprintResolverService } from '../blueprints/blueprint-resolver.service';
 import {
   plainTextOrMarkdownToHtml,
   renderHtmlAsDocx,
@@ -55,6 +59,7 @@ export class DocumentsService extends BaseCrudService<Document> {
     private readonly llm: LlmService,
     private readonly search: SearchService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly blueprintResolver: BlueprintResolverService,
   ) {
     super(em, Document);
     this.evaluationQueue = new Queue('document-evaluation', {
@@ -71,12 +76,35 @@ export class DocumentsService extends BaseCrudService<Document> {
       title: string;
       folderId: string;
       workflowItemId?: string;
+      activityInstanceId?: string;
+      /** When set, document is linked to the process-track stage and must match `trackableId` via the stage's process track. */
+      classifiedStageInstanceId?: string;
       trackableId: string;
       organizationId: string;
       userId: string;
       isTemplate?: boolean;
     },
   ): Promise<Document> {
+    let classifiedStage: StageInstance | undefined;
+    if (data.classifiedStageInstanceId) {
+      const si = await this.em.findOne(
+        StageInstance,
+        { id: data.classifiedStageInstanceId, organization: data.organizationId } as any,
+        { populate: ['processTrack', 'processTrack.trackable'] as any },
+      );
+      if (!si) {
+        throw new NotFoundException('Stage instance not found');
+      }
+      const pt = si.processTrack as ProcessTrack;
+      const tid =
+        (pt.trackable as { id?: string } | undefined)?.id
+        ?? (typeof (pt as any).trackable === 'string' ? (pt as any).trackable : undefined);
+      if (tid !== data.trackableId) {
+        throw new BadRequestException('Stage does not belong to this trackable');
+      }
+      classifiedStage = si;
+    }
+
     const key = this.storage.buildKey(
       data.organizationId,
       data.trackableId,
@@ -95,9 +123,10 @@ export class DocumentsService extends BaseCrudService<Document> {
       reviewStatus: DocumentReviewStatus.DRAFT,
       isTemplate: data.isTemplate || false,
       folder: data.folderId,
-      workflowItem: data.workflowItemId || undefined,
+      workflowItem: data.workflowItemId && !data.activityInstanceId ? data.workflowItemId : undefined,
       uploadedBy: data.userId,
       organization: data.organizationId,
+      classifiedStageInstance: classifiedStage,
     } as any);
 
     const version = this.em.create(DocumentVersion, {
@@ -109,7 +138,10 @@ export class DocumentsService extends BaseCrudService<Document> {
     } as any);
 
     await this.em.flush();
-    if (data.workflowItemId) {
+    if (data.activityInstanceId) {
+      await this.applyActivityInstanceLink(doc, data.activityInstanceId, data.organizationId);
+      await this.em.flush();
+    } else if (data.workflowItemId) {
       await this.appendParticipationForNewLink(doc.id, data.workflowItemId, data.organizationId, doc.currentVersion);
     }
     this.emitDocumentEvent(DomainEvents.DOCUMENT_CREATED, {
@@ -248,6 +280,7 @@ export class DocumentsService extends BaseCrudService<Document> {
     userId: string,
     organizationId: string,
     trackableId: string,
+    targetActivityInstanceId?: string,
   ): Promise<Document> {
     const sourceDoc = await this.findOne(sourceDocId);
     const sourceBuffer = await this.storage.download(sourceDoc.minioKey!);
@@ -270,7 +303,7 @@ export class DocumentsService extends BaseCrudService<Document> {
       reviewStatus: DocumentReviewStatus.DRAFT,
       isTemplate: false,
       folder: targetFolderId,
-      workflowItem: targetWorkflowItemId || undefined,
+      workflowItem: targetWorkflowItemId && !targetActivityInstanceId ? targetWorkflowItemId : undefined,
       uploadedBy: userId,
       organization: organizationId,
       contentText: sourceDoc.contentText,
@@ -284,7 +317,11 @@ export class DocumentsService extends BaseCrudService<Document> {
     } as any);
 
     await this.em.flush();
-    if (targetWorkflowItemId) {
+    if (targetActivityInstanceId) {
+      const d = await this.findOne(newDoc.id, { populate: ['folder', 'folder.trackable'] as any });
+      await this.applyActivityInstanceLink(d, targetActivityInstanceId, organizationId);
+      await this.em.flush();
+    } else if (targetWorkflowItemId) {
       await this.appendParticipationForNewLink(newDoc.id, targetWorkflowItemId, organizationId, newDoc.currentVersion);
     }
     this.emitDocumentEvent(DomainEvents.DOCUMENT_CREATED, {
@@ -359,10 +396,11 @@ export class DocumentsService extends BaseCrudService<Document> {
       isTemplate?: boolean;
       tags?: string[];
       workflowItemId?: string | null;
+      activityInstanceId?: string | null;
     },
     organizationId: string,
   ): Promise<Document> {
-    const doc = await this.findOne(id, { populate: ['folder', 'folder.trackable', 'workflowItem'] as any });
+    const doc = await this.findOne(id, { populate: ['folder', 'folder.trackable', 'workflowItem', 'activityInstance'] as any });
     if ((doc as any).organization?.id && (doc as any).organization.id !== organizationId) {
       throw new NotFoundException('Document not found');
     }
@@ -378,13 +416,24 @@ export class DocumentsService extends BaseCrudService<Document> {
         await this.applyWorkflowItemLink(doc, nextWi, organizationId);
       }
     }
+    if ('activityInstanceId' in dto) {
+      const nextAi = dto.activityInstanceId ?? null;
+      const aiRaw = (doc as any).activityInstance;
+      let curAi: string | null = null;
+      if (aiRaw != null) {
+        curAi = typeof aiRaw === 'string' ? aiRaw : (aiRaw as { id: string }).id;
+      }
+      if (nextAi !== curAi) {
+        await this.applyActivityInstanceLink(doc, nextAi, organizationId);
+      }
+    }
     if (dto.title !== undefined) (doc as any).title = dto.title;
     if (dto.reviewStatus !== undefined) (doc as any).reviewStatus = dto.reviewStatus;
     if (dto.isTemplate !== undefined) (doc as any).isTemplate = dto.isTemplate;
     if (dto.tags !== undefined) (doc as any).tags = dto.tags;
 
     await this.em.flush();
-    const refreshed = await this.findOne(id, { populate: ['folder', 'folder.trackable', 'workflowItem'] as any });
+    const refreshed = await this.findOne(id, { populate: ['folder', 'folder.trackable', 'workflowItem', 'activityInstance'] as any });
     const trackableId = (refreshed.folder as any)?.trackable?.id as string | undefined;
     const wi = refreshed.workflowItem as WorkflowItem | undefined;
     const workflowItemId =
@@ -404,10 +453,25 @@ export class DocumentsService extends BaseCrudService<Document> {
 
   async linkWorkflowItem(
     documentId: string,
-    workflowItemId: string | null,
+    body: { workflowItemId?: string | null; activityInstanceId?: string | null },
     organizationId: string,
   ): Promise<Document> {
-    return this.patchDocument(documentId, { workflowItemId }, organizationId);
+    const dto: {
+      title?: string;
+      reviewStatus?: string;
+      isTemplate?: boolean;
+      tags?: string[];
+      workflowItemId?: string | null;
+      activityInstanceId?: string | null;
+    } = {};
+    if ('workflowItemId' in body) dto.workflowItemId = body.workflowItemId;
+    if ('activityInstanceId' in body) dto.activityInstanceId = body.activityInstanceId;
+    if (Object.keys(dto).length === 0) {
+      return this.findOne(documentId, {
+        populate: ['folder', 'folder.trackable', 'workflowItem', 'activityInstance'] as any,
+      });
+    }
+    return this.patchDocument(documentId, dto, organizationId);
   }
 
   async getWorkflowHistory(documentId: string, organizationId: string) {
@@ -459,6 +523,7 @@ export class DocumentsService extends BaseCrudService<Document> {
 
     if (!workflowItemId) {
       (doc as any).workflowItem = undefined;
+      (doc as any).activityInstance = undefined;
       return;
     }
 
@@ -478,6 +543,7 @@ export class DocumentsService extends BaseCrudService<Document> {
       throw new BadRequestException('La actividad debe pertenecer al mismo expediente que la carpeta del documento.');
     }
 
+    (doc as any).activityInstance = undefined;
     (doc as any).workflowItem = wi;
     this.em.create(DocumentWorkflowParticipation, {
       document: doc,
@@ -487,6 +553,49 @@ export class DocumentsService extends BaseCrudService<Document> {
       versionAtStart: doc.currentVersion,
       organization: organizationId,
     } as any);
+  }
+
+  private async applyActivityInstanceLink(
+    doc: Document,
+    activityInstanceId: string | null,
+    organizationId: string,
+  ): Promise<void> {
+    await this.closeOpenParticipations(doc.id, organizationId);
+
+    if (!activityInstanceId) {
+      (doc as any).activityInstance = undefined;
+      return;
+    }
+
+    const act = await this.em.findOne(
+      ActivityInstance,
+      { id: activityInstanceId, organization: organizationId } as any,
+      { populate: ['trackable'] as any },
+    );
+    if (!act) {
+      throw new BadRequestException('La actividad no existe o no pertenece a la organización.');
+    }
+
+    let folder = doc.folder as { id?: string; trackable?: { id: string } } | string | undefined;
+    if (typeof folder === 'string') {
+      const f = await this.em.findOne(Folder, { id: folder, organization: organizationId } as any, {
+        populate: ['trackable'] as any,
+      });
+      (doc as any).folder = f;
+      folder = f as any;
+    } else if (folder && typeof folder === 'object' && folder.id && !(folder as any).trackable) {
+      await this.em.populate(doc, ['folder', 'folder.trackable'] as any);
+      folder = doc.folder as any;
+    }
+
+    const trackableId = (folder as any)?.trackable?.id ?? (folder as any)?.trackable;
+    const actTid = (act as any).trackable?.id ?? (act as any).trackable;
+    if (trackableId && actTid && String(trackableId) !== String(actTid)) {
+      throw new BadRequestException('La actividad debe pertenecer al mismo expediente que la carpeta del documento.');
+    }
+
+    (doc as any).workflowItem = undefined;
+    (doc as any).activityInstance = act;
   }
 
   private async closeOpenParticipations(documentId: string, organizationId: string): Promise<void> {
@@ -837,6 +946,7 @@ export class DocumentsService extends BaseCrudService<Document> {
     folderId: string;
     trackableId: string;
     workflowItemId?: string;
+    activityInstanceId?: string;
     organizationId: string;
     userId: string;
     /** If set, used as indexed contentText instead of stripping HTML */
@@ -872,7 +982,7 @@ export class DocumentsService extends BaseCrudService<Document> {
       reviewStatus: DocumentReviewStatus.DRAFT,
       isTemplate: false,
       folder: data.folderId,
-      workflowItem: data.workflowItemId || undefined,
+      workflowItem: data.workflowItemId && !data.activityInstanceId ? data.workflowItemId : undefined,
       uploadedBy: data.userId,
       organization: data.organizationId,
       contentText,
@@ -888,7 +998,10 @@ export class DocumentsService extends BaseCrudService<Document> {
 
     await this.em.flush();
 
-    if (data.workflowItemId) {
+    if (data.activityInstanceId) {
+      await this.applyActivityInstanceLink(doc, data.activityInstanceId, data.organizationId);
+      await this.em.flush();
+    } else if (data.workflowItemId) {
       await this.appendParticipationForNewLink(doc.id, data.workflowItemId, data.organizationId, doc.currentVersion);
     }
 
@@ -976,6 +1089,7 @@ export class DocumentsService extends BaseCrudService<Document> {
     folderId: string;
     trackableId: string;
     workflowItemId?: string;
+    activityInstanceId?: string;
     organizationId: string;
     userId: string;
     /** Initial plain text / markdown stored for search & assistant */
@@ -990,6 +1104,7 @@ export class DocumentsService extends BaseCrudService<Document> {
         folderId: data.folderId,
         trackableId: data.trackableId,
         workflowItemId: data.workflowItemId,
+        activityInstanceId: data.activityInstanceId,
         organizationId: data.organizationId,
         userId: data.userId,
         contentTextOverride: text,
@@ -1004,14 +1119,17 @@ export class DocumentsService extends BaseCrudService<Document> {
       reviewStatus: DocumentReviewStatus.DRAFT,
       isTemplate: false,
       folder: data.folderId,
-      workflowItem: data.workflowItemId || undefined,
+      workflowItem: data.workflowItemId && !data.activityInstanceId ? data.workflowItemId : undefined,
       uploadedBy: data.userId,
       organization: data.organizationId,
       contentText: undefined,
     } as any);
 
     await this.em.flush();
-    if (data.workflowItemId) {
+    if (data.activityInstanceId) {
+      await this.applyActivityInstanceLink(doc, data.activityInstanceId, data.organizationId);
+      await this.em.flush();
+    } else if (data.workflowItemId) {
       await this.appendParticipationForNewLink(doc.id, data.workflowItemId, data.organizationId, doc.currentVersion);
     }
     this.emitDocumentEvent(DomainEvents.DOCUMENT_CREATED, {
@@ -1137,5 +1255,49 @@ export class DocumentsService extends BaseCrudService<Document> {
     res: import('express').Response,
   ): Promise<void> {
     return this.llm.aiComplete(body, res);
+  }
+
+  /** Link document to a procedural `StageInstance` (expediente v2). */
+  async classifyDocument(
+    documentId: string,
+    stageInstanceId: string | null,
+    organizationId: string,
+  ): Promise<Document> {
+    const doc = await this.em.findOne(Document, { id: documentId, organization: organizationId });
+    if (!doc) throw new NotFoundException('Document not found');
+    if (stageInstanceId) {
+      const stage = await this.em.findOne(StageInstance, { id: stageInstanceId, organization: organizationId });
+      if (!stage) throw new NotFoundException('Stage instance not found');
+    }
+    doc.classifiedStageInstance = stageInstanceId
+      ? this.em.getReference(StageInstance, stageInstanceId)
+      : undefined;
+    await this.em.flush();
+    return doc;
+  }
+
+  /**
+   * Returns suggested document types for a stage (from resolved blueprint for the process track).
+   */
+  async suggestedTypesForStage(
+    stageInstanceId: string,
+    organizationId: string,
+  ): Promise<{ documentType: string; name: string }[]> {
+    const si = await this.em.findOne(
+      StageInstance,
+      { id: stageInstanceId, organization: organizationId },
+      { populate: ['processTrack', 'processTrack.trackable', 'processTrack.blueprint', 'processTrack.blueprint.parentBlueprint'] },
+    );
+    if (!si) throw new NotFoundException('Stage instance not found');
+    const pt = si.processTrack as ProcessTrack;
+    const tree = await this.blueprintResolver.resolveForProcessTrack(pt);
+    const stage = tree.stages.find((s) => s.code === si.stageTemplateCode);
+    return (stage?.documentSuggestions ?? []).map((d) => {
+      const prov = d as { name: string; _p?: { name: { value: string } } };
+      return {
+        documentType: d.documentType,
+        name: prov._p?.name?.value ?? prov.name,
+      };
+    });
   }
 }

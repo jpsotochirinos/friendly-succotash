@@ -25,6 +25,7 @@ import { extensionFromMime } from '../attachments/attachment-downloader';
 import type { PersistStats, SinoePersistContext } from './notification-repository';
 import { sendPlainEmail } from '../../../utils/mailer';
 import { normalizeExpediente } from '../expediente.util';
+import { getSinoeMatchQueue } from '../../../queues/sinoe-match.queue';
 
 function stripBuffersForRaw(row: SinoeScrapeRow): Record<string, unknown> {
   const { anexos, ...rest } = row;
@@ -307,6 +308,19 @@ export class SinoePostgresRepository {
 
       newCount += 1;
       await em.flush();
+
+      try {
+        await getSinoeMatchQueue().add(
+          'match',
+          {
+            organizationId: ctx.organizationId,
+            notificationId: notif.id,
+          },
+          { removeOnComplete: 100 },
+        );
+      } catch (err) {
+        console.warn('[sinoe-match] enqueue failed', err);
+      }
     }
 
     return { newCount, totalCount, byStatus };

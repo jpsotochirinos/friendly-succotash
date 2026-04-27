@@ -20,7 +20,10 @@ export interface OrganizationSummary {
   name: string;
   settings?: Record<string, unknown> | null;
   onboardingState?: Record<string, unknown> | null;
-  featureFlags?: { useConfigurableWorkflows?: boolean } | null;
+  featureFlags?: {
+    useConfigurableWorkflows?: boolean;
+    sinoePolicy?: { autoApplyThreshold?: number; minConfidenceByAction?: Record<string, number> };
+  } | null;
   /** Overrides ActionType → workflow definition id */
   workflowActionTypeDefaults?: Record<string, string> | null;
   /** Presigned URL for display; set only by GET /organizations/me */
@@ -70,6 +73,17 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function requestMagicLink(email: string) {
     await apiClient.post('/auth/magic-link', { email });
+  }
+
+  /** Returns dev-only reset URL when API exposes it (local testing). */
+  async function requestPasswordReset(email: string): Promise<string | null> {
+    const { data } = await apiClient.post<{ devResetUrl?: string }>('/auth/forgot-password', { email });
+    return typeof data?.devResetUrl === 'string' ? data.devResetUrl : null;
+  }
+
+  async function resetPassword(token: string, password: string) {
+    const { data } = await apiClient.post('/auth/reset-password', { token, password });
+    await setAuth(data as { accessToken: string; user?: AuthUser });
   }
 
   async function verifyMagicLink(token: string) {
@@ -151,6 +165,8 @@ export const useAuthStore = defineStore('auth', () => {
     fetchMyOrganization,
     ensureOrganizationLoaded,
     requestMagicLink,
+    requestPasswordReset,
+    resetPassword,
     verifyMagicLink,
     previewInvitation,
     acceptInvitation,

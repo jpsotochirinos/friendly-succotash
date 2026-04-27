@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
@@ -32,6 +32,24 @@ export class UsersController {
   @RequirePermissions('user:update')
   async update(@Param('id') id: string, @Body() dto: any) {
     return this.usersService.update(id, dto);
+  }
+
+  @Patch(':id/disable')
+  @RequirePermissions('user:update')
+  async setDisable(
+    @Param('id') id: string,
+    @Body() body: { until?: string | null; enable?: boolean },
+    @CurrentUser() user: any,
+  ) {
+    if (body.enable === true) {
+      return this.usersService.setUserAccess(user.organizationId, user.id, id, { enable: true });
+    }
+    if (!body || typeof body !== 'object' || !('until' in body)) {
+      throw new BadRequestException('Provide until (ISO string or null) or enable: true');
+    }
+    return this.usersService.setUserAccess(user.organizationId, user.id, id, {
+      until: body.until ?? null,
+    });
   }
 
   @Delete(':id')

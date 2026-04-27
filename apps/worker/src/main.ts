@@ -31,6 +31,10 @@ import { setupCronJobs } from './schedules/cron';
 import { createWhatsAppBriefingWorker } from './processors/whatsapp-briefing.processor';
 import { createWhatsAppActivityCleanupWorker } from './processors/whatsapp-activity-cleanup.processor';
 import { createFeedIngestWorker } from './processors/feed-ingest.processor';
+import { createDocxToPdfWorker } from './processors/docx-to-pdf.processor';
+import { createSignaturesFinalizeWorker } from './processors/signatures-finalize.processor';
+import { createSignaturesExpireWorker } from './processors/signatures-expire.processor';
+import { createSinoeMatchWorker } from './processors/sinoe-match.processor';
 
 async function bootstrap() {
   console.log('[worker] Starting...');
@@ -88,6 +92,22 @@ async function bootstrap() {
 
   createFeedIngestWorker(orm);
   console.log('[worker] Feed ingest worker registered');
+
+  createDocxToPdfWorker(orm);
+  console.log('[worker] DOCX→PDF worker registered');
+
+  createSignaturesFinalizeWorker(orm);
+  console.log('[worker] Signatures finalize worker registered');
+
+  createSignaturesExpireWorker(orm);
+  console.log('[worker] Signatures expire worker registered');
+
+  const sinoeMatchW = createSinoeMatchWorker(orm);
+  if (sinoeMatchW) {
+    console.log(
+      '[worker] SINOE match worker registered (uses API dist — set DISABLE_SINOE_MATCH_WORKER=true on API to avoid double-processing)',
+    );
+  }
 
   await setupCronJobs();
   await scheduleTimeTickCron();

@@ -21,9 +21,17 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ) {
     const { id, emails, name, photos } = profile;
+    const email = emails?.[0]?.value;
+    if (!email) {
+      return done(new Error('GOOGLE_OAUTH_NO_EMAIL'));
+    }
+    const json = (profile as unknown as { _json?: { email_verified?: boolean } })._json;
+    if (json?.email_verified === false) {
+      return done(new Error('GOOGLE_OAUTH_EMAIL_NOT_VERIFIED'));
+    }
     const user = {
       googleId: id,
-      email: emails?.[0]?.value,
+      email,
       firstName: name?.givenName,
       lastName: name?.familyName,
       avatarUrl: photos?.[0]?.value,

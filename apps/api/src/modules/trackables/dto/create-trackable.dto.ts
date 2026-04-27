@@ -7,6 +7,7 @@ import {
   MaxLength,
   IsUUID,
   ValidateIf,
+  IsBoolean,
 } from 'class-validator';
 import type { MatterType } from '@tracker/shared';
 import { MATTER_TYPE_VALUES } from '../../../common/class-validator-enums';
@@ -67,4 +68,12 @@ export class CreateTrackableDto {
   @IsObject()
   @IsOptional()
   metadata?: Record<string, unknown>;
+
+  /**
+   * When true, skips auto-creating a freeform process track. Use the expediente
+   * wizard, which always calls `POST /process-tracks` after `POST /trackables`.
+   */
+  @IsBoolean()
+  @IsOptional()
+  skipAutoProcessTrack?: boolean;
 }

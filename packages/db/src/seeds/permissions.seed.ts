@@ -8,8 +8,6 @@ const PERMISSIONS = [
   { code: 'workflow_item:update', category: 'workflow', description: 'Edit workflow items' },
   { code: 'workflow_item:delete', category: 'workflow', description: 'Delete workflow items' },
   { code: 'workflow_item:comment', category: 'workflow', description: 'Comment on workflow items' },
-  { code: 'workflow_template:read', category: 'workflow', description: 'View workflow templates' },
-  { code: 'workflow_template:manage', category: 'workflow', description: 'Create and edit org workflow templates' },
   { code: 'document:create', category: 'document', description: 'Create documents' },
   { code: 'document:read', category: 'document', description: 'View documents' },
   { code: 'document:update', category: 'document', description: 'Edit documents' },
@@ -71,8 +69,24 @@ const PERMISSIONS = [
     category: 'whatsapp',
     description: 'Receive calendar and in-app notification digests via WhatsApp',
   },
+  { code: 'blueprint:read', category: 'blueprint', description: 'View blueprints and resolved structure' },
+  { code: 'blueprint:manage', category: 'blueprint', description: 'Adopt, edit, publish tenant blueprints and overrides' },
+  {
+    code: 'sinoe-proposal:approve',
+    category: 'integration',
+    description: 'Approve or reject SINOE proposal actions',
+  },
   { code: 'feed:read', category: 'feed', description: 'View legal news and Alega updates feed' },
   { code: 'feed:manage', category: 'feed', description: 'Manage feed items and RSS sources' },
+  { code: 'signature:create', category: 'signature', description: 'Crear solicitudes de firma' },
+  { code: 'signature:sign', category: 'signature', description: 'Firmar documentos propios' },
+  { code: 'signature:view_all', category: 'signature', description: 'Ver todas las solicitudes del workspace' },
+  { code: 'signature:cancel', category: 'signature', description: 'Cancelar solicitudes de firma' },
+  {
+    code: 'signature:manage_profiles',
+    category: 'signature',
+    description: 'Gestionar perfiles de firma del equipo',
+  },
 ];
 
 export { PERMISSIONS };

@@ -40,16 +40,36 @@
         <template #body="{ data }">
           <Tag
             v-if="data.kind === 'member'"
-            :value="data.isActive ? t('settings.active') : t('settings.no')"
-            :severity="data.isActive ? 'success' : 'secondary'"
+            :value="memberStatusLabel(data)"
+            :severity="memberStatusSeverity(data)"
           />
           <Tag v-else :value="t('settings.statusPending')" severity="warn" />
         </template>
       </Column>
-      <Column v-if="canCreate" :header="t('common.actions')" class="w-28">
+      <Column v-if="canCreate || canUpdate" :header="t('common.actions')" class="w-[min(12rem,40vw)]">
         <template #body="{ data }">
+          <div v-if="data.kind === 'member' && canUpdate" class="flex flex-wrap items-center gap-1">
+            <Button
+              v-if="!data.isActive"
+              :label="t('settings.enableUser')"
+              icon="pi pi-check"
+              size="small"
+              outlined
+              @click="confirmEnable(data)"
+            />
+            <Button
+              v-else
+              :label="t('settings.disableUser')"
+              icon="pi pi-ban"
+              severity="secondary"
+              size="small"
+              outlined
+              :disabled="data.id === currentUserId"
+              @click="openDisableMenu($event, data)"
+            />
+          </div>
           <Button
-            v-if="data.kind === 'invite'"
+            v-else-if="data.kind === 'invite' && canCreate"
             icon="pi pi-times"
             severity="danger"
             text
@@ -131,6 +151,28 @@
       </template>
     </Dialog>
 
+    <Menu ref="disableMenuRef" :model="disableMenuModel" popup />
+
+    <Dialog
+      v-model:visible="customDisableOpen"
+      :header="t('settings.disableCustomTitle')"
+      modal
+      :style="{ width: 'min(24rem, 96vw)' }"
+      @hide="customDisableUser = null"
+    >
+      <div v-if="customDisableUser" class="flex flex-col gap-3 pt-2">
+        <p class="text-sm m-0" :style="{ color: 'var(--fg-muted)' }">{{ customDisableUser.email }}</p>
+        <Calendar v-model="customDisableDate" date-format="dd/mm/yy" show-icon class="w-full max-w-[16rem]" />
+        <Button
+          :label="t('settings.disableCustomConfirm')"
+          icon="pi pi-check"
+          :loading="customDisableSaving"
+          :disabled="!customDisableDate"
+          @click="submitCustomDisable"
+        />
+      </div>
+    </Dialog>
+
     <ConfirmDialog />
   </div>
 </template>
@@ -147,12 +189,17 @@ import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import Message from 'primevue/message';
 import ConfirmDialog from 'primevue/confirmdialog';
+import Menu from 'primevue/menu';
+import Calendar from 'primevue/calendar';
+import type { MenuItem } from 'primevue/menuitem';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { apiClient } from '@/api/client';
 import PageHeader from '@/components/common/PageHeader.vue';
+import { useAuthStore } from '@/stores/auth.store';
 
-const { t } = useI18n();
+const { t, locale: i18nLocale } = useI18n();
+const authStore = useAuthStore();
 const confirm = useConfirm();
 const toast = useToast();
 
@@ -162,6 +209,7 @@ interface UserRow {
   firstName?: string;
   lastName?: string;
   isActive?: boolean;
+  disabledUntil?: string | null;
   role?: { name?: string };
 }
 
@@ -183,6 +231,16 @@ const permissions = ref<string[]>([]);
 
 const canRead = computed(() => permissions.value.includes('user:read'));
 const canCreate = computed(() => permissions.value.includes('user:create'));
+const canUpdate = computed(() => permissions.value.includes('user:update'));
+
+const currentUserId = computed(() => authStore.user?.id ?? '');
+
+const disableMenuRef = ref<InstanceType<typeof Menu> | null>(null);
+const disableMenuModel = ref<MenuItem[]>([]);
+const customDisableOpen = ref(false);
+const customDisableUser = ref<UserRow | null>(null);
+const customDisableDate = ref<Date | null>(null);
+const customDisableSaving = ref(false);
 
 const mergedRows = computed<MergedRow[]>(() => {
   const m = users.value.map((u) => ({ kind: 'member' as const, ...u }));
@@ -193,6 +251,124 @@ const mergedRows = computed<MergedRow[]>(() => {
 function displayName(u: UserRow) {
   const n = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
   return n || '—';
+}
+
+function memberStatusLabel(data: MergedRow): string {
+  if (data.kind !== 'member') return '';
+  if (data.isActive) return t('settings.active');
+  const until = data.disabledUntil;
+  if (until) {
+    const end = new Date(until);
+    if (!Number.isNaN(end.getTime()) && end.getTime() > Date.now()) {
+      return t('settings.disabledUntil', {
+        date: end.toLocaleString(i18nLocale.value === 'en' ? 'en-US' : 'es-PE', {
+          dateStyle: 'short',
+          timeStyle: 'short',
+        }),
+      });
+    }
+  }
+  return t('settings.disabledIndefinite');
+}
+
+function memberStatusSeverity(data: MergedRow): 'success' | 'warn' | 'secondary' {
+  if (data.kind !== 'member') return 'secondary';
+  if (data.isActive) return 'success';
+  const until = data.disabledUntil;
+  if (until) {
+    const end = new Date(until);
+    if (!Number.isNaN(end.getTime()) && end.getTime() > Date.now()) return 'warn';
+  }
+  return 'secondary';
+}
+
+function openDisableMenu(event: Event, row: UserRow) {
+  if (row.id === currentUserId.value) {
+    toast.add({ severity: 'warn', summary: t('settings.cannotDisableSelf'), life: 4000 });
+    return;
+  }
+  disableMenuModel.value = [
+    { label: t('settings.disable1d'), command: () => void applyDisable(row, 1) },
+    { label: t('settings.disable7d'), command: () => void applyDisable(row, 7) },
+    { label: t('settings.disable30d'), command: () => void applyDisable(row, 30) },
+    { label: t('settings.disableIndefinite'), command: () => void applyDisable(row, null) },
+    { separator: true },
+    {
+      label: t('settings.disableCustom'),
+      command: () => {
+        customDisableUser.value = row;
+        customDisableDate.value = new Date();
+        customDisableOpen.value = true;
+      },
+    },
+  ];
+  disableMenuRef.value?.toggle(event);
+}
+
+async function applyDisable(row: UserRow, days: number | null) {
+  try {
+    let until: string | null = null;
+    if (days != null) {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() + days);
+      d.setUTCHours(23, 59, 59, 999);
+      until = d.toISOString();
+    }
+    await apiClient.patch(`/users/${row.id}/disable`, { until });
+    toast.add({ severity: 'success', summary: t('settings.userAccessUpdated'), life: 3000 });
+    await loadUsers();
+  } catch {
+    toast.add({ severity: 'error', summary: t('settings.userAccessError'), life: 4000 });
+  }
+}
+
+async function submitCustomDisable() {
+  const row = customDisableUser.value;
+  const day = customDisableDate.value;
+  if (!row || !day) return;
+  customDisableSaving.value = true;
+  try {
+    const d = new Date(day);
+    d.setHours(23, 59, 59, 999);
+    await apiClient.patch(`/users/${row.id}/disable`, { until: d.toISOString() });
+    toast.add({ severity: 'success', summary: t('settings.userAccessUpdated'), life: 3000 });
+    customDisableOpen.value = false;
+    customDisableUser.value = null;
+    await loadUsers();
+  } catch {
+    toast.add({ severity: 'error', summary: t('settings.userAccessError'), life: 4000 });
+  } finally {
+    customDisableSaving.value = false;
+  }
+}
+
+function confirmEnable(row: UserRow) {
+  confirm.require({
+    message: t('settings.enableUserConfirm', { email: row.email }),
+    header: t('settings.enableUser'),
+    icon: 'pi pi-check-circle',
+    acceptLabel: t('settings.enableUser'),
+    rejectLabel: t('common.cancel'),
+    accept: async () => {
+      try {
+        await apiClient.patch(`/users/${row.id}/disable`, { enable: true });
+        toast.add({ severity: 'success', summary: t('settings.userAccessUpdated'), life: 3000 });
+        await loadUsers();
+      } catch {
+        toast.add({ severity: 'error', summary: t('settings.userAccessError'), life: 4000 });
+      }
+    },
+  });
+}
+
+async function loadUsers() {
+  if (!canRead.value) return;
+  try {
+    const usersRes = await apiClient.get<{ data: UserRow[]; total?: number }>('/users');
+    users.value = Array.isArray(usersRes.data?.data) ? usersRes.data.data : [];
+  } catch {
+    users.value = [];
+  }
 }
 
 const inviteDialogVisible = ref(false);
@@ -326,11 +502,7 @@ onMounted(async () => {
   }
 
   try {
-    const [usersRes] = await Promise.all([
-      apiClient.get<{ data: UserRow[]; total?: number }>('/users'),
-      loadInvitations(),
-    ]);
-    users.value = Array.isArray(usersRes.data?.data) ? usersRes.data.data : [];
+    await Promise.all([loadUsers(), loadInvitations()]);
   } catch {
     users.value = [];
   } finally {

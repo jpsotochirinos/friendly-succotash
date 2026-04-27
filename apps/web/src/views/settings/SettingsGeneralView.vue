@@ -1,6 +1,10 @@
 <template>
   <div class="max-w-xl flex flex-col gap-6">
-    <PageHeader :title="t('settings.sections.general')" :subtitle="t('settings.generalSubtitle')" />
+    <PageHeader
+      v-if="!embedded"
+      :title="t('settings.sections.general')"
+      :subtitle="t('settings.generalSubtitle')"
+    />
 
     <form class="space-y-6" @submit.prevent="save">
       <div class="flex flex-col gap-1.5">
@@ -76,23 +80,23 @@
         </div>
         <p class="text-xs" :style="{ color: 'var(--fg-muted)' }">{{ t('settings.useConfigurableWorkflowsHint') }}</p>
         <Message
-          v-if="useConfigurableWorkflows && !loading && !canManageWorkflowDefinitions"
+          v-if="useConfigurableWorkflows && !loading && !canReadBlueprints"
           severity="info"
           :closable="false"
           class="mt-2 text-sm [&_.p-message-text]:text-sm"
         >
-          <span>{{ t('settings.flowsPermissionHint') }}</span>
+          <span>{{ t('settings.flowsPermissionHintBlueprints') }}</span>
           <RouterLink :to="{ name: 'settings-roles' }" class="ml-1 font-medium underline text-primary-600">
             {{ t('settings.sections.roles') }}
           </RouterLink>
           .
         </Message>
-        <div v-if="useConfigurableWorkflows && !loading && canManageWorkflowDefinitions" class="mt-2">
+        <div v-if="useConfigurableWorkflows && !loading && canReadBlueprints" class="mt-2">
           <RouterLink
-            :to="{ name: 'settings-workflows' }"
+            :to="{ name: 'settings-blueprints' }"
             class="text-sm font-medium text-primary-600 underline"
           >
-            {{ t('settings.goToWorkflowDefinitions') }} →
+            {{ t('settings.goToBlueprints') }} →
           </RouterLink>
         </div>
       </div>
@@ -117,6 +121,8 @@ import PageHeader from '@/components/common/PageHeader.vue';
 import { useAuthStore } from '@/stores/auth.store';
 import type { OrganizationSummary } from '@/stores/auth.store';
 
+withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
+
 const { t } = useI18n();
 const toast = useToast();
 const route = useRoute();
@@ -127,7 +133,7 @@ const { organization } = storeToRefs(authStore);
 const orgName = ref('');
 const useConfigurableWorkflows = ref(false);
 const userPermissions = ref<string[]>([]);
-const canManageWorkflowDefinitions = computed(() => userPermissions.value.includes('workflow:update'));
+const canReadBlueprints = computed(() => userPermissions.value.includes('blueprint:read'));
 const loading = ref(true);
 const saving = ref(false);
 const logoUploading = ref(false);

@@ -1,6 +1,7 @@
 <template>
   <div class="max-w-5xl flex flex-col gap-8">
     <PageHeader
+      v-if="!embedded"
       :title="t('settings.sections.plan')"
       :subtitle="t('settings.billingUi.planPageSubtitle')"
     />
@@ -88,6 +89,8 @@ import {
 } from '@/api/billing';
 import { useAuthStore } from '@/stores/auth.store';
 import { PlanTier } from '@tracker/shared';
+
+withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
 
 const { t } = useI18n();
 const confirm = useConfirm();

@@ -152,6 +152,123 @@ html.dark {
     color: var(--fg-default);
   }
 
+  /**
+   * Confirm / wizard modals (ConfirmDialogBase, DeleteTrackableDialog)
+   * Máscara: blur + tinte en frío (medianoche / abismo) encima del contenido.
+   * Panel: sombra base + aro y glow muy suaves por intención, mezclados con la marca.
+   */
+  .alega-confirm-mask {
+    -webkit-backdrop-filter: blur(4px) saturate(1.08);
+    backdrop-filter: blur(4px) saturate(1.08);
+    background: color-mix(
+      in srgb,
+      var(--brand-medianoche) 16%,
+      color-mix(in srgb, #ffffff 38%, transparent)
+    ) !important;
+  }
+  html.dark .alega-confirm-mask {
+    background: color-mix(
+      in srgb,
+      var(--brand-abismo) 42%,
+      color-mix(in srgb, var(--brand-hielo) 10%, transparent)
+    ) !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .alega-confirm-mask {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  .alega-confirm-panel {
+    position: relative;
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, #ffffff 18%, transparent),
+        color-mix(in srgb, var(--brand-hielo) 6%, transparent) 42%,
+        color-mix(in srgb, var(--surface-raised) 88%, transparent)
+      ),
+      color-mix(in srgb, var(--surface-raised) 82%, transparent);
+    -webkit-backdrop-filter: blur(22px) saturate(1.25);
+    backdrop-filter: blur(22px) saturate(1.25);
+    border: 1px solid color-mix(in srgb, #ffffff 36%, var(--surface-border));
+    border-radius: 1rem;
+    box-shadow: var(--shadow-lg);
+  }
+  html.dark .alega-confirm-panel {
+    background:
+      linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--brand-hielo) 10%, transparent),
+        color-mix(in srgb, var(--brand-zafiro) 7%, transparent) 44%,
+        color-mix(in srgb, var(--surface-raised) 82%, transparent)
+      ),
+      color-mix(in srgb, var(--surface-raised) 78%, transparent);
+    border-color: color-mix(in srgb, var(--brand-hielo) 30%, var(--surface-border));
+  }
+  .alega-confirm-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, #ffffff 24%, transparent), transparent 38%),
+      radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--brand-hielo) 18%, transparent), transparent 58%);
+  }
+  html.dark .alega-confirm-panel::before {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--brand-hielo) 12%, transparent), transparent 42%),
+      radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--brand-zafiro) 18%, transparent), transparent 58%);
+  }
+
+  .alega-confirm-panel--info {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 1px color-mix(in srgb, var(--brand-zafiro) 26%, var(--surface-border)),
+      0 24px 56px -18px color-mix(in srgb, var(--brand-zafiro) 20%, transparent);
+  }
+
+  .alega-confirm-panel--warning {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 1px
+        color-mix(in srgb, var(--brand-real) 22%, color-mix(in srgb, #d97706 45%, var(--surface-border))),
+      0 24px 56px -18px
+        color-mix(
+          in srgb,
+          #d97706 14%,
+          color-mix(in srgb, var(--brand-medianoche) 22%, transparent)
+        );
+  }
+
+  .alega-confirm-panel--danger {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 1px
+        color-mix(in srgb, var(--brand-real) 20%, color-mix(in srgb, #dc2626 40%, var(--surface-border))),
+      0 24px 56px -18px
+        color-mix(
+          in srgb,
+          #dc2626 12%,
+          color-mix(in srgb, var(--brand-medianoche) 24%, transparent)
+        );
+  }
+
+  .alega-confirm-panel--success {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 1px
+        color-mix(in srgb, var(--brand-medianoche) 18%, color-mix(in srgb, #059669 38%, var(--surface-border))),
+      0 24px 56px -18px
+        color-mix(
+          in srgb,
+          #059669 12%,
+          color-mix(in srgb, var(--brand-medianoche) 20%, transparent)
+        );
+  }
+
   .app-divider {
     background-color: var(--surface-border);
   }

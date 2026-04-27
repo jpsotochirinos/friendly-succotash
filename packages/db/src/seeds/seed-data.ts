@@ -5,7 +5,6 @@ import config from '../mikro-orm.config';
 import { PERMISSIONS } from './permissions.seed';
 import { PlanTier, TrackableStatus, WorkflowItemStatus, MatterType, ActionType } from '@tracker/shared';
 import { WorkflowDefinition, WorkflowState } from '../entities';
-import { seedLegalSystemTemplates } from './legal-templates.seed';
 import { seedSystemWorkflows } from './workflows.seed';
 
 const TRACKABLE_TYPES = ['project', 'case', 'process', 'audit'];
@@ -44,23 +43,35 @@ async function seed() {
   const operatorRole = em.create('Role', {
     name: 'Senior Operator', description: 'Operational access', isSystem: true, organization: org,
   });
-  const operatorPerms = allPermissions.filter((p: any) =>
-    !['org:manage', 'role:manage'].includes(p.code),
+  const operatorPerms = allPermissions.filter(
+    (p: any) =>
+      ![
+        'org:manage',
+        'role:manage',
+        'signature:manage_profiles',
+        'blueprint:manage',
+        'sinoe-proposal:approve',
+      ].includes(p.code),
   );
   (operatorRole as any).permissions.set(operatorPerms);
 
   const juniorRole = em.create('Role', {
     name: 'Junior Operator', description: 'Basic access', isSystem: true, organization: org,
   });
-  const juniorPerms = allPermissions.filter((p: any) =>
-    p.code.includes(':read') ||
+  const juniorPerms = allPermissions.filter((p: any) => {
+    if (typeof p.code === 'string' && p.code.startsWith('signature:')) {
+      return p.code === 'signature:sign';
+    }
+    return (
+      p.code.includes(':read') ||
       p.code.includes(':create') ||
       p.code === 'workflow:review' ||
       p.code === 'workflow_item:comment' ||
       (typeof p.code === 'string'
         && p.code.startsWith('whatsapp:')
-        && p.code !== 'whatsapp:send_to_others'),
-  );
+        && p.code !== 'whatsapp:send_to_others')
+    );
+  });
   (juniorRole as any).permissions.set(juniorPerms);
   await em.flush();
 
@@ -207,9 +218,6 @@ async function seed() {
   }
 
   await em.flush();
-
-  console.log('Seeding legal workflow templates...');
-  await seedLegalSystemTemplates(em);
 
   const trackableCount = await em.count('Trackable', {}, { filters: false });
   const itemCount = await em.count('WorkflowItem', {}, { filters: false });

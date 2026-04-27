@@ -1,6 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 
+/** activity_instances + stage + track + state + user (t = expediente vía process_track). */
+const FROM_ACTIVITY = `
+  FROM activity_instances ai
+  INNER JOIN stage_instances si ON si.id = ai.stage_instance_id
+  INNER JOIN process_tracks pt ON pt.id = si.process_track_id
+  INNER JOIN trackables t ON t.id = pt.trackable_id
+  LEFT JOIN workflow_states wst ON wst.id = ai.current_state_id
+  LEFT JOIN users u ON u.id = ai.assigned_to_id
+`;
+
+const ACTIVITY_OPEN = `
+  (ai.workflow_state_category IS NULL OR ai.workflow_state_category NOT IN ('done', 'cancelled'))
+  AND (wst.id IS NULL OR wst.key NOT IN ('closed', 'skipped', 'validated'))
+`;
+
 @Injectable()
 export class DashboardService {
   constructor(private readonly em: EntityManager) {}
@@ -30,19 +45,21 @@ export class DashboardService {
     return result;
   }
 
-  /** Counts workflow_items by status for one expediente (aligns with Kanban). */
+  /** Counts activities by workflow state for one expediente (aligns con Kanban / motor v2). */
   async getWorkflowItemsByStatus(organizationId: string, trackableId: string) {
     const conn = this.em.getConnection();
     return conn.execute(
       `
-      SELECT wst.key AS status, COUNT(*)::int AS count
-      FROM workflow_items wi
-      INNER JOIN workflow_states wst ON wst.id = wi.current_state_id
-      WHERE wi.organization_id = ?
-        AND wi.trackable_id = ?
-      GROUP BY wst.key
+      SELECT s.status, s.count
+      FROM (
+        SELECT COALESCE(wst.key, 'pending') AS status, COUNT(*)::int AS count
+        ${FROM_ACTIVITY}
+        WHERE ai.organization_id = ?
+          AND t.id = ?
+        GROUP BY COALESCE(wst.key, 'pending')
+      ) s
       ORDER BY
-        CASE wst.key
+        CASE s.status
           WHEN 'pending' THEN 1
           WHEN 'active' THEN 2
           WHEN 'in_progress' THEN 3
@@ -64,25 +81,25 @@ export class DashboardService {
     const params: any[] = [organizationId, safeDays];
     let extra = '';
     if (trackableId) {
-      extra = ' AND wi.trackable_id = ?';
+      extra = ' AND t.id = ?';
       params.push(trackableId);
     }
-    return conn.execute(`
+    return conn.execute(
+      `
       SELECT
-        wi.id, wi.title, wi.kind, wst.key AS status, wi.due_date,
-        wi.depth, t.title as trackable_title, t.id as trackable_id,
+        ai.id, ai.title, ai.kind, wst.key AS status, ai.due_date,
+        NULL::int AS depth, t.title as trackable_title, t.id as trackable_id,
         u.email as assigned_to_email, u.first_name as assigned_to_name
-      FROM workflow_items wi
-      INNER JOIN workflow_states wst ON wst.id = wi.current_state_id
-      JOIN trackables t ON wi.trackable_id = t.id
-      LEFT JOIN users u ON wi.assigned_to_id = u.id
-      WHERE wi.organization_id = ?
-        AND wi.due_date IS NOT NULL
-        AND wi.due_date <= CURRENT_DATE + make_interval(days => ?)
-        AND wst.key NOT IN ('closed', 'skipped', 'validated')${extra}
-      ORDER BY wi.due_date ASC
+      ${FROM_ACTIVITY}
+      WHERE ai.organization_id = ?
+        AND ai.due_date IS NOT NULL
+        AND ai.due_date <= CURRENT_DATE + make_interval(days => ?)
+        AND ${ACTIVITY_OPEN}${extra}
+      ORDER BY ai.due_date ASC
       LIMIT 50
-    `, params);
+    `,
+      params,
+    );
   }
 
   async getOverdueItems(organizationId: string, trackableId?: string) {
@@ -90,52 +107,62 @@ export class DashboardService {
     const params: any[] = [organizationId];
     let extra = '';
     if (trackableId) {
-      extra = ' AND wi.trackable_id = ?';
+      extra = ' AND t.id = ?';
       params.push(trackableId);
     }
-    return conn.execute(`
+    return conn.execute(
+      `
       SELECT
-        wi.id, wi.title, wi.kind, wst.key AS status, wi.due_date,
+        ai.id, ai.title, ai.kind, wst.key AS status, ai.due_date,
         t.title as trackable_title, t.id as trackable_id,
         u.email as assigned_to_email, u.first_name as assigned_to_name
-      FROM workflow_items wi
-      INNER JOIN workflow_states wst ON wst.id = wi.current_state_id
-      JOIN trackables t ON wi.trackable_id = t.id
-      LEFT JOIN users u ON wi.assigned_to_id = u.id
-      WHERE wi.organization_id = ?
-        AND wi.due_date < CURRENT_DATE
-        AND wst.key NOT IN ('closed', 'skipped', 'validated')${extra}
-      ORDER BY wi.due_date ASC
-    `, params);
+      ${FROM_ACTIVITY}
+      WHERE ai.organization_id = ?
+        AND ai.due_date < CURRENT_DATE
+        AND ${ACTIVITY_OPEN}${extra}
+      ORDER BY ai.due_date ASC
+    `,
+      params,
+    );
   }
 
   async getWorkloadByUser(organizationId: string, trackableId?: string) {
     const conn = this.em.getConnection();
-    const params: any[] = [];
-    let extraJoin = '';
-    if (trackableId) {
-      extraJoin = ' AND wi.trackable_id = ?';
-      params.push(trackableId);
-    }
+    const extraT = trackableId ? ' AND t.id = ?' : '';
+    const params: any[] = [organizationId];
+    if (trackableId) params.push(trackableId);
     params.push(organizationId);
-    return conn.execute(`
+    return conn.execute(
+      `
       SELECT
         u.id as user_id,
         u.email,
         u.first_name,
         u.last_name,
-        COUNT(*) FILTER (WHERE wst.key = 'pending') as pending_count,
-        COUNT(*) FILTER (WHERE wst.key = 'in_progress') as in_progress_count,
-        COUNT(*) FILTER (WHERE wst.key = 'under_review') as under_review_count,
-        COUNT(*) as total_assigned
+        COUNT(p.id) FILTER (WHERE wst.key = 'pending') as pending_count,
+        COUNT(p.id) FILTER (WHERE wst.key = 'in_progress') as in_progress_count,
+        COUNT(p.id) FILTER (WHERE wst.key = 'under_review') as under_review_count,
+        COUNT(p.id) as total_assigned
       FROM users u
-      LEFT JOIN workflow_items wi ON wi.assigned_to_id = u.id${extraJoin}
-      LEFT JOIN workflow_states wst ON wst.id = wi.current_state_id
-        AND wst.key NOT IN ('closed', 'skipped', 'validated')
+      LEFT JOIN (
+        SELECT ai.id, ai.assigned_to_id, ai.current_state_id
+        FROM activity_instances ai
+        INNER JOIN stage_instances si ON si.id = ai.stage_instance_id
+        INNER JOIN process_tracks pt ON pt.id = si.process_track_id
+        INNER JOIN trackables t ON t.id = pt.trackable_id
+        LEFT JOIN workflow_states wst0 ON wst0.id = ai.current_state_id
+        WHERE ai.organization_id = ?
+          ${extraT}
+          AND (ai.workflow_state_category IS NULL OR ai.workflow_state_category NOT IN ('done', 'cancelled'))
+          AND (wst0.id IS NULL OR wst0.key NOT IN ('closed', 'skipped', 'validated'))
+      ) p ON p.assigned_to_id = u.id
+      LEFT JOIN workflow_states wst ON wst.id = p.current_state_id
       WHERE u.organization_id = ?
       GROUP BY u.id, u.email, u.first_name, u.last_name
       ORDER BY total_assigned DESC
-    `, params);
+    `,
+      params,
+    );
   }
 
   async getProgressByTrackable(organizationId: string, trackableId?: string) {
@@ -146,27 +173,43 @@ export class DashboardService {
       extra = ' AND t.id = ?';
       params.push(trackableId);
     }
-    return conn.execute(`
+    return conn.execute(
+      `
       SELECT
         t.id, t.title, t.status, t.due_date,
-        COUNT(wi.id) as total_items,
-        COUNT(*) FILTER (WHERE ws.key IN ('closed', 'validated', 'skipped')) as completed_items,
+        COUNT(a.id) as total_items,
+        COUNT(*) FILTER (WHERE
+          (ws.key IN ('closed', 'validated', 'skipped'))
+          OR (a.workflow_state_category = 'done')
+        ) as completed_items,
         CASE
-          WHEN COUNT(wi.id) > 0
+          WHEN COUNT(a.id) > 0
           THEN ROUND(
-            COUNT(*) FILTER (WHERE ws.key IN ('closed', 'validated', 'skipped'))::numeric
-            / COUNT(wi.id)::numeric * 100, 1
+            COUNT(*) FILTER (WHERE
+              (ws.key IN ('closed', 'validated', 'skipped'))
+              OR (a.workflow_state_category = 'done')
+            )::numeric
+            / COUNT(a.id)::numeric * 100, 1
           )
           ELSE 0
         END as progress_pct
       FROM trackables t
-      LEFT JOIN workflow_items wi ON wi.trackable_id = t.id
-      LEFT JOIN workflow_states ws ON ws.id = wi.current_state_id
+      LEFT JOIN (
+        SELECT
+          ai.id, ai.current_state_id, ai.workflow_state_category,
+          pt.trackable_id AS exp_id
+        FROM activity_instances ai
+        INNER JOIN stage_instances si ON si.id = ai.stage_instance_id
+        INNER JOIN process_tracks pt ON pt.id = si.process_track_id
+      ) a ON a.exp_id = t.id
+      LEFT JOIN workflow_states ws ON ws.id = a.current_state_id
       WHERE t.organization_id = ?
         AND t.status != 'archived'${extra}
       GROUP BY t.id, t.title, t.status, t.due_date
       ORDER BY t.created_at DESC
-    `, params);
+    `,
+      params,
+    );
   }
 
   async getRecentActivity(organizationId: string, limit = 20) {
@@ -184,11 +227,10 @@ export class DashboardService {
    */
   async getHomeDashboard(organizationId: string, userId: string) {
     const conn = this.em.getConnection();
-    const openWi = `EXISTS (
-        SELECT 1 FROM workflow_states __ws
-        WHERE __ws.id = wi.current_state_id
-        AND __ws.key NOT IN ('closed', 'skipped', 'validated')
-      )`;
+    const openAct = `(
+      (ai.workflow_state_category IS NULL OR ai.workflow_state_category NOT IN ('done', 'cancelled'))
+      AND (wst.id IS NULL OR wst.key NOT IN ('closed', 'skipped', 'validated'))
+    )`;
 
     const [
       activeRes,
@@ -207,48 +249,50 @@ export class DashboardService {
       ),
       conn.execute(
         `
-        SELECT COUNT(*)::int AS c FROM workflow_items wi
-        WHERE wi.organization_id = ?
-          AND ${openWi}
-          AND wi.is_legal_deadline = true
+        SELECT COUNT(*)::int AS c
+        ${FROM_ACTIVITY}
+        WHERE ai.organization_id = ?
+          AND ${openAct}
+          AND ai.is_legal_deadline = true
       `,
         [organizationId],
       ),
       conn.execute(
         `
-        SELECT COUNT(*)::int AS c FROM workflow_items wi
-        WHERE wi.organization_id = ?
-          AND ${openWi}
-          AND wi.due_date IS NOT NULL
-          AND wi.due_date::date = CURRENT_DATE
+        SELECT COUNT(*)::int AS c
+        ${FROM_ACTIVITY}
+        WHERE ai.organization_id = ?
+          AND ${openAct}
+          AND ai.due_date IS NOT NULL
+          AND ai.due_date::date = CURRENT_DATE
       `,
         [organizationId],
       ),
       conn.execute(
         `
-        SELECT COUNT(*)::int AS c FROM workflow_items wi
-        WHERE wi.organization_id = ?
-          AND ${openWi}
-          AND wi.due_date IS NOT NULL
-          AND wi.due_date::date < CURRENT_DATE
+        SELECT COUNT(*)::int AS c
+        ${FROM_ACTIVITY}
+        WHERE ai.organization_id = ?
+          AND ${openAct}
+          AND ai.due_date IS NOT NULL
+          AND ai.due_date::date < CURRENT_DATE
       `,
         [organizationId],
       ),
       conn.execute(
         `
         SELECT
-          wi.id, wi.title, wi.kind, wstp.key AS status, wi.due_date,
+          ai.id, ai.title, ai.kind, wstp.key AS status, ai.due_date,
           t.id as trackable_id, t.title as trackable_title
-        FROM workflow_items wi
-        INNER JOIN workflow_states wstp ON wstp.id = wi.current_state_id
-        JOIN trackables t ON wi.trackable_id = t.id
-        WHERE wi.organization_id = ?
-          AND wi.assigned_to_id = ?
-          AND ${openWi}
+        ${FROM_ACTIVITY.replaceAll('wst', 'wstp')}
+        WHERE ai.organization_id = ?
+          AND ai.assigned_to_id = ?
+          AND ( (ai.workflow_state_category IS NULL OR ai.workflow_state_category NOT IN ('done', 'cancelled'))
+            AND (wstp.id IS NULL OR wstp.key NOT IN ('closed', 'skipped', 'validated')) )
         ORDER BY
-          CASE WHEN wi.due_date IS NOT NULL AND wi.due_date::date < CURRENT_DATE THEN 0 ELSE 1 END,
-          wi.due_date ASC NULLS LAST,
-          wi.created_at DESC
+          CASE WHEN ai.due_date IS NOT NULL AND ai.due_date::date < CURRENT_DATE THEN 0 ELSE 1 END,
+          ai.due_date ASC NULLS LAST,
+          ai.created_at DESC
         LIMIT 5
       `,
         [organizationId, userId],
@@ -256,15 +300,14 @@ export class DashboardService {
       conn.execute(
         `
         SELECT
-          wi.id, wi.title, wi.kind, wst2.key AS status, wi.due_date,
+          ai.id, ai.title, ai.kind, wst2.key AS status, ai.due_date,
           t.id as trackable_id, t.title as trackable_title
-        FROM workflow_items wi
-        INNER JOIN workflow_states wst2 ON wst2.id = wi.current_state_id
-        JOIN trackables t ON wi.trackable_id = t.id
-        WHERE wi.organization_id = ?
-          AND wi.assigned_to_id = ?
-          AND ${openWi}
-        ORDER BY wi.updated_at DESC
+        ${FROM_ACTIVITY.replaceAll('wst', 'wst2')}
+        WHERE ai.organization_id = ?
+          AND ai.assigned_to_id = ?
+          AND ( (ai.workflow_state_category IS NULL OR ai.workflow_state_category NOT IN ('done', 'cancelled'))
+            AND (wst2.id IS NULL OR wst2.key NOT IN ('closed', 'skipped', 'validated')) )
+        ORDER BY ai.updated_at DESC
         LIMIT 5
       `,
         [organizationId, userId],
@@ -324,10 +367,10 @@ export class DashboardService {
   ) {
     const conn = this.em.getConnection();
     const params: any[] = [organizationId];
-    let whereClause = 'WHERE wi.organization_id = ?';
+    let whereClause = 'WHERE ai.organization_id = ?';
 
     if (filters?.trackableId) {
-      whereClause += ' AND wi.trackable_id = ?';
+      whereClause += ' AND t.id = ?';
       params.push(filters.trackableId);
     }
     if (filters?.status) {
@@ -335,44 +378,47 @@ export class DashboardService {
       params.push(filters.status);
     }
     if (filters?.assignedToId) {
-      whereClause += ' AND wi.assigned_to_id = ?';
+      whereClause += ' AND ai.assigned_to_id = ?';
       params.push(filters.assignedToId);
     }
     if (filters?.kind) {
-      whereClause += ' AND wi.kind = ?';
+      whereClause += ' AND ai.kind = ?';
       params.push(filters.kind);
     }
     if (filters?.overdue) {
-      whereClause +=
-        " AND wi.due_date < CURRENT_DATE AND wst.key NOT IN ('closed', 'skipped', 'validated')";
+      whereClause += ` AND ai.due_date < CURRENT_DATE AND ${ACTIVITY_OPEN}`;
     }
 
     const page = filters?.page || 1;
     const limit = filters?.limit || 50;
     const offset = (page - 1) * limit;
 
-    const fromWi =
-      'FROM workflow_items wi INNER JOIN workflow_states wst ON wst.id = wi.current_state_id JOIN trackables t ON wi.trackable_id = t.id LEFT JOIN users u ON wi.assigned_to_id = u.id';
+    const fromGa = `FROM activity_instances ai
+      INNER JOIN stage_instances si ON si.id = ai.stage_instance_id
+      INNER JOIN process_tracks pt ON pt.id = si.process_track_id
+      INNER JOIN trackables t ON t.id = pt.trackable_id
+      LEFT JOIN workflow_states wst ON wst.id = ai.current_state_id
+      LEFT JOIN users u ON ai.assigned_to_id = u.id`;
 
     const countResult = await conn.execute(
-      `SELECT COUNT(*) as total ${fromWi} ${whereClause}`,
+      `SELECT COUNT(*) as total ${fromGa} ${whereClause}`,
       params,
     );
 
     const items = await conn.execute(
       `
       SELECT
-        wi.id, wi.title, wi.kind, wi.action_type, wst.key AS status,
-        wi.due_date, wi.start_date, wi.depth, wi.sort_order,
+        ai.id, ai.title, ai.kind, ai.action_type, wst.key AS status,
+        ai.due_date, ai.start_date, NULL::int as depth, NULL::int as sort_order,
         t.id as trackable_id, t.title as trackable_title,
         u.id as assigned_to_id, u.email as assigned_to_email,
         u.first_name as assigned_to_name
-      ${fromWi}
+      ${fromGa}
       ${whereClause}
       ORDER BY
-        CASE WHEN wi.due_date < CURRENT_DATE AND wst.key NOT IN ('closed', 'skipped', 'validated') THEN 0 ELSE 1 END,
-        wi.due_date ASC NULLS LAST,
-        wi.created_at DESC
+        CASE WHEN ai.due_date < CURRENT_DATE AND (wst.id IS NULL OR wst.key NOT IN ('closed', 'skipped', 'validated')) THEN 0 ELSE 1 END,
+        ai.due_date ASC NULLS LAST,
+        ai.created_at DESC
       LIMIT ? OFFSET ?
     `,
       [...params, limit, offset],
@@ -406,32 +452,34 @@ export class DashboardService {
     const items = await conn.execute(
       `
       SELECT
-        wi.id, wi.title, wi.kind, wi.action_type, wstc.key AS status,
-        wi.due_date, wi.start_date, wi.depth, wi.sort_order,
+        ai.id, ai.title, ai.kind, ai.action_type, wstc.key AS status,
+        ai.due_date, ai.start_date, NULL::int as depth, NULL::int as sort_order,
         t.id as trackable_id, t.title as trackable_title,
         u.id as assigned_to_id, u.email as assigned_to_email,
         u.first_name as assigned_to_name
-      FROM workflow_items wi
-      INNER JOIN workflow_states wstc ON wstc.id = wi.current_state_id
-      JOIN trackables t ON wi.trackable_id = t.id
-      LEFT JOIN users u ON wi.assigned_to_id = u.id
-      WHERE wi.organization_id = ?
-        AND (wi.start_date IS NOT NULL OR wi.due_date IS NOT NULL)
+      FROM activity_instances ai
+      INNER JOIN stage_instances si ON si.id = ai.stage_instance_id
+      INNER JOIN process_tracks pt ON pt.id = si.process_track_id
+      INNER JOIN trackables t ON t.id = pt.trackable_id
+      LEFT JOIN workflow_states wstc ON wstc.id = ai.current_state_id
+      LEFT JOIN users u ON ai.assigned_to_id = u.id
+      WHERE ai.organization_id = ?
+        AND (ai.start_date IS NOT NULL OR ai.due_date IS NOT NULL)
         AND (
           (
-            wi.start_date IS NOT NULL AND wi.due_date IS NOT NULL
-            AND wi.start_date::date <= ?::date AND wi.due_date::date >= ?::date
+            ai.start_date IS NOT NULL AND ai.due_date IS NOT NULL
+            AND ai.start_date::date <= ?::date AND ai.due_date::date >= ?::date
           )
           OR (
-            wi.start_date IS NOT NULL AND wi.due_date IS NULL
-            AND wi.start_date::date BETWEEN ?::date AND ?::date
+            ai.start_date IS NOT NULL AND ai.due_date IS NULL
+            AND ai.start_date::date BETWEEN ?::date AND ?::date
           )
           OR (
-            wi.start_date IS NULL AND wi.due_date IS NOT NULL
-            AND wi.due_date::date BETWEEN ?::date AND ?::date
+            ai.start_date IS NULL AND ai.due_date IS NOT NULL
+            AND ai.due_date::date BETWEEN ?::date AND ?::date
           )
         )
-      ORDER BY wi.due_date ASC NULLS LAST, wi.start_date ASC NULLS LAST, wi.created_at DESC
+      ORDER BY ai.due_date ASC NULLS LAST, ai.start_date ASC NULLS LAST, ai.created_at DESC
       LIMIT 3000
     `,
       params,

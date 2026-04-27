@@ -178,3 +178,211 @@ export enum WhatsAppMessageDirection {
   INBOUND = 'inbound',
   OUTBOUND = 'outbound',
 }
+
+export enum SignatureRequestStatus {
+  DRAFT = 'draft',
+  PENDING = 'pending',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
+  EXPIRED = 'expired',
+}
+
+export enum SignatureMode {
+  SEQUENTIAL = 'sequential',
+  PARALLEL = 'parallel',
+}
+
+export enum SignerStatus {
+  PENDING = 'pending',
+  NOTIFIED = 'notified',
+  SIGNED = 'signed',
+  DECLINED = 'declined',
+}
+
+export enum SignatureEventType {
+  REQUEST_CREATED = 'request_created',
+  NOTIFICATION_SENT = 'notification_sent',
+  LINK_OPENED = 'link_opened',
+  OTP_SENT = 'otp_sent',
+  OTP_VERIFIED = 'otp_verified',
+  SIGNATURE_PLACED = 'signature_placed',
+  DECLINED = 'declined',
+  COMPLETED = 'completed',
+  EXPIRED = 'expired',
+}
+
+// ============================================================================
+// Legal process flow engine (procedural deadlines & stage advance)
+// ============================================================================
+
+export enum DeadlineType {
+  NONE = 'none',
+  FROM_NOTIFICATION = 'from_notification',
+  FROM_STAGE_START = 'from_stage_start',
+  FIXED_DATE = 'fixed_date',
+}
+
+export enum DeadlineCalendarType {
+  JUDICIAL = 'judicial',
+  CALENDAR = 'calendar',
+  BUSINESS = 'business',
+}
+
+export enum DeadlineTriggerType {
+  MANUAL = 'manual',
+  SINOE = 'sinoe',
+  STAGE_ENTERED = 'stage_entered',
+}
+
+export enum LegalDeadlineStatus {
+  PENDING = 'pending',
+  MET = 'met',
+  OVERDUE = 'overdue',
+  WAIVED = 'waived',
+}
+
+export enum AdvancedByType {
+  MANUAL = 'manual',
+  SINOE = 'sinoe',
+  RULE = 'rule',
+}
+
+// =============================================================================
+// Blueprint engine v2 (ProcessTrack, Stage/ActivityInstance, SinoeProposal)
+// =============================================================================
+
+export enum BlueprintScope {
+  SYSTEM = 'system',
+  TENANT = 'tenant',
+  INSTANCE = 'instance',
+}
+
+export enum BlueprintTargetType {
+  STAGE = 'stage',
+  ACTIVITY = 'activity',
+  DEADLINE_RULE = 'deadline_rule',
+  DOCUMENT_SUGGESTION = 'document_suggestion',
+  SINOE_RULE = 'sinoe_rule',
+}
+
+export enum BlueprintOverrideOperation {
+  MODIFY = 'modify',
+  ADD = 'add',
+  REMOVE = 'remove',
+  REORDER = 'reorder',
+}
+
+export enum ProcessTrackRole {
+  PRIMARY = 'primary',
+  ACCESSORY = 'accessory',
+  APPEAL = 'appeal',
+  CAUTELAR = 'cautelar',
+  INCIDENTAL = 'incidental',
+}
+
+export enum ProcessTrackOutcome {
+  WON = 'won',
+  LOST = 'lost',
+  SETTLED = 'settled',
+  WITHDRAWN = 'withdrawn',
+  DISMISSED = 'dismissed',
+  ARCHIVED = 'archived',
+}
+
+export enum StageInstanceStatus {
+  PENDING = 'pending',
+  ACTIVE = 'active',
+  COMPLETED = 'completed',
+  SKIPPED = 'skipped',
+}
+
+/** Trigger for a `DeadlineRule` in v1: single target code per rule. */
+export enum BlueprintDeadlineTrigger {
+  STAGE_ENTERED = 'stage_entered',
+  DOCUMENT_NOTIFIED = 'document_notified',
+  ACTIVITY_COMPLETED = 'activity_completed',
+}
+
+export enum DeadlineDurationUnit {
+  CALENDAR_DAYS = 'calendar_days',
+  JUDICIAL_BUSINESS_DAYS = 'judicial_business_days',
+}
+
+export enum DeadlineOnExpiry {
+  CREATE_ACTIVITY = 'create_activity',
+  ADVANCE_STAGE = 'advance_stage',
+  ALERT_ONLY = 'alert_only',
+}
+
+export enum DeadlineCriticality {
+  INFO = 'info',
+  ADVISORY = 'advisory',
+  CRITICAL = 'critical',
+}
+
+export enum SinoeMatchMode {
+  EXACT = 'exact',
+  CONTAINS = 'contains',
+  REGEX = 'regex',
+}
+
+export enum SinoeRuleAction {
+  ADVANCE_TO_STAGE = 'advance_to_stage',
+  CREATE_ACTIVITY = 'create_activity',
+  TRIGGER_DEADLINE = 'trigger_deadline',
+  NOTIFY_ONLY = 'notify_only',
+}
+
+export enum SinoeProposedAction {
+  ADVANCE_STAGE = 'advance_stage',
+  CREATE_ACTIVITY = 'create_activity',
+  TRIGGER_DEADLINE = 'trigger_deadline',
+  LINK_DOCUMENT = 'link_document',
+}
+
+export enum SinoeProposalStatus {
+  PENDING = 'pending',
+  UNMATCHED = 'unmatched',
+  AUTO_APPLIED = 'auto_applied',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  REVERTED = 'reverted',
+}
+
+export enum ProcessTrackEventType {
+  STAGE_ENTERED = 'stage_entered',
+  STAGE_EXITED = 'stage_exited',
+  STAGE_REOPENED = 'stage_reopened',
+  STAGE_REVERTED = 'stage_reverted',
+  STAGE_WORK_CLOSED = 'stage_work_closed',
+  STAGE_WORK_REOPENED = 'stage_work_reopened',
+  STAGE_INSTANCE_CREATED = 'stage_instance_created',
+  ACTIVITY_CREATED = 'activity_created',
+  ACTIVITY_COMPLETED = 'activity_completed',
+  ACTIVITY_INHERITED = 'activity_inherited',
+  ACTIVITY_CLOSED_SKIPPED = 'activity_closed_skipped',
+  ACTIVITY_MOVED = 'activity_moved',
+  DEADLINE_TRIGGERED = 'deadline_triggered',
+  SINOE_PROPOSAL_APPLIED = 'sinoe_proposal_applied',
+  SINOE_PROPOSAL_REVERTED = 'sinoe_proposal_reverted',
+  OVERRIDE_APPLIED = 'override_applied',
+  DEADLINE_OVERRIDDEN = 'deadline_overridden',
+}
+
+export enum ComputedDeadlineStatusV2 {
+  PENDING = 'pending',
+  MET = 'met',
+  EXPIRED = 'expired',
+  WAIVED = 'waived',
+}
+
+/** Suggested / classified document type for blueprints and UI. */
+export enum BlueprintDocumentType {
+  DEMANDA = 'demanda',
+  RESOLUCION = 'resolucion',
+  CEDULA_NOTIFICACION = 'cedula_notificacion',
+  ESCRITO_CONTESTACION = 'escrito_contestacion',
+  ACTA_AUDIENCIA = 'acta_audiencia',
+  SENTENCIA = 'sentencia',
+  OTRO = 'otro',
+}

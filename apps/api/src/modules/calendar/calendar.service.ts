@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { createHash, randomBytes } from 'crypto';
-import { User, WorkflowItem } from '@tracker/db';
+import { ActivityInstance, User, WorkflowItem } from '@tracker/db';
 import { CalendarQueryDto } from './dto/calendar-query.dto';
 import { RescheduleEventDto } from './dto/reschedule-event.dto';
 
@@ -59,9 +59,9 @@ export class CalendarService {
 
     const events: UnifiedCalendarEvent[] = [];
 
-    const wfRows = await this.fetchWorkflowRows(organizationId, userId, q, scope);
-    for (const row of wfRows) {
-      events.push(this.workflowRowToEvent(row));
+    const actRows = await this.fetchActivityRows(organizationId, userId, q, scope);
+    for (const row of actRows) {
+      events.push(this.activityRowToEvent(row));
     }
 
     if (q.includeBirthdays) {
@@ -91,7 +91,7 @@ export class CalendarService {
     return { events };
   }
 
-  private async fetchWorkflowRows(
+  private async fetchActivityRows(
     organizationId: string,
     userId: string,
     q: CalendarQueryDto,
@@ -102,68 +102,71 @@ export class CalendarService {
     let extra = '';
 
     if (scope === 'mine') {
-      extra += ' AND wi.assigned_to_id = ?';
+      extra += ' AND ai.assigned_to_id = ?';
       params.push(userId);
     }
 
     if (q.trackableId) {
-      extra += ' AND wi.trackable_id = ?';
+      extra += ' AND t.id = ?';
       params.push(q.trackableId);
     }
 
     if (q.kinds?.length) {
-      extra += ` AND wi.kind = ANY(ARRAY[${q.kinds.map(() => '?').join(',')}]::text[])`;
+      extra += ` AND ai.kind = ANY(ARRAY[${q.kinds.map(() => '?').join(',')}]::text[])`;
       params.push(...q.kinds);
     }
 
     if (q.priorities?.length) {
-      extra += ` AND wi.priority = ANY(ARRAY[${q.priorities.map(() => '?').join(',')}]::text[])`;
+      extra += ` AND ai.priority = ANY(ARRAY[${q.priorities.map(() => '?').join(',')}]::text[])`;
       params.push(...q.priorities);
     }
 
     if (q.assignees?.length) {
-      extra += ` AND wi.assigned_to_id = ANY(ARRAY[${q.assignees.map(() => '?').join(',')}]::uuid[])`;
+      extra += ` AND ai.assigned_to_id = ANY(ARRAY[${q.assignees.map(() => '?').join(',')}]::uuid[])`;
       params.push(...q.assignees);
     }
 
     const sql = `
       SELECT
-        wi.id, wi.title, wi.kind, wst.key AS status, wi.action_type,
-        wi.due_date, wi.start_date, wi.depth, wi.sort_order,
-        wi.is_legal_deadline,
-        wi.location, wi.priority, wi.all_day, wi.reminder_minutes_before,
-        wi.calendar_color, wi.rrule, wi.metadata, wi.accent_color,
+        ai.id, ai.title, ai.kind, wst.key AS status, ai.action_type,
+        ai.due_date, ai.start_date,
+        NULL::int AS depth, NULL::int AS sort_order,
+        ai.is_legal_deadline,
+        ai.location, ai.priority, ai.all_day, ai.reminder_minutes_before,
+        ai.calendar_color, ai.rrule, ai.metadata, ai.accent_color,
         t.id as trackable_id, t.title as trackable_title,
         u.id as assigned_to_id, u.email as assigned_to_email,
         u.first_name as assigned_to_name
-      FROM workflow_items wi
-      INNER JOIN workflow_states wst ON wst.id = wi.current_state_id
-      JOIN trackables t ON wi.trackable_id = t.id
-      LEFT JOIN users u ON wi.assigned_to_id = u.id
-      WHERE wi.organization_id = ?
-        AND (wi.start_date IS NOT NULL OR wi.due_date IS NOT NULL)
+      FROM activity_instances ai
+      INNER JOIN stage_instances si ON si.id = ai.stage_instance_id
+      INNER JOIN process_tracks pt ON pt.id = si.process_track_id
+      INNER JOIN trackables t ON t.id = pt.trackable_id
+      LEFT JOIN workflow_states wst ON wst.id = ai.current_state_id
+      LEFT JOIN users u ON ai.assigned_to_id = u.id
+      WHERE ai.organization_id = ?
+        AND (ai.start_date IS NOT NULL OR ai.due_date IS NOT NULL)
         AND (
           (
-            wi.start_date IS NOT NULL AND wi.due_date IS NOT NULL
-            AND wi.start_date::date <= ?::date AND wi.due_date::date >= ?::date
+            ai.start_date IS NOT NULL AND ai.due_date IS NOT NULL
+            AND ai.start_date::date <= ?::date AND ai.due_date::date >= ?::date
           )
           OR (
-            wi.start_date IS NOT NULL AND wi.due_date IS NULL
-            AND wi.start_date::date BETWEEN ?::date AND ?::date
+            ai.start_date IS NOT NULL AND ai.due_date IS NULL
+            AND ai.start_date::date BETWEEN ?::date AND ?::date
           )
           OR (
-            wi.start_date IS NULL AND wi.due_date IS NOT NULL
-            AND wi.due_date::date BETWEEN ?::date AND ?::date
+            ai.start_date IS NULL AND ai.due_date IS NOT NULL
+            AND ai.due_date::date BETWEEN ?::date AND ?::date
           )
         )
         ${extra}
-      ORDER BY wi.due_date ASC NULLS LAST, wi.start_date ASC NULLS LAST, wi.created_at DESC
+      ORDER BY ai.due_date ASC NULLS LAST, ai.start_date ASC NULLS LAST, ai.created_at DESC
       LIMIT 5000
     `;
     return conn.execute(sql, params) as Promise<Record<string, unknown>[]>;
   }
 
-  private workflowRowToEvent(row: Record<string, unknown>): UnifiedCalendarEvent {
+  private activityRowToEvent(row: Record<string, unknown>): UnifiedCalendarEvent {
     const id = String(row.id);
     const start = row.start_date ? new Date(row.start_date as string).toISOString() : null;
     const end = row.due_date ? new Date(row.due_date as string).toISOString() : null;
@@ -178,14 +181,15 @@ export class CalendarService {
     if (!start && end) startS = endS;
 
     return {
-      id: `wi:${id}`,
+      id: `ai:${id}`,
       source: 'workflow',
       title: String(row.title ?? ''),
       start: startS,
       end: endS,
       allDay,
       extendedProps: {
-        workflowItemId: id,
+        activityInstanceId: id,
+        workflowItemId: null,
         kind: row.kind ?? null,
         status: row.status,
         trackableId: row.trackable_id,
@@ -314,21 +318,69 @@ export class CalendarService {
     }));
   }
 
+  private parseCalendarEventIdParam(raw: string): { type: 'ai' | 'wi'; id: string } {
+    if (raw.startsWith('ai:')) {
+      return { type: 'ai', id: raw.slice(3) };
+    }
+    if (raw.startsWith('wi:')) {
+      return { type: 'wi', id: raw.slice(3) };
+    }
+    return { type: 'ai', id: raw };
+  }
+
   async reschedule(
     organizationId: string,
-    workflowItemId: string,
+    eventIdParam: string,
     dto: RescheduleEventDto,
     permissions: string[],
-  ): Promise<WorkflowItem> {
+  ): Promise<ActivityInstance | WorkflowItem> {
     if (!permissions.includes('workflow_item:update')) {
       throw new ForbiddenException();
     }
+    const ref = this.parseCalendarEventIdParam(eventIdParam);
+    if (ref.type === 'ai') {
+      const act = await this.em.findOne(
+        ActivityInstance,
+        { id: ref.id, organization: organizationId },
+        { populate: ['stageInstance'] },
+      );
+      if (act) {
+        if (dto.startDate !== undefined) {
+          act.startDate = dto.startDate ? new Date(dto.startDate) : undefined;
+        }
+        if (dto.dueDate !== undefined) {
+          act.dueDate = dto.dueDate ? new Date(dto.dueDate) : undefined;
+        }
+        if (dto.allDay !== undefined) {
+          act.allDay = dto.allDay;
+        }
+        await this.em.flush();
+        return act;
+      }
+      if (!eventIdParam.startsWith('wi:')) {
+        const legacy = await this.em.findOne(WorkflowItem, {
+          id: ref.id,
+          organization: organizationId,
+        });
+        if (legacy) {
+          return this.rescheduleWorkflowItem(legacy, dto);
+        }
+      }
+      throw new NotFoundException('Calendar event not found');
+    }
+
     const item = await this.em.findOne(WorkflowItem, {
-      id: workflowItemId,
+      id: ref.id,
       organization: organizationId,
     });
-    if (!item) throw new NotFoundException('Workflow item not found');
+    if (!item) throw new NotFoundException('Calendar event not found');
+    return this.rescheduleWorkflowItem(item, dto);
+  }
 
+  private async rescheduleWorkflowItem(
+    item: WorkflowItem,
+    dto: RescheduleEventDto,
+  ): Promise<WorkflowItem> {
     if (dto.startDate !== undefined) {
       item.startDate = dto.startDate ? new Date(dto.startDate) : undefined;
     }

@@ -1,6 +1,6 @@
 <template>
-  <div class="flex min-h-0 flex-1 flex-col overflow-hidden bg-gray-50 dark:bg-gray-900">
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+  <div class="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--surface-app)]">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--surface-border)] bg-[var(--surface-raised)]">
       <Dropdown
         :model-value="trackableId"
         :options="switcherOptions"
@@ -38,18 +38,10 @@
         />
         <Button
           v-if="activeTab === 1"
-          icon="pi pi-clone"
-          label="Aplicar plantilla"
-          size="small"
-          outlined
-          @click="openTemplatePicker"
-        />
-        <Button
-          v-if="activeTab === 1"
           icon="pi pi-plus"
-          label="Nueva actuación"
+          label="Nueva actividad"
           size="small"
-          @click="openRootCreateDialog"
+          @click="() => openRootCreateDialog()"
         />
       </div>
     </div>
@@ -61,7 +53,7 @@
           <div class="flex flex-wrap gap-2">
             <Button
               icon="pi pi-plus"
-              label="Nueva actuación"
+              label="Nueva actividad"
               size="small"
               :disabled="!canCreateWorkflowItem"
               @click="quickNewActuacion"
@@ -84,14 +76,6 @@
               @click="goToDocumentosTab"
             />
             <Button
-              icon="pi pi-clone"
-              label="Aplicar plantilla"
-              size="small"
-              severity="secondary"
-              outlined
-              @click="quickApplyTemplate"
-            />
-            <Button
               icon="pi pi-cloud-download"
               size="small"
               severity="secondary"
@@ -103,88 +87,123 @@
             />
           </div>
 
-          <!-- Hero: estado, identificación, próximo hito crítico, partes -->
-          <div class="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-5 md:p-6 shadow-sm">
-            <div class="flex flex-wrap items-start justify-between gap-3">
-              <div class="min-w-0 flex-1">
-                <div class="flex flex-wrap items-center gap-2 mb-2">
+          <!-- Hero: carátula ejecutiva del expediente -->
+          <div
+            class="exp-hero-entrance relative overflow-hidden rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-5 shadow-md md:p-6"
+          >
+            <div class="pointer-events-none absolute inset-x-0 top-0 h-1 bg-brand-gradient" />
+            <div
+              class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-[#0F6E7A]/10 blur-3xl dark:bg-emerald-300/10"
+            />
+            <div class="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+              <div class="min-w-0">
+                <div class="mb-3 flex flex-wrap items-center gap-2">
                   <StatusBadge :status="caseForm.status" />
-                  <span v-if="caseForm.expedientNumber?.trim()" class="text-xs text-gray-500 dark:text-gray-400 font-mono">
-                    N.º {{ caseForm.expedientNumber.trim() }}
+                  <span
+                    v-if="caseForm.expedientNumber?.trim()"
+                    class="inline-flex max-w-full items-center gap-1 rounded-full border border-[var(--surface-border)] bg-white/70 px-2.5 py-1 text-xs font-medium text-[var(--fg-muted)] dark:bg-white/5"
+                  >
+                    <i class="pi pi-hashtag text-[10px]" />
+                    <span class="truncate">{{ caseForm.expedientNumber.trim() }}</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1 rounded-full bg-[#0F6E7A]/10 px-2.5 py-1 text-xs font-medium text-[#0F6E7A] dark:bg-emerald-300/10 dark:text-emerald-200">
+                    <i class="pi pi-briefcase text-[10px]" />
+                    {{ caseDisplayMatterLabel }}
                   </span>
                 </div>
-                <h2 class="text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100 m-0 leading-tight">
+                <h2 class="m-0 text-2xl font-semibold leading-tight text-[var(--fg-default)] md:text-3xl">
                   {{ caseForm.title || 'Sin título' }}
                 </h2>
-                <p v-if="caseForm.court?.trim()" class="text-sm text-gray-600 dark:text-gray-400 m-0 mt-1">
-                  {{ caseForm.court.trim() }}
+                <p class="m-0 mt-2 text-sm text-[var(--fg-muted)]">
+                  <i class="pi pi-building-columns mr-1 text-xs" />
+                  {{ caseForm.court?.trim() || 'Órgano jurisdiccional pendiente' }}
                 </p>
-              </div>
-              <div class="flex items-center gap-0.5 shrink-0">
-                <Button
-                  v-if="canEditTrackable"
-                  icon="pi pi-pencil"
-                  text
-                  rounded
-                  severity="secondary"
-                  v-tooltip.bottom="'Editar ficha (desplaza al panel)'"
-                  aria-label="Editar ficha"
-                  @click="scrollToFichaAndEdit"
-                />
-                <Button icon="pi pi-refresh" text rounded v-tooltip.bottom="'Actualizar métricas'" aria-label="Actualizar métricas" @click="loadDashboardData" />
-              </div>
-            </div>
 
-            <div v-if="nextHearing" class="mt-4 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-amber-50/90 dark:bg-amber-950/30 px-4 py-3">
-              <p class="text-xs font-semibold text-amber-900 dark:text-amber-200 m-0 mb-1">
-                {{ nextHearingLabel(nextHearing) }}
-              </p>
-              <p class="text-sm font-medium text-gray-900 dark:text-gray-100 m-0">{{ nextHearing.title }}</p>
-              <p v-if="nextHearing.dueDate" class="text-xs text-gray-600 dark:text-gray-400 mt-1 m-0">
-                {{ formatDate(String(nextHearing.dueDate)) }}
-              </p>
-            </div>
-            <p v-else class="mt-4 text-sm text-gray-500 dark:text-gray-400 m-0">
-              Sin audiencia ni plazo legal próximo en el flujo.
-            </p>
+                <div class="mt-5 grid gap-3 md:grid-cols-3">
+                  <div class="rounded-xl border border-[var(--surface-border)] bg-white/65 p-3 dark:bg-white/5">
+                    <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">Cliente</p>
+                    <p class="m-0 mt-1 truncate text-sm font-medium text-[var(--fg-default)]">{{ caseDisplayClientName }}</p>
+                  </div>
+                  <div class="rounded-xl border border-[var(--surface-border)] bg-white/65 p-3 dark:bg-white/5">
+                    <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">Contraparte</p>
+                    <p class="m-0 mt-1 truncate text-sm font-medium text-[var(--fg-default)]">
+                      {{ caseForm.counterpartyName?.trim() || '—' }}
+                    </p>
+                  </div>
+                  <div class="rounded-xl border border-[var(--surface-border)] bg-white/65 p-3 dark:bg-white/5">
+                    <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">Abogado a cargo</p>
+                    <p class="m-0 mt-1 truncate text-sm font-medium text-[var(--fg-default)]">{{ caseDisplayAssignee }}</p>
+                  </div>
+                </div>
+              </div>
 
-            <div class="flex flex-wrap gap-2 mt-4">
-              <Tag severity="secondary" class="text-xs max-w-[14rem]">
-                <span class="truncate block">Cliente: {{ caseDisplayClientName }}</span>
-              </Tag>
-              <Tag severity="secondary" class="text-xs max-w-[14rem]">
-                <span class="truncate block">Contraparte: {{ caseForm.counterpartyName?.trim() || '—' }}</span>
-              </Tag>
-              <Tag severity="secondary" class="text-xs max-w-[14rem]">
-                <span class="truncate block">Abogado: {{ caseDisplayAssignee }}</span>
-              </Tag>
+              <aside class="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 shadow-sm dark:border-amber-400/25 dark:bg-amber-400/10">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="m-0 text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-900/70 dark:text-amber-100/70">
+                      Próxima actuación clave
+                    </p>
+                    <template v-if="nextHearing">
+                      <h3 class="m-0 mt-2 text-base font-semibold leading-snug text-amber-950 dark:text-amber-50">
+                        {{ nextHearing.title }}
+                      </h3>
+                      <p class="m-0 mt-2 text-sm text-amber-900/80 dark:text-amber-100/80">
+                        {{ nextHearingLabel(nextHearing) }}
+                        <span v-if="nextHearing.dueDate"> · {{ formatDate(String(nextHearing.dueDate)) }}</span>
+                      </p>
+                    </template>
+                    <p v-else class="m-0 mt-2 text-sm leading-relaxed text-amber-900/80 dark:text-amber-100/80">
+                      Sin audiencia ni plazo legal próximo en el flujo.
+                    </p>
+                  </div>
+                  <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-200/70 text-amber-900 dark:bg-amber-300/15 dark:text-amber-100">
+                    <i class="pi pi-calendar-clock text-sm" />
+                  </span>
+                </div>
+                <div class="mt-4 flex items-center justify-end gap-1">
+                  <Button
+                    v-if="canEditTrackable"
+                    icon="pi pi-pencil"
+                    text
+                    rounded
+                    severity="secondary"
+                    v-tooltip.bottom="'Editar ficha (desplaza al panel)'"
+                    aria-label="Editar ficha"
+                    @click="scrollToFichaAndEdit"
+                  />
+                  <Button icon="pi pi-refresh" text rounded v-tooltip.bottom="'Actualizar métricas'" aria-label="Actualizar métricas" @click="loadDashboardData" />
+                </div>
+              </aside>
             </div>
           </div>
 
           <!-- Ficha del expediente (datos generales y partes) -->
           <div
             ref="fichaSectionRef"
-            class="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm overflow-hidden scroll-mt-6"
+            class="rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-sm overflow-hidden scroll-mt-6"
           >
               <button
                 type="button"
-                class="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"
+                class="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-[var(--surface-sunken)] transition-colors duration-150"
                 @click="fichaSectionOpen = !fichaSectionOpen"
               >
-                <span class="text-sm font-semibold text-gray-800 dark:text-gray-100">Ficha del expediente</span>
+                <span class="text-sm font-semibold text-[var(--fg-default)]">Ficha del expediente</span>
                 <i
-                  class="pi text-gray-500"
-                  :class="fichaSectionOpen ? 'pi-chevron-up' : 'pi-chevron-down'"
+                  class="pi pi-chevron-down ficha-chevron text-[var(--fg-subtle)]"
+                  :class="{ 'is-open': fichaSectionOpen }"
                   aria-hidden="true"
                 />
               </button>
               <div
-                v-show="fichaSectionOpen"
-                class="px-4 pb-6 pt-0 border-t border-gray-100 dark:border-gray-700 space-y-6"
+                class="ficha-collapse" :class="{ 'is-open': fichaSectionOpen }"
               >
-              <div class="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-6 shadow-sm mt-4">
+              <div class="overflow-hidden">
+              <div
+                class="px-4 pb-6 pt-0 border-t border-[var(--surface-border)] space-y-6"
+              >
+              <div class="rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-6 shadow-sm mt-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                  <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                  <h2 class="text-base font-semibold text-[var(--fg-default)]">
                     Datos generales
                   </h2>
                   <div class="flex flex-wrap items-center gap-2">
@@ -218,48 +237,48 @@
 
                 <div v-if="!caseGeneralEditing" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
                   <div class="md:col-span-2">
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nombre del expediente</p>
-                    <p class="text-gray-900 dark:text-gray-100 font-medium">{{ caseForm.title || '—' }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Nombre del expediente</p>
+                    <p class="text-[var(--fg-default)] font-medium">{{ caseForm.title || '—' }}</p>
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">N.º de expediente</p>
-                    <p class="text-gray-800 dark:text-gray-200">{{ caseForm.expedientNumber?.trim() || '—' }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">N.º de expediente</p>
+                    <p class="text-[var(--fg-default)]">{{ caseForm.expedientNumber?.trim() || '—' }}</p>
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Juzgado / órgano</p>
-                    <p class="text-gray-800 dark:text-gray-200">{{ caseForm.court?.trim() || '—' }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Juzgado / órgano</p>
+                    <p class="text-[var(--fg-default)]">{{ caseForm.court?.trim() || '—' }}</p>
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Jurisdicción</p>
-                    <p class="text-gray-800 dark:text-gray-200">{{ caseForm.jurisdiction?.trim() || '—' }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Jurisdicción</p>
+                    <p class="text-[var(--fg-default)]">{{ caseForm.jurisdiction?.trim() || '—' }}</p>
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Cliente</p>
-                    <p class="text-gray-800 dark:text-gray-200">{{ caseDisplayClientName }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Cliente</p>
+                    <p class="text-[var(--fg-default)]">{{ caseDisplayClientName }}</p>
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Contraparte</p>
-                    <p class="text-gray-800 dark:text-gray-200">{{ caseForm.counterpartyName?.trim() || '—' }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Contraparte</p>
+                    <p class="text-[var(--fg-default)]">{{ caseForm.counterpartyName?.trim() || '—' }}</p>
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tipo de servicio</p>
-                    <p class="text-gray-800 dark:text-gray-200">{{ caseDisplayMatterLabel }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Tipo de servicio</p>
+                    <p class="text-[var(--fg-default)]">{{ caseDisplayMatterLabel }}</p>
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Abogado a cargo</p>
-                    <p class="text-gray-800 dark:text-gray-200">{{ caseDisplayAssignee }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Abogado a cargo</p>
+                    <p class="text-[var(--fg-default)]">{{ caseDisplayAssignee }}</p>
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tipo</p>
-                    <p class="text-gray-800 dark:text-gray-200">{{ caseDisplayType }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Tipo</p>
+                    <p class="text-[var(--fg-default)]">{{ caseDisplayType }}</p>
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Estado</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Estado</p>
                     <StatusBadge :status="caseForm.status" />
                   </div>
                   <div>
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Vencimiento</p>
-                    <p v-if="caseForm.dueDate" class="text-gray-800 dark:text-gray-200">
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Vencimiento</p>
+                    <p v-if="caseForm.dueDate" class="text-[var(--fg-default)]">
                       {{
                         new Date(caseForm.dueDate).toLocaleDateString('es-PE', {
                           month: 'short',
@@ -268,17 +287,17 @@
                         })
                       }}
                     </p>
-                    <p v-else class="text-gray-400">—</p>
+                    <p v-else class="text-[var(--fg-subtle)]">—</p>
                   </div>
                   <div class="md:col-span-2">
-                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Resumen del caso</p>
-                    <p class="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{{ caseForm.description?.trim() || '—' }}</p>
+                    <p class="text-xs font-medium text-[var(--fg-muted)] mb-1">Resumen del caso</p>
+                    <p class="text-[var(--fg-default)] whitespace-pre-wrap">{{ caseForm.description?.trim() || '—' }}</p>
                   </div>
                 </div>
 
                 <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="md:col-span-2 space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="case-title">Nombre del expediente</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]" for="case-title">Nombre del expediente</label>
                     <InputText
                       id="case-title"
                       v-model="caseForm.title"
@@ -286,7 +305,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="case-expedient">N.º de expediente</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]" for="case-expedient">N.º de expediente</label>
                     <InputText
                       id="case-expedient"
                       v-model="caseForm.expedientNumber"
@@ -295,7 +314,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="case-court">Juzgado / órgano</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]" for="case-court">Juzgado / órgano</label>
                     <InputText
                       id="case-court"
                       v-model="caseForm.court"
@@ -303,7 +322,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="case-jurisdiction">Jurisdicción (código)</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]" for="case-jurisdiction">Jurisdicción (código)</label>
                     <InputText
                       id="case-jurisdiction"
                       v-model="caseForm.jurisdiction"
@@ -313,7 +332,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]">Cliente</label>
                     <Dropdown
                       v-model="caseForm.clientId"
                       :options="clientsOptions"
@@ -326,7 +345,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="case-counterparty">Contraparte</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]" for="case-counterparty">Contraparte</label>
                     <InputText
                       id="case-counterparty"
                       v-model="caseForm.counterpartyName"
@@ -334,7 +353,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo de servicio</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]">Tipo de servicio</label>
                     <Dropdown
                       v-model="caseForm.matterType"
                       :options="matterTypeOptions"
@@ -344,7 +363,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Abogado a cargo</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]">Abogado a cargo</label>
                     <Dropdown
                       v-model="caseForm.assignedToId"
                       :options="userOptions"
@@ -357,7 +376,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Tipo</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]">Tipo</label>
                     <Dropdown
                       v-model="caseForm.type"
                       :options="typeSelectOptions"
@@ -367,7 +386,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Estado</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]">Estado</label>
                     <Dropdown
                       v-model="caseForm.status"
                       :options="trackableStatusEditOptions"
@@ -377,7 +396,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Fecha de vencimiento</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]">Fecha de vencimiento</label>
                     <Calendar
                       v-model="caseForm.dueDate"
                       date-format="dd/mm/yy"
@@ -387,7 +406,7 @@
                     />
                   </div>
                   <div class="md:col-span-2 space-y-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300" for="case-desc">Resumen del caso</label>
+                    <label class="text-sm font-medium text-[var(--fg-muted)]" for="case-desc">Resumen del caso</label>
                     <Textarea
                       id="case-desc"
                       v-model="caseForm.description"
@@ -399,9 +418,9 @@
                 </div>
               </div>
 
-              <div class="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-6 shadow-sm">
+              <div class="rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-6 shadow-sm">
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                  <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 m-0">Partes del expediente</h3>
+                  <h3 class="text-sm font-semibold text-[var(--fg-default)] m-0">Partes del expediente</h3>
                   <Button
                     v-if="canEditTrackable"
                     icon="pi pi-plus"
@@ -410,8 +429,8 @@
                     @click="openPartyDialog()"
                   />
                 </div>
-                <p v-if="partiesLoading" class="text-sm text-gray-500">Cargando partes…</p>
-                <p v-else-if="!trackableParties.length" class="text-sm text-gray-500 m-0">
+                <p v-if="partiesLoading" class="text-sm text-[var(--fg-muted)]">Cargando partes…</p>
+                <p v-else-if="!trackableParties.length" class="text-sm text-[var(--fg-muted)] m-0">
                   No hay partes adicionales registradas. El cliente de la firma y la contraparte siguen en «Datos generales».
                 </p>
                 <DataTable v-else :value="trackableParties" size="small" striped-rows>
@@ -447,48 +466,173 @@
               </div>
             </div>
           </div>
+          </div>
+          </div>
 
-          <!-- Distribución por estado (barra segmentada) -->
-          <div class="rounded-xl border border-gray-200 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 p-4 md:p-5 shadow-sm">
-            <div class="flex items-center justify-between gap-2 mb-3">
-              <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 m-0">Actuaciones por estado</h3>
-              <span class="text-xs text-gray-500 dark:text-gray-400">{{ statusSegments.total }} en total</span>
-            </div>
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div
-              v-if="statusSegments.total > 0"
-              class="flex h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700 ring-1 ring-inset ring-gray-200/80 dark:ring-gray-600"
-              role="img"
-              :aria-label="'Distribución: ' + statusSegmentsLegend"
+              v-for="(card, cardIdx) in summaryCards"
+              :key="card.id"
+              class="exp-summary-card group relative overflow-hidden rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
+              :style="{ '--stagger-delay': `${cardIdx * 60}ms` }"
             >
               <div
-                v-for="seg in statusSegments.segments"
-                :key="seg.status"
-                class="h-full min-w-0 transition-[width] duration-300"
-                :style="{ width: seg.pct + '%', backgroundColor: seg.color }"
-                :title="`${seg.label}: ${seg.count}`"
+                class="pointer-events-none absolute inset-0 bg-gradient-to-br opacity-100"
+                :class="card.tone"
               />
+              <div class="relative flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="m-0 text-xs font-medium text-[var(--fg-muted)]">{{ card.label }}</p>
+                  <p class="m-0 mt-2 text-3xl font-semibold tracking-tight text-[var(--fg-default)] tabular-nums">
+                    {{ card.value }}
+                  </p>
+                  <p v-if="card.hint" class="m-0 mt-1.5 text-xs font-medium leading-snug text-[var(--fg-muted)]">
+                    {{ card.hint }}
+                  </p>
+                </div>
+                <span
+                  class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/75 shadow-sm ring-1 ring-black/5 dark:bg-white/10 dark:ring-white/10"
+                  :class="card.tone"
+                >
+                  <i :class="card.icon" class="text-sm" />
+                </span>
+              </div>
             </div>
-            <p v-else class="text-sm text-gray-500 m-0">Sin actuaciones en este expediente.</p>
-            <p v-if="statusSegments.total > 0" class="text-xs text-gray-600 dark:text-gray-300 mt-3 m-0 leading-relaxed">
-              {{ statusSegmentsLegend }}
-            </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          <!-- Avance general (misma lógica que el pie del tab Actividades / ProcessStageBoardView) -->
+          <div
+            class="relative w-full overflow-hidden rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-5 shadow-md md:p-6"
+          >
             <div
-              v-for="card in summaryCards"
-              :key="card.label"
-              class="rounded-xl border border-gray-200/90 dark:border-gray-600 bg-white/90 dark:bg-gray-800/90 px-4 py-3 shadow-sm text-center"
-            >
-              <div class="text-2xl md:text-3xl font-bold tabular-nums" :class="card.color">{{ card.value }}</div>
-              <div class="text-xs md:text-sm text-gray-500 dark:text-gray-400 mt-1">{{ card.label }}</div>
+              class="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-[#3FB58C]/10 via-[#0F6E7A]/5 to-transparent"
+            />
+            <div class="relative grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] xl:items-center">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span
+                    class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-[#0F6E7A]/10 text-[#0F6E7A] dark:bg-emerald-300/10 dark:text-emerald-300"
+                  >
+                    <i class="pi pi-balance-scale text-sm" />
+                  </span>
+                  <div class="min-w-0">
+                    <p class="m-0 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--fg-muted)]">
+                      {{ t('trackables.expedienteSummary.legalControl') }}
+                    </p>
+                    <h3 class="m-0 text-lg font-semibold text-[var(--fg-default)]">
+                      {{ t('trackables.expedienteSummary.avanceTitle') }}
+                    </h3>
+                  </div>
+                </div>
+                <p class="m-0 mt-3 max-w-3xl text-sm leading-relaxed text-[var(--fg-muted)]">
+                  <template v-if="expedienteActivityMetrics.total > 0">
+                    {{ t('trackables.expedienteSummary.legalControlSubtitle') }}
+                  </template>
+                  <template v-else>
+                    {{ t('trackables.expedienteSummary.avanceEmpty') }}
+                  </template>
+                </p>
+              </div>
+
+              <div
+                v-if="expedienteActivityMetrics.total > 0"
+                class="grid gap-2 sm:grid-cols-3 xl:grid-cols-1"
+              >
+                <div class="rounded-xl border border-[var(--surface-border)] bg-white/70 px-3 py-2 dark:bg-white/5">
+                  <p class="m-0 text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)]">
+                    {{ t('trackables.expedienteSummary.completedPct', { n: expedienteActivityMetrics.donePct }) }}
+                  </p>
+                  <div
+                    class="mt-2 relative h-2.5 w-full overflow-hidden rounded-full bg-slate-200/90 dark:bg-slate-700/80"
+                  >
+                    <div
+                      class="absolute inset-y-0 left-0 h-full rounded-full bg-slate-400/45 dark:bg-slate-500/35 transition-[width]"
+                      :style="{ width: expedienteActivityMetrics.globalActivePct + '%' }"
+                    />
+                    <div
+                      class="absolute inset-y-0 left-0 h-full rounded-full transition-[width]"
+                      :style="{
+                        width: expedienteActivityMetrics.donePct + '%',
+                        background: 'linear-gradient(90deg, #0F6E7A 0%, #2D3FBF 50%, #3FB58C 100%)',
+                      }"
+                      role="progressbar"
+                      :aria-valuenow="expedienteActivityMetrics.donePct"
+                      aria-valuemin="0"
+                      aria-valuemax="100"
+                      :aria-label="t('trackables.expedienteSummary.avanceTitle')"
+                    />
+                  </div>
+                </div>
+                <div
+                  class="rounded-xl border px-3 py-2"
+                  :class="
+                    expedienteActivityMetrics.overdue
+                      ? 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100'
+                      : 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-100'
+                  "
+                >
+                  <p class="m-0 text-[11px] font-medium uppercase tracking-wide opacity-75">
+                    {{ t('trackables.expedienteSummary.overdue') }}
+                  </p>
+                  <p class="m-0 mt-1 text-sm font-semibold">
+                    <i
+                      class="pi mr-1 text-xs"
+                      :class="expedienteActivityMetrics.overdue ? 'pi-exclamation-triangle' : 'pi-check-circle'"
+                    />
+                    {{
+                      expedienteActivityMetrics.overdue
+                        ? t('trackables.expedienteSummary.criticalOverdue', { n: expedienteActivityMetrics.overdue })
+                        : t('trackables.expedienteSummary.noCriticalOverdue')
+                    }}
+                  </p>
+                </div>
+                <div class="rounded-xl border border-[var(--surface-border)] bg-white/70 px-3 py-2 dark:bg-white/5">
+                  <p class="m-0 text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)]">
+                    {{ t('trackables.expedienteSummary.next14Days') }}
+                  </p>
+                  <p class="m-0 mt-1 text-sm font-semibold text-[var(--fg-default)]">
+                    {{ t('trackables.expedienteSummary.nextDeadlinesShort', { n: dashboardDeadlines.length }) }}
+                  </p>
+                </div>
+              </div>
             </div>
+
+            <ul
+              v-if="expedienteActivityMetrics.total > 0"
+              class="relative m-0 mt-5 flex list-none flex-wrap gap-x-5 gap-y-2 border-t border-[var(--surface-border)] pt-4 pl-0 text-xs text-[var(--fg-muted)]"
+            >
+              <li class="inline-flex items-center gap-1.5">
+                <span class="inline-block h-2 w-2 shrink-0 rounded-full bg-[#3FB58C]" />
+                <span>{{ expedienteActivityMetrics.done }} {{ t('trackables.expedienteSummary.legendDone') }}</span>
+              </li>
+              <li class="inline-flex items-center gap-1.5">
+                <span class="inline-block h-2 w-2 shrink-0 rounded-full bg-[#E8A33D]" />
+                <span>{{ expedienteActivityMetrics.inProgress }} {{ t('trackables.expedienteSummary.legendInProgress') }}</span>
+              </li>
+              <li
+                v-if="expedienteActivityMetrics.overdue"
+                class="inline-flex items-center gap-1.5 text-amber-800 dark:text-amber-200"
+              >
+                <i class="pi pi-exclamation-triangle text-xs" />
+                <span>{{ expedienteActivityMetrics.overdue }} {{ t('trackables.expedienteSummary.legendOverdue') }}</span>
+              </li>
+              <li class="inline-flex items-center gap-1.5">
+                <span class="inline-block h-2 w-2 shrink-0 rounded-full bg-slate-400" />
+                <span>{{ expedienteActivityMetrics.total }} {{ t('trackables.expedienteSummary.legendTotal') }}</span>
+              </li>
+            </ul>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
-              <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2 flex-wrap">
-                <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 m-0">Vencimientos</h3>
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="overflow-hidden rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-sm">
+              <div class="flex flex-wrap items-center gap-2 border-b border-[var(--surface-border)] px-4 py-3">
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-red-500/10 text-red-600 dark:text-red-300">
+                  <i class="pi pi-gavel text-sm" />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="m-0 text-sm font-semibold text-[var(--fg-default)]">Agenda procesal y plazos</h3>
+                  <p class="m-0 mt-0.5 text-xs text-[var(--fg-muted)]">Prioriza vencidos, hoy y próximos hitos legales.</p>
+                </div>
                 <Tag v-if="dashboardOverdueCount > 0" :value="`${dashboardOverdueCount} vencidos`" severity="danger" />
                 <Tag value="Plazo legal" severity="danger" class="text-[10px]" />
               </div>
@@ -522,7 +666,7 @@
                           </template>
                         </Column>
                       </DataTable>
-                      <p v-else class="text-sm text-gray-500 m-0 py-3 px-2">Ninguno</p>
+                      <p v-else class="text-sm text-[var(--fg-muted)] m-0 py-3 px-2">Ninguno</p>
                     </AccordionContent>
                   </AccordionPanel>
                   <AccordionPanel value="1">
@@ -553,7 +697,7 @@
                           </template>
                         </Column>
                       </DataTable>
-                      <p v-else class="text-sm text-gray-500 m-0 py-3 px-2">Ninguno</p>
+                      <p v-else class="text-sm text-[var(--fg-muted)] m-0 py-3 px-2">Ninguno</p>
                     </AccordionContent>
                   </AccordionPanel>
                   <AccordionPanel value="2">
@@ -584,13 +728,13 @@
                           </template>
                         </Column>
                       </DataTable>
-                      <p v-else class="text-sm text-gray-500 m-0 py-3 px-2">Ninguno</p>
+                      <p v-else class="text-sm text-[var(--fg-muted)] m-0 py-3 px-2">Ninguno</p>
                     </AccordionContent>
                   </AccordionPanel>
                   <AccordionPanel value="3">
                     <AccordionHeader>
                       <span class="flex items-center gap-2 w-full">
-                        <span class="text-gray-700 dark:text-gray-300 font-medium">8 – 14 días</span>
+                        <span class="text-[var(--fg-default)] font-medium">8 – 14 días</span>
                         <Tag :value="String(deadlineGroups.twoWeeks.length)" severity="secondary" rounded />
                       </span>
                     </AccordionHeader>
@@ -615,7 +759,7 @@
                           </template>
                         </Column>
                       </DataTable>
-                      <p v-else class="text-sm text-gray-500 m-0 py-3 px-2">Ninguno</p>
+                      <p v-else class="text-sm text-[var(--fg-muted)] m-0 py-3 px-2">Ninguno</p>
                     </AccordionContent>
                   </AccordionPanel>
                 </Accordion>
@@ -623,502 +767,93 @@
             </div>
 
             <div class="space-y-6">
-              <div class="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm">
-                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                  <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 m-0">Siguientes actuaciones</h3>
-                  <p class="text-xs text-gray-500 m-0 mt-0.5">En curso o revisión, ordenadas por vencimiento</p>
+              <div class="overflow-hidden rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-sm">
+                <div class="border-b border-[var(--surface-border)] px-4 py-3">
+                  <h3 class="m-0 text-sm font-semibold text-[var(--fg-default)]">Próximas actuaciones</h3>
+                  <p class="m-0 mt-0.5 text-xs text-[var(--fg-muted)]">Trabajo activo o en revisión, ordenado por vencimiento.</p>
                 </div>
-                <ul v-if="nextActuaciones.length" class="divide-y divide-gray-100 dark:divide-gray-700 m-0 p-0 list-none">
+                <ul v-if="nextActividades.length" class="divide-y divide-[var(--surface-border)] m-0 p-0 list-none">
                   <li
-                    v-for="item in nextActuaciones"
+                    v-for="item in nextActividades"
                     :key="item.id"
-                    class="flex items-start gap-3 px-4 py-3"
+                    class="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-[var(--surface-sunken)]/40"
                   >
                     <div class="min-w-0 flex-1">
-                      <p class="text-sm font-medium text-gray-900 dark:text-gray-100 m-0 truncate">{{ item.title }}</p>
+                      <p class="m-0 truncate text-sm font-medium text-[var(--fg-default)]">{{ item.title }}</p>
                       <div class="flex flex-wrap items-center gap-2 mt-1">
                         <Tag v-if="item.kind" :value="item.kind" severity="secondary" class="text-[10px]" />
-                        <span v-if="item.dueDate" class="text-xs text-gray-500">
+                        <span v-if="item.dueDate" class="text-xs text-[var(--fg-muted)]">
                           {{ formatDate(String(item.dueDate)) }}
                         </span>
-                        <span v-else class="text-xs text-gray-400">Sin fecha</span>
+                        <span v-else class="text-xs text-[var(--fg-subtle)]">Sin fecha</span>
                       </div>
                     </div>
                     <Button label="Abrir" size="small" outlined @click="openSidebar(item)" />
                   </li>
                 </ul>
-                <p v-else class="text-sm text-gray-500 m-0 px-4 py-6 text-center">No hay actuaciones activas pendientes.</p>
+                <p v-else class="text-sm text-[var(--fg-muted)] m-0 px-4 py-6 text-center">No hay actividades activas pendientes.</p>
               </div>
 
-              <div class="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-sm">
-                <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                  <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 m-0">Equipo en este expediente</h3>
-                  <p class="text-xs text-gray-500 m-0 mt-0.5">Ítems abiertos por usuario asignado</p>
+              <div class="overflow-hidden rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-sm">
+                <div class="border-b border-[var(--surface-border)] px-4 py-3">
+                  <h3 class="m-0 text-sm font-semibold text-[var(--fg-default)]">Equipo responsable</h3>
+                  <p class="m-0 mt-0.5 text-xs text-[var(--fg-muted)]">Carga abierta por abogado o miembro asignado.</p>
                 </div>
                 <ul v-if="teamMembers.length" class="m-0 p-0 list-none">
                   <li
                     v-for="m in teamMembers"
                     :key="m.userId"
-                    class="flex items-center gap-3 px-4 py-3 border-b border-gray-50 dark:border-gray-700/80 last:border-0"
+                    class="exp-team-row flex items-center gap-3 px-4 py-3 border-b border-[var(--surface-border)] last:border-0 transition-colors duration-150"
                   >
-                    <Avatar :label="m.initials" shape="circle" class="bg-primary-100 text-primary-900 dark:bg-primary-900/40 dark:text-primary-100 shrink-0" />
+                    <Avatar :label="m.initials" shape="circle" class="bg-[var(--accent-soft)] text-[var(--accent)] shrink-0" />
                     <div class="min-w-0 flex-1">
-                      <p class="text-sm font-medium text-gray-900 dark:text-gray-100 m-0 truncate">{{ m.name }}</p>
-                      <p class="text-xs text-gray-500 m-0">
+                      <p class="text-sm font-medium text-[var(--fg-default)] m-0 truncate">{{ m.name }}</p>
+                      <p class="text-xs text-[var(--fg-muted)] m-0">
                         Pend. {{ m.pending }} · En curso {{ m.inProgress }} · Revisión {{ m.underReview }}
-                        <span class="text-gray-400">({{ m.total }} total)</span>
+                        <span class="text-[var(--fg-subtle)]">({{ m.total }} total)</span>
                       </p>
                     </div>
                   </li>
                 </ul>
-                <p v-else class="text-sm text-gray-500 m-0 px-4 py-6 text-center">Sin asignaciones abiertas.</p>
+                <p v-else class="text-sm text-[var(--fg-muted)] m-0 px-4 py-6 text-center">Sin asignaciones abiertas.</p>
               </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[200px]">
-            <div class="lg:col-span-2 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-4 shadow-sm">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 m-0">Bitácora reciente</h3>
-                <Button label="Ver todo" size="small" link @click="openActivityDrawer" />
-              </div>
-              <div v-if="caseActivityLoading" class="text-sm text-gray-500 py-8 text-center">Cargando…</div>
-              <ul v-else class="space-y-0">
-                <li
-                  v-for="(log, idx) in summaryActivityLogPreview"
-                  :key="log.id"
-                  class="flex gap-3"
-                >
-                  <div class="flex flex-col items-center shrink-0 w-3 pt-1">
-                    <span
-                      class="h-2.5 w-2.5 rounded-full border-2 border-blue-500 bg-white dark:bg-gray-800"
-                    />
-                    <span
-                      v-if="idx < summaryActivityLogPreview.length - 1"
-                      class="w-px flex-1 min-h-[1.5rem] bg-gray-200 dark:bg-gray-600"
-                    />
-                  </div>
-                  <div class="flex-1 flex items-start justify-between gap-2 pb-4">
-                    <div class="min-w-0">
-                      <p class="text-sm text-gray-800 dark:text-gray-100">
-                        <span class="font-medium capitalize">{{ log.action }}</span>
-                        <span class="text-gray-500"> · {{ log.entityType }}</span>
-                      </p>
-                      <p class="text-xs text-gray-500 mt-0.5">
-                        {{ formatDateTime(log.createdAt) }}
-                        <span v-if="log.user"> · {{ log.user.firstName || log.user.email }}</span>
-                      </p>
-                    </div>
-                    <Button
-                      v-if="canOpenActivityLog(log)"
-                      label="Ver"
-                      size="small"
-                      link
-                      class="shrink-0"
-                      @click="openActivityLogEntry(log)"
-                    />
-                  </div>
-                </li>
-              </ul>
-              <p v-if="!caseActivityLoading && !caseActivityLog.length" class="text-sm text-gray-500 py-6 text-center">
-                Sin actividad registrada
-              </p>
-            </div>
-
-            <div class="rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 p-4 shadow-sm">
-              <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">Archivos recientes</h3>
-              <div v-if="caseDocsLoading" class="text-sm text-gray-500 py-6 text-center">Cargando…</div>
-              <ul v-else class="space-y-2">
-                <li v-for="doc in caseRecentDocs" :key="doc.id">
-                  <RouterLink
-                    :to="{ name: 'document-editor', params: { id: doc.id } }"
-                    class="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2 min-w-0"
-                  >
-                    <i class="pi pi-file shrink-0 text-xs opacity-70" />
-                    <span class="truncate">{{ doc.title }}</span>
-                  </RouterLink>
-                  <p class="text-[11px] text-gray-400 mt-0.5 pl-5">
-                    {{ doc.updatedAt || doc.createdAt ? formatDateTime((doc.updatedAt || doc.createdAt) as string) : '—' }}
-                  </p>
-                </li>
-              </ul>
-              <p v-if="!caseDocsLoading && !caseRecentDocs.length" class="text-sm text-gray-500 py-6 text-center">
-                Sin archivos aún
-              </p>
-            </div>
-          </div>
         </div>
       </TabPanel>
 
-      <!-- Tab Actuaciones -->
-      <TabPanel :value="1" header="Actuaciones">
-        <div class="flow-first-panel flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div class="flex flex-wrap items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80">
-            <SelectButton
-              v-model="flowViewMode"
-              :options="flowViewModeOptions"
-              option-label="label"
-              option-value="value"
-              class="flow-view-toggle"
+      <!-- Tab Actividades: flujo (etapas) o tablero por estado (hasta reemplazo por vistas híbridas) -->
+      <TabPanel :value="1" :header="t('trackables.tabActivities')">
+        <div class="flex min-h-0 min-h-[min(58vh,30rem)] flex-1 flex-col overflow-hidden">
+          <div
+            v-if="primaryProcessTrackId"
+            class="flow-first-panel flex min-h-0 flex-1 flex-col overflow-hidden"
+          >
+            <ProcessStageBoardView
+              ref="processBoardRef"
+              :process-track-id="primaryProcessTrackId"
+              :trackable-id="trackableId"
+              :upload-folder-id="rootFolderId"
+              class="min-h-0 flex-1"
+              @open-create-activity="onOpenCreateActivityFromBoard"
+              @open-activity="onOpenActivityFromBoard"
             />
-            <span class="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline">
-              Cambia la vista del mismo expediente
-            </span>
           </div>
-
-          <!-- Vista árbol -->
-          <div v-if="flowViewMode === 'tree'" class="min-h-0 flex-1 overflow-auto p-4">
-            <Tree
-              :value="primeTreeNodes"
-              class="w-full"
-              selection-mode="single"
-              @node-select="onTreeNodeSelect"
-            />
-            <p v-if="!primeTreeNodes.length" class="text-sm text-gray-500 py-8 text-center">
-              Sin actuaciones. Usa «Aplicar plantilla» o «Nueva actuación».
+          <div
+            v-else
+            class="flow-first-panel flex min-h-0 min-h-[min(40vh,20rem)] flex-1 flex-col items-center justify-center gap-4 border-b border-[var(--surface-border)] p-8 text-center"
+          >
+            <p class="max-w-md text-sm text-[var(--fg-muted)]">
+              {{ t('processTrack.emptyState.body') }}
             </p>
-          </div>
-
-          <!-- Vista Kanban: scroll vertical y horizontal en el tablero; barra horizontal al borde inferior del panel -->
-          <div v-else-if="flowViewMode === 'kanban'" class="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-            <Message
-              v-if="!useConfigurableWorkflowsEnabled"
-              severity="warn"
-              :closable="false"
-              class="mx-4 mt-3 shrink-0 border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40"
-            >
-              <span class="text-sm">
-                Modo Kanban limitado: en
-                <RouterLink :to="{ name: 'settings-general' }" class="font-semibold underline">
-                  Ajustes → {{ t('settings.sections.general') }}
-                </RouterLink>
-                activa el interruptor de flujos configurables para poder arrastrar tarjetas entre columnas.
-              </span>
-            </Message>
-            <div
-              v-if="authStore.organization?.featureFlags?.useConfigurableWorkflows"
-              class="flex flex-wrap items-center gap-2 border-b border-gray-200 px-4 py-2 dark:border-gray-700"
-            >
-              <span class="text-xs text-gray-500 dark:text-gray-400">Columnas</span>
-              <SelectButton
-                v-model="kanbanBoardLayout"
-                :options="kanbanBoardLayoutOptions"
-                option-label="label"
-                option-value="value"
-                class="text-xs"
-              />
-            </div>
-            <div
-              ref="kanbanBoardScrollRef"
-              class="kanban-board-scroll min-h-[24rem] flex-1 overflow-auto px-4 pt-3 pb-0 [scrollbar-gutter:stable]"
-              @scroll.passive="onKanbanBoardScroll"
-            >
-              <div class="flex min-h-full min-w-max gap-3 pb-1">
-                <div
-                  v-for="col in kanbanColumns"
-                  :key="col.key"
-                  class="kanban-col flex min-w-[220px] max-w-[240px] flex-shrink-0 flex-col rounded-lg shadow-sm"
-                  :data-kanban-col="col.key"
-                  :class="[col.bg, kanbanColumnClass(col.key)]"
-                  :title="draggingItem ? kanbanColumnTitleAttr(col.key) : ''"
-                >
-                  <div
-                    class="kanban-col-header sticky top-0 z-10 flex items-center justify-between rounded-t-lg border-t-4 px-3 py-2.5"
-                    :class="[col.border, col.bg]"
-                  >
-                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">{{ col.label }}</span>
-                    <Tag :value="String((kanbanLists[col.key] ?? []).length)" rounded severity="secondary" />
-                  </div>
-
-                  <div class="flex flex-1 flex-col p-2">
-                    <Draggable
-                      v-model="kanbanLists[col.key]"
-                      group="flow-kanban"
-                      item-key="id"
-                      :sort="false"
-                      :move="onKanbanMove"
-                      :disabled="!canEditWorkflowItem || !useConfigurableWorkflowsEnabled"
-                      ghost-class="opacity-50"
-                      class="flex min-h-[4rem] flex-1 flex-col gap-2"
-                      draggable=".kanban-card--draggable"
-                      @start="onKanbanDragStart($event, col.key)"
-                      @end="onKanbanDragEnd"
-                      @change="onKanbanColumnChange(col.key, $event)"
-                    >
-                      <template #item="{ element: item }">
-                        <div
-                          class="kanban-card--draggable group relative flex shrink-0 cursor-grab flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.04)] transition-[box-shadow,transform] duration-150 motion-safe:hover:-translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-400 focus-visible:ring-offset-1 active:cursor-grabbing dark:border-gray-600 dark:bg-gray-700 dark:focus-visible:ring-offset-gray-900 motion-safe:hover:shadow-[0_4px_12px_rgba(16,24,40,0.08)]"
-                          role="button"
-                          tabindex="0"
-                          :aria-label="kanbanCardAriaLabel(item)"
-                          @click="onKanbanCardClick(item)"
-                          @keydown.enter.prevent="onKanbanCardClick(item)"
-                          @keydown.space.prevent="onKanbanCardClick(item)"
-                        >
-                          <div class="flex min-w-0 flex-1 gap-0">
-                            <div
-                              class="w-[3px] shrink-0 self-stretch bg-gray-200 dark:bg-gray-600"
-                              :style="itemAccentBarStyle(item)"
-                            />
-                            <div class="min-w-0 flex-1 p-3">
-                              <div class="mb-2 flex min-w-0 items-start justify-between gap-2">
-                                <p class="min-w-0 flex-1 line-clamp-2 text-pretty text-sm font-semibold leading-snug text-gray-900 dark:text-gray-50">
-                                  {{ item.title }}
-                                </p>
-                                <div class="flex shrink-0 items-center justify-end gap-1 pt-0.5">
-                                  <TicketKey
-                                    v-if="item.ticketKey"
-                                    :label="item.ticketKey"
-                                    muted
-                                  />
-                                  <PriorityIcon :priority="item.priority ?? 'normal'" compact />
-                                </div>
-                              </div>
-                              <div class="mb-2 min-w-0">
-                                <span
-                                  class="inline-block max-w-full truncate rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-gray-800 dark:text-gray-300"
-                                >
-                                  {{ kindLabel(item.kind) || item.kind || 'Actuación' }}
-                                </span>
-                              </div>
-                              <div class="flex min-w-0 flex-wrap items-center gap-2">
-                                <UserAvatar
-                                  v-if="item.assignedTo"
-                                  :first-name="item.assignedTo.firstName"
-                                  :last-name="item.assignedTo.lastName"
-                                  :email="item.assignedTo.email"
-                                  :avatar-url="item.assignedTo.avatarUrl"
-                                  size="sm"
-                                />
-                                <span
-                                  v-if="item.assignedTo"
-                                  class="min-w-0 flex-1 truncate text-xs text-gray-600 dark:text-gray-300"
-                                >
-                                  {{ item.assignedTo.firstName || item.assignedTo.email }}
-                                </span>
-                                <span
-                                  v-if="item.dueDate"
-                                  role="status"
-                                  :aria-label="
-                                    isOverdue(item.dueDate)
-                                      ? `Vencido el ${formatDate(item.dueDate)}`
-                                      : formatDate(item.dueDate)
-                                  "
-                                  class="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-medium"
-                                  :class="
-                                    isOverdue(item.dueDate)
-                                      ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300'
-                                      : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
-                                  "
-                                >
-                                  <i class="pi pi-calendar text-[10px]" aria-hidden="true" />
-                                  {{ formatDate(item.dueDate) }}
-                                  <span v-if="isOverdue(item.dueDate)"> · Vencido</span>
-                                </span>
-                                <span
-                                  v-if="item.isLegalDeadline"
-                                  class="inline-flex shrink-0 items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-red-700 bg-red-50 dark:bg-red-950/40 dark:text-red-300"
-                                  aria-label="Plazo legal"
-                                >
-                                  <i class="pi pi-flag text-[10px]" aria-hidden="true" />
-                                  Plazo legal
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </template>
-                      <template #footer>
-                        <div
-                          v-if="(kanbanLists[col.key] ?? []).length === 0"
-                          class="shrink-0 py-6 text-center text-sm text-gray-400 dark:text-gray-500"
-                        >
-                          Sin items
-                        </div>
-                        <div class="shrink-0 pt-1">
-                          <Button
-                            v-if="activeTab === 1 && col.key === 'pending'"
-                            icon="pi pi-plus"
-                            label="Agregar item"
-                            size="small"
-                            severity="secondary"
-                            variant="text"
-                            class="cursor-pointer"
-                            @click.stop="openRootCreateDialog"
-                          />
-                        </div>
-                      </template>
-                    </Draggable>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Barra navegación columnas (pegada al borde inferior del panel; el scroll horizontal del tablero queda justo encima) -->
-            <footer
-              class="z-10 flex shrink-0 items-center gap-2 border-t border-gray-200 bg-white/95 px-3 py-2 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/95"
-            >
-              <div class="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5">
-                <button
-                  v-for="col in kanbanColumns"
-                  :key="'nav-' + col.key"
-                  type="button"
-                  class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                  :class="
-                    visibleKanbanColumnKeys.has(col.key)
-                      ? 'border-primary-400 bg-primary-50 text-primary-900 dark:border-primary-600 dark:bg-primary-950/50 dark:text-primary-100'
-                      : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700/50'
-                  "
-                  @click="scrollKanbanToColumn(col.key)"
-                >
-                  <span class="max-w-[10rem] truncate">{{ col.label }}</span>
-                  <Tag :value="String((kanbanLists[col.key] ?? []).length)" rounded severity="secondary" class="text-[10px]" />
-                </button>
-              </div>
-            </footer>
-
-            <!-- Mini-mapa -->
-            <div class="pointer-events-none absolute bottom-14 right-3 z-20 flex flex-col items-end gap-2">
-              <button
-                v-tooltip.left="kanbanMinimapOpen ? 'Ocultar mapa' : 'Mapa del tablero'"
-                type="button"
-                class="pointer-events-auto flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white/95 text-gray-700 shadow-md backdrop-blur dark:border-gray-600 dark:bg-gray-800/95 dark:text-gray-200"
-                :aria-expanded="kanbanMinimapOpen"
-                aria-label="Mapa del tablero"
-                @click="kanbanMinimapOpen = !kanbanMinimapOpen"
-              >
-                <i class="pi pi-map text-lg" aria-hidden="true" />
-              </button>
-              <div
-                v-if="kanbanMinimapOpen"
-                class="pointer-events-auto w-[200px] rounded-lg border border-gray-200 bg-white/95 p-2 shadow-lg backdrop-blur dark:border-gray-600 dark:bg-gray-900/95"
-              >
-                <div class="relative h-14 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
-                  <div class="flex h-full gap-px p-0.5">
-                    <div
-                      v-for="col in kanbanColumns"
-                      :key="'mm-' + col.key"
-                      class="flex min-w-0 flex-1 flex-col gap-px bg-gray-200/80 dark:bg-gray-700/80"
-                    >
-                      <div
-                        v-for="n in Math.min((kanbanLists[col.key] ?? []).length, 12)"
-                        :key="col.key + '-cell-' + n"
-                        class="h-1.5 rounded-sm bg-gray-400/90 dark:bg-gray-500"
-                      />
-                    </div>
-                  </div>
-                  <div
-                    class="pointer-events-auto absolute inset-y-1 cursor-grab rounded border-2 border-primary-500 bg-primary-400/20 active:cursor-grabbing dark:border-primary-400"
-                    :style="kanbanMinimapViewportStyle"
-                    @pointerdown.prevent="onKanbanMinimapPointerDown"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Vista línea de tiempo -->
-          <div v-else-if="flowViewMode === 'timeline'" class="min-h-0 flex-1 overflow-auto p-4 space-y-2">
-            <div
-              v-for="row in timelineItems"
-              :key="row.id"
-              class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 cursor-pointer hover:shadow-sm"
-              :style="itemAccentStyle(row)"
-              @click="openSidebar(row)"
-            >
-              <span class="text-xs text-gray-500 w-24 shrink-0">{{ row.dueDate ? formatDate(row.dueDate) : '—' }}</span>
-              <span class="flex-1 font-medium text-gray-800 dark:text-gray-100">{{ row.title }}</span>
-              <Tag v-if="row.isLegalDeadline" value="Plazo legal" severity="danger" class="text-xs" />
-              <Tag v-if="row.kind" :value="row.kind" severity="secondary" />
-              <StatusBadge :status="row.status" />
-            </div>
-            <p v-if="!timelineItems.length" class="text-sm text-gray-500 py-8 text-center">Sin fechas para mostrar</p>
-          </div>
-
-          <!-- Vista tabla -->
-          <div v-else-if="flowViewMode === 'table'" class="min-h-0 flex-1 overflow-auto p-4 md:p-6 space-y-4">
-            <div class="flex items-center justify-between flex-wrap gap-3">
-              <h3 class="text-base font-semibold dark:text-gray-100 m-0">Listado de actuaciones</h3>
-              <div class="flex gap-2 items-center flex-wrap">
-                <Button
-                  icon="pi pi-plus"
-                  label="Agregar actuación"
-                  size="small"
-                  severity="secondary"
-                  variant="text"
-                  :disabled="!canCreateWorkflowItem"
-                  @click="openRootCreateDialog"
-                />
-                <Dropdown
-                  v-model="activityStatusFilter"
-                  :options="statusFilterOptions"
-                  placeholder="Estado"
-                  show-clear
-                  class="w-44"
-                />
-                <Dropdown
-                  v-model="activityTypeFilter"
-                  :options="kindOptions"
-                  option-label="label"
-                  option-value="value"
-                  placeholder="Tipo / kind"
-                  show-clear
-                  class="w-40"
-                />
-              </div>
-            </div>
-            <DataTable
-              :value="filteredActivities"
-              paginator
-              :rows="20"
-              striped-rows
-            >
-              <Column field="title" header="Actuación">
-                <template #body="{ data }">
-                  <span
-                    class="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium"
-                    @click="openSidebar(data)"
-                  >
-                    {{ data.title }}
-                  </span>
-                </template>
-              </Column>
-              <Column header="Plazo">
-                <template #body="{ data }">
-                  <Tag v-if="data.isLegalDeadline" value="Plazo legal" severity="danger" class="text-xs" />
-                  <span v-else class="text-gray-400 text-xs">—</span>
-                </template>
-              </Column>
-              <Column field="kind" header="Tipo">
-                <template #body="{ data }">
-                  <Tag :value="data.kind || '—'" :severity="kindSeverity(data.kind)" />
-                </template>
-              </Column>
-              <Column field="status" header="Estado">
-                <template #body="{ data }">
-                  <StatusBadge :status="data.status" />
-                </template>
-              </Column>
-              <Column field="assignedTo" header="Asignado">
-                <template #body="{ data }">
-                  <span class="dark:text-gray-300">{{ data.assignedTo?.firstName || data.assignedTo?.email || '-' }}</span>
-                </template>
-              </Column>
-              <Column header="Fecha inicio">
-                <template #body="{ data }">
-                  <span v-if="data.startDate" class="dark:text-gray-300">{{ formatDate(data.startDate) }}</span>
-                  <span v-else class="text-gray-400">-</span>
-                </template>
-              </Column>
-              <Column header="Vencimiento">
-                <template #body="{ data }">
-                  <span v-if="data.dueDate" :class="isOverdue(data.dueDate) ? 'text-red-500 font-semibold' : 'dark:text-gray-300'">
-                    {{ formatDate(data.dueDate) }}
-                  </span>
-                  <span v-else class="text-gray-400">-</span>
-                </template>
-              </Column>
-            </DataTable>
+            <Button
+              :label="t('processTrack.emptyState.createButton')"
+              icon="pi pi-sitemap"
+              :loading="creatingProcessTrack"
+              :disabled="!canEditTrackable"
+              @click="ensureFreeformProcessTrack"
+            />
           </div>
         </div>
       </TabPanel>
@@ -1130,9 +865,20 @@
         </div>
       </TabPanel>
 
-      <!-- Tab Calendario -->
+      <!-- Tab Calendario: mismos plazos e hitos que las actividades del expediente -->
       <TabPanel :value="3" header="Calendario">
         <div class="flex flex-col gap-4 min-h-0 flex-1 p-4 md:p-6 overflow-auto">
+          <p class="text-sm text-[var(--fg-muted)] m-0">
+            Audiencias, plazos y vencimientos vinculados a las
+            <button
+              type="button"
+              class="font-medium text-primary-600 dark:text-primary-400 underline decoration-primary-400/50 hover:decoration-primary-500"
+              @click="openActividadesTab"
+            >
+              actividades
+            </button>
+            de este expediente.
+          </p>
           <div class="flex flex-wrap justify-end gap-2">
             <Button
               icon="pi pi-calendar-plus"
@@ -1252,10 +998,10 @@
     >
       <div class="flex flex-col gap-4 h-full">
         <div class="flex flex-wrap gap-2 items-center">
-          <label class="text-xs text-gray-500">Filtrar por acción</label>
+          <label class="text-xs text-[var(--fg-muted)]">Filtrar por acción</label>
           <InputText v-model="activityDrawerActionFilter" placeholder="contiene…" class="flex-1 min-w-[8rem]" />
         </div>
-        <div v-if="drawerActivityLoading" class="text-sm text-gray-500 py-8 text-center">Cargando…</div>
+        <div v-if="drawerActivityLoading" class="text-sm text-[var(--fg-muted)] py-8 text-center">Cargando…</div>
         <ul v-else class="space-y-0 flex-1 overflow-y-auto m-0 p-0 list-none">
           <li
             v-for="(log, idx) in filteredDrawerActivityLog"
@@ -1263,19 +1009,19 @@
             class="flex gap-3"
           >
             <div class="flex flex-col items-center shrink-0 w-3 pt-1">
-              <span class="h-2.5 w-2.5 rounded-full border-2 border-blue-500 bg-white dark:bg-gray-800" />
+              <span class="h-2.5 w-2.5 rounded-full border-2 border-[var(--accent)] bg-[var(--surface-raised)]" />
               <span
                 v-if="idx < filteredDrawerActivityLog.length - 1"
-                class="w-px flex-1 min-h-[1.5rem] bg-gray-200 dark:bg-gray-600"
+                class="w-px flex-1 min-h-[1.5rem] bg-[var(--surface-border)]"
               />
             </div>
             <div class="flex-1 flex items-start justify-between gap-2 pb-4">
               <div class="min-w-0">
-                <p class="text-sm text-gray-800 dark:text-gray-100">
-                  <span class="font-medium capitalize">{{ log.action }}</span>
-                  <span class="text-gray-500"> · {{ log.entityType }}</span>
+                <p class="text-sm text-[var(--fg-default)]">
+                  <span class="font-medium">{{ formatActivityAction(log.action) }}</span>
+                  <span class="text-[var(--fg-muted)]"> · {{ formatActivityEntity(log.entityType) }}</span>
                 </p>
-                <p class="text-xs text-gray-500 mt-0.5">
+                <p class="text-xs text-[var(--fg-muted)] mt-0.5">
                   {{ formatDateTime(log.createdAt) }}
                   <span v-if="log.user"> · {{ log.user.firstName || log.user.email }}</span>
                 </p>
@@ -1291,7 +1037,7 @@
             </div>
           </li>
         </ul>
-        <p v-if="!drawerActivityLoading && !filteredDrawerActivityLog.length" class="text-sm text-gray-500 py-6 text-center">
+        <p v-if="!drawerActivityLoading && !filteredDrawerActivityLog.length" class="text-sm text-[var(--fg-muted)] py-6 text-center">
           Sin entradas con este filtro
         </p>
       </div>
@@ -1303,7 +1049,7 @@
       modal
       :style="{ width: 'min(420px, 96vw)' }"
     >
-      <p class="text-xs text-gray-500 m-0 mb-2">Atajo: Ctrl+K o Cmd+K</p>
+      <p class="text-xs text-[var(--fg-muted)] m-0 mb-2">Atajo: Ctrl+K o Cmd+K</p>
       <InputText
         v-model="commandPaletteFilter"
         placeholder="Buscar acción…"
@@ -1314,11 +1060,11 @@
         <li v-for="cmd in filteredCommandPalette" :key="cmd.id">
           <button
             type="button"
-            class="w-full text-left px-3 py-2 rounded-lg border border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm flex justify-between gap-2"
+            class="w-full text-left px-3 py-2 rounded-lg border border-[var(--surface-border)] hover:bg-[var(--surface-sunken)] text-sm flex justify-between gap-2"
             @click="runCommandPalette(cmd)"
           >
             <span>{{ cmd.label }}</span>
-            <span class="text-gray-400 text-xs">{{ cmd.hint }}</span>
+            <span class="text-[var(--fg-subtle)] text-xs">{{ cmd.hint }}</span>
           </button>
         </li>
       </ul>
@@ -1368,7 +1114,7 @@
       </template>
     </Dialog>
 
-    <!-- Detalle de actuación (modal centrado, misma familia que «Nueva actuación») -->
+    <!-- Detalle de actividad (modal centrado, misma familia que «Nueva actividad») -->
     <Dialog
       :visible="!!editingItem"
       modal
@@ -1384,7 +1130,7 @@
           <TicketKey v-if="editingItem?.ticketKey" :label="editingItem.ticketKey" />
           <span class="truncate text-sm font-medium text-[var(--fg-muted)]">
             {{
-              canEditWorkflowItem && isEditingDetail ? 'Editando actuación' : 'Detalle de actuación'
+              canEditWorkflowItem && isEditingDetail ? 'Editando actividad' : 'Detalle de actividad'
             }}
           </span>
           <Tag v-if="!canEditWorkflowItem" value="Solo lectura" severity="warn" class="text-[10px] shrink-0" />
@@ -1395,7 +1141,7 @@
               label="Editar"
               size="small"
               text
-              aria-label="Editar actuación"
+              aria-label="Editar actividad"
               @click="enterEditMode"
             />
             <Button
@@ -1415,7 +1161,7 @@
               text
               severity="secondary"
               type="button"
-              aria-label="Copiar enlace de la actuación"
+              aria-label="Copiar enlace de la actividad"
               @click="shareActivityLink"
             />
           </div>
@@ -1443,40 +1189,31 @@
             id="item-detail-title"
             v-model="editingItem.title"
             placeholder="Sin título"
-            aria-label="Título de la actuación"
+            aria-label="Título de la actividad"
             class="item-detail-title-input w-full border-none bg-transparent p-0 py-2 text-2xl font-semibold leading-tight text-[var(--fg-default)] shadow-none transition-shadow duration-200 focus:ring-2 focus:ring-[var(--p-primary-300)] focus:ring-offset-0"
           />
 
           <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
-            <template
-              v-if="
-                canEditWorkflowItem &&
-                isEditingDetail &&
-                availableTransitions.length > 0 &&
-                !useConfigurableWorkflowsEnabled
-              "
-            >
-              <Button
-                type="button"
-                class="status-pill"
-                aria-haspopup="true"
-                aria-label="Cambiar estado"
-                @click="(e) => statusTransitionMenuRef?.toggle(e)"
-              >
-                <Tag :value="statusLabel(editingItem.status)" :severity="statusSeverity(editingItem.status)" />
-                <i class="pi pi-chevron-down text-[10px] opacity-70" aria-hidden="true" />
-              </Button>
-              <Menu ref="statusTransitionMenuRef" :model="statusTransitionMenuItems" popup />
-            </template>
             <Tag
-              v-else
               :value="statusLabel(editingItem.status)"
               :severity="statusSeverity(editingItem.status)"
             />
-            <span v-if="detailAssigneeDisplay" class="flex min-w-0 items-center gap-1.5">
-              <Avatar :label="detailAssigneeInitials" size="small" shape="circle" />
-              <span class="truncate text-[var(--fg-default)]">{{ detailAssigneeDisplay }}</span>
-            </span>
+            <Tag
+              v-if="detailAssigneeDisplay"
+              severity="secondary"
+              class="max-w-[min(18rem,70vw)] min-w-0 py-0 pl-0.5 pr-2 text-xs font-normal"
+            >
+              <span class="inline-flex min-w-0 items-center gap-1.5">
+                <Avatar
+                  v-if="editingItem.assignedTo"
+                  :image="editingItem.assignedTo.avatarUrl || undefined"
+                  :label="editingItem.assignedTo.avatarUrl ? undefined : detailAssigneeInitials"
+                  shape="circle"
+                  class="!h-3 !w-3 shrink-0 !text-[7px] leading-none bg-primary-100 text-primary-900 dark:bg-primary-900/40 dark:text-primary-100"
+                />
+                <span class="min-w-0 truncate">{{ detailAssigneeDisplay }}</span>
+              </span>
+            </Tag>
             <Tag v-if="editingItem.priority" :value="priorityLabelForItem(editingItem.priority)" severity="info" class="text-xs" />
             <span
               v-if="editingItem.dueDate"
@@ -1487,77 +1224,6 @@
             </span>
             <Tag v-if="editingItem.isLegalDeadline" value="Plazo legal" severity="danger" class="text-xs" />
           </div>
-
-          <section
-            v-if="useConfigurableWorkflowsEnabled"
-            class="rounded-xl border border-[var(--surface-border)] bg-[var(--surface-sunken)]/80 p-3 space-y-2"
-          >
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <div class="min-w-0">
-                <p class="text-[11px] font-medium uppercase tracking-wide text-[var(--fg-muted)]">
-                  {{ t('trackables.flow.workflowAndState') }}
-                </p>
-                <p class="text-sm text-[var(--fg-default)]">
-                  <template v-if="editingItem?.workflowId">
-                    <span class="font-semibold">{{ detailWorkflowName || '…' }}</span>
-                    <span class="text-[var(--fg-muted)]"> · </span>
-                    <span class="font-mono text-xs">{{ editingItem.stateKey || editingItem.status }}</span>
-                  </template>
-                  <span v-else class="font-semibold text-amber-700 dark:text-amber-300">
-                    {{ t('trackables.flow.noWorkflowLeadCta') }}
-                  </span>
-                </p>
-              </div>
-              <Dropdown
-                v-if="canEditWorkflowItem"
-                v-model="workflowPickerValue"
-                :options="workflowDefinitionsPicker"
-                option-label="name"
-                option-value="id"
-                :placeholder="
-                  editingItem?.workflowId ? t('trackables.flow.changeFlow') : t('trackables.flow.assignFlow')
-                "
-                :disabled="sidebarItemHasChildren || workflowChangeLoading"
-                class="w-full min-w-[12rem] max-w-full sm:max-w-xs"
-                :filter="workflowDefinitionsPicker.length > 8"
-                @update:model-value="applyWorkflowFromPicker"
-              />
-            </div>
-            <p v-if="sidebarItemHasChildren" class="text-xs text-amber-700 dark:text-amber-300">
-              {{ t('trackables.flow.changeFlowDisabledChildren') }}
-            </p>
-            <p v-else-if="editingItem?.workflowId" class="text-[11px] text-[var(--fg-muted)]">
-              {{ t('trackables.flow.changeFlowHint') }}
-            </p>
-            <div
-              v-if="canEditWorkflowItem && availableTransitions.length && editingItem?.workflowId"
-              class="flex flex-wrap gap-1.5"
-            >
-              <Button
-                v-for="tr in availableTransitions"
-                :key="tr.to"
-                type="button"
-                size="small"
-                outlined
-                :disabled="workflowChangeLoading"
-                :label="`${tr.label} → ${tr.to}`"
-                @click="handleTransition(editingItem!.id, tr.to)"
-              />
-            </div>
-            <p
-              v-else-if="useConfigurableWorkflowsEnabled && !availableTransitions.length && editingItem?.workflowId"
-              class="text-xs text-[var(--fg-muted)]"
-            >
-              {{ t('trackables.flow.noTransitionsInSidebar') }}
-            </p>
-            <RouterLink
-              v-if="editingItem?.workflowId && canEditWorkflowDefinitions"
-              :to="{ name: 'settings-workflow-edit', params: { id: editingItem.workflowId }, query: { tab: 'preview' } }"
-              class="block text-right text-xs text-primary-600 underline"
-            >
-              {{ t('trackables.flow.viewGraph') }} →
-            </RouterLink>
-          </section>
 
           <section class="space-y-3">
             <header class="flex items-center justify-between gap-2 border-b border-[var(--surface-border)] pb-2">
@@ -1593,75 +1259,6 @@
               class="item-detail-editor w-full"
               placeholder="Sin descripción"
             />
-          </section>
-
-          <section class="space-y-3">
-            <header class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--surface-border)] pb-2">
-              <div class="flex items-center gap-2">
-                <h3 class="text-sm font-semibold text-[var(--fg-default)]">Entregables</h3>
-                <Tag
-                  :value="`${deliverablesProgress}%`"
-                  :severity="deliverablesProgress === 100 ? 'success' : deliverablesProgress > 50 ? 'warn' : 'info'"
-                  class="text-xs"
-                />
-              </div>
-            </header>
-            <div class="space-y-1">
-              <div
-                v-for="(d, idx) in currentDeliverables"
-                :key="idx"
-                class="flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-[var(--surface-sunken)]"
-              >
-                <Checkbox
-                  v-model="d.done"
-                  :binary="true"
-                  :disabled="!canEditWorkflowItem || !isEditingDetail"
-                />
-                <span
-                  class="text-sm"
-                  :class="d.done ? 'text-[var(--fg-muted)] line-through' : 'text-[var(--fg-default)]'"
-                >
-                  {{ d.label }}
-                </span>
-              </div>
-            </div>
-          </section>
-
-          <section class="space-y-3">
-            <header class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--surface-border)] pb-2">
-              <h3 class="text-sm font-semibold text-[var(--fg-default)]">Subtareas</h3>
-              <Button
-                label="Nueva diligencia"
-                icon="pi pi-plus"
-                size="small"
-                outlined
-                :disabled="!canEditWorkflowItem || !isEditingDetail"
-                @click="openSubtaskFromDetail"
-              />
-            </header>
-            <p v-if="!itemChildren.length" class="mb-0 text-sm text-[var(--fg-muted)]">
-              No hay subtareas. Usa «Nueva diligencia» para crear una bajo esta actuación.
-            </p>
-            <ul v-else class="space-y-2">
-              <li
-                v-for="ch in itemChildren"
-                :key="ch.id"
-                class="flex flex-wrap cursor-pointer items-center justify-between gap-2 rounded-lg border border-[var(--surface-border)] bg-[var(--surface-sunken)]/50 p-3 transition-colors hover:bg-[var(--surface-sunken)]"
-                @click="openSidebar(ch)"
-              >
-                <div class="min-w-0 flex-1">
-                  <div class="truncate text-sm font-medium text-[var(--fg-default)]">{{ ch.title }}</div>
-                  <div class="text-xs text-[var(--fg-muted)]">
-                    {{ ch.kind || '—' }}
-                    <span v-if="ch.dueDate"> · {{ formatDate(ch.dueDate) }}</span>
-                  </div>
-                </div>
-                <div class="flex shrink-0 items-center gap-2">
-                  <Tag :value="statusLabel(ch.status)" severity="secondary" class="text-xs" />
-                  <Tag v-if="ch.isLegalDeadline" value="Plazo" severity="danger" class="text-xs" />
-                </div>
-              </li>
-            </ul>
           </section>
 
           <section class="space-y-3">
@@ -1746,7 +1343,7 @@
                   Sin comentarios aún.
                 </p>
               </div>
-              <div v-if="canCommentWorkflowItem" class="mt-4 flex flex-col gap-2">
+              <div v-if="canPostCommentOnOpenActivity" class="mt-4 flex flex-col gap-2">
                 <Textarea
                   v-model="newCommentText"
                   rows="2"
@@ -1764,10 +1361,10 @@
                 />
               </div>
               <p
-                v-else-if="canReadWorkflowItem && userPermissions.length"
+                v-else-if="(canReadWorkflowItem || canReadTrackableForComments) && userPermissions.length"
                 class="mt-4 text-sm text-[var(--fg-muted)]"
               >
-                No tienes permiso para publicar comentarios en esta actuación.
+                No tienes permiso para publicar comentarios en esta actividad.
               </p>
             </template>
           </section>
@@ -1776,7 +1373,7 @@
         <!-- Sidebar: clave | valor (estilo Jira) -->
         <aside
           class="item-detail-sidebar w-full lg:w-[min(22rem,32%)] lg:max-w-sm shrink-0 flex flex-col gap-2 min-h-0 overflow-y-auto border-t border-[var(--surface-border)] pt-4 pr-4 sm:pr-5 lg:pt-0 lg:pl-6 lg:pr-5 lg:border-t-0 lg:border-l lg:mt-0"
-          aria-label="Detalles de la actuación"
+          aria-label="Detalles de la actividad"
         >
           <p
             v-if="canEditWorkflowItem && !isEditingDetail"
@@ -1809,7 +1406,6 @@
                       editable
                       show-clear
                       input-id="item-detail-kind-input"
-                      @change="initDeliverables(editingItem!.kind || 'Actuacion')"
                     />
                     <span v-else class="text-[var(--fg-default)]">{{ kindLabel(editingItem.kind) || '—' }}</span>
                   </dd>
@@ -1828,8 +1424,7 @@
                       class="w-full"
                       input-id="item-detail-assignee-input"
                     />
-                    <span v-else class="flex items-center gap-1.5 text-[var(--fg-default)]">
-                      <Avatar v-if="detailAssigneeInitials" :label="detailAssigneeInitials" size="small" shape="circle" />
+                    <span v-else class="text-[var(--fg-default)]">
                       {{ detailAssigneeDisplay || '—' }}
                     </span>
                   </dd>
@@ -1887,7 +1482,7 @@
                         :style="{ backgroundColor: editingItem.accentColor || 'transparent' }"
                         v-tooltip.bottom="'Kanban y línea de tiempo'"
                         :disabled="!isEditingDetail || !canEditWorkflowItem"
-                        aria-label="Color de la actuación"
+                        aria-label="Color de la actividad"
                         @click="(e) => detailAccentPopoverRef?.toggle(e)"
                       />
                       <Popover
@@ -2070,7 +1665,7 @@
       </div>
     </Dialog>
 
-    <!-- Nueva actuación: mismo layout que detalle (dos columnas) -->
+    <!-- Nueva actividad: mismo layout que detalle (dos columnas) -->
     <Dialog
       v-model:visible="showCreateDialog"
       modal
@@ -2089,7 +1684,7 @@
             size="small"
             :disabled="!newItem.title?.trim() || createItemSaving"
             :loading="createItemSaving"
-            aria-label="Crear actuación"
+            aria-label="Crear actividad"
             @click="createItem"
           />
         </div>
@@ -2112,9 +1707,17 @@
             id="create-item-title"
             v-model="newItem.title"
             placeholder="Ej. Presentación de demanda"
-            aria-label="Título de la nueva actuación"
+            aria-label="Título de la nueva actividad"
             class="item-detail-title-input w-full border-none bg-transparent p-0 py-2 text-2xl font-semibold leading-tight text-[var(--fg-default)] shadow-none transition-shadow duration-200 focus:ring-2 focus:ring-[var(--p-primary-300)] focus:ring-offset-0"
           />
+
+          <div
+            v-if="primaryProcessTrackId"
+            class="flex flex-wrap items-center gap-2"
+          >
+            <span class="text-xs text-[var(--fg-muted)]">Columna inicial:</span>
+            <Tag :value="createDialogStateColumnLabel" rounded severity="secondary" class="!text-xs" />
+          </div>
 
           <section class="space-y-3">
             <header class="border-b border-[var(--surface-border)] pb-2">
@@ -2128,18 +1731,18 @@
               v-model="newItem.description"
               editor-style="min-height: 10rem; max-height: min(36vh, 20rem);"
               class="item-detail-editor w-full"
-              placeholder="Detalle de la actuación…"
+              placeholder="Detalle de la actividad…"
             />
           </section>
 
           <Message severity="info" :closable="false" class="text-sm">
-            Diligencias, entregables, comentarios y documentos estarán disponibles después de crear la actuación.
+            Diligencias, entregables, comentarios y documentos estarán disponibles después de crear la actividad.
           </Message>
         </section>
 
         <aside
           class="item-detail-sidebar w-full lg:w-[min(22rem,32%)] lg:max-w-sm shrink-0 flex flex-col gap-2 min-h-0 overflow-y-auto border-t border-[var(--surface-border)] pt-4 pr-4 sm:pr-5 lg:pt-0 lg:pl-6 lg:pr-5 lg:border-t-0 lg:border-l lg:mt-0"
-          aria-label="Detalles de la nueva actuación"
+          aria-label="Detalles de la nueva actividad"
         >
           <p class="m-0 text-[11px] leading-snug text-[var(--fg-muted)]">
             Desactiva «Todo el día» en Calendario para fijar hora de inicio y vencimiento.
@@ -2220,20 +1823,6 @@
                     <InputText id="create-item-location" v-model="newItem.location" class="w-full" placeholder="Ej. Juzgado, sala…" />
                   </dd>
 
-                  <dt>Padre</dt>
-                  <dd class="min-w-0">
-                    <Dropdown
-                      id="create-item-parent-input"
-                      v-model="newItem.parentId"
-                      :options="parentOptions"
-                      option-label="label"
-                      option-value="value"
-                      placeholder="Raíz del expediente"
-                      show-clear
-                      class="w-full"
-                    />
-                  </dd>
-
                   <dt>Color</dt>
                   <dd class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
@@ -2242,7 +1831,7 @@
                         class="h-6 w-6 shrink-0 rounded-full border border-[var(--surface-border)]"
                         :style="{ backgroundColor: newItem.accentColor || 'transparent' }"
                         v-tooltip.bottom="'Kanban y línea de tiempo'"
-                        aria-label="Color de la actuación"
+                        aria-label="Color de la actividad"
                         @click="(e) => createAccentPopoverRef?.toggle(e)"
                       />
                       <Popover
@@ -2386,12 +1975,12 @@
     >
       <div class="flex flex-col gap-4 pt-2">
         <div class="flex flex-col gap-1">
-          <label for="new-doc-title" class="text-sm font-medium text-gray-700 dark:text-gray-300">Título *</label>
+          <label for="new-doc-title" class="text-sm font-medium text-[var(--fg-muted)]">Título *</label>
           <InputText id="new-doc-title" v-model="newDocTitle" placeholder="Título del documento" />
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Carpeta destino</label>
+          <label class="text-sm font-medium text-[var(--fg-muted)]">Carpeta destino</label>
           <Dropdown
             v-model="newDocFolderId"
             :options="folderOptions"
@@ -2403,7 +1992,7 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Plantilla (opcional)</label>
+          <label class="text-sm font-medium text-[var(--fg-muted)]">Plantilla (opcional)</label>
           <div v-if="selectedTemplateDoc" class="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
             <i class="pi pi-file-word text-blue-500" />
             <span class="flex-1 text-sm text-blue-700 dark:text-blue-300 truncate">{{ selectedTemplateDoc.title }}</span>
@@ -2438,11 +2027,11 @@
       :modal="true"
       :style="{ width: '440px' }"
     >
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-        Elige la carpeta del expediente donde guardar el archivo. Quedará vinculado a esta actuación.
+      <p class="text-sm text-[var(--fg-muted)] mb-3">
+        Elige la carpeta del expediente donde guardar el archivo. Quedará vinculado a esta actividad.
       </p>
       <div class="flex flex-col gap-1">
-        <label for="sidebar-upload-folder" class="text-sm font-medium text-gray-700 dark:text-gray-300">Carpeta destino</label>
+        <label for="sidebar-upload-folder" class="text-sm font-medium text-[var(--fg-muted)]">Carpeta destino</label>
         <Dropdown
           id="sidebar-upload-folder"
           v-model="uploadFolderPickId"
@@ -2475,40 +2064,6 @@
     />
 
     <Dialog
-      v-model:visible="showTemplatePicker"
-      header="Aplicar plantilla de flujo"
-      modal
-      class="w-full max-w-lg"
-      @hide="templateList = []"
-    >
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-        Se crearán actuaciones en este expediente según la plantilla. Las fechas usan «hoy» como inicio si no indicas otra.
-      </p>
-      <div v-if="templatesLoading" class="py-6 text-center text-gray-500">Cargando…</div>
-      <ul v-else class="space-y-2 max-h-72 overflow-auto">
-        <li
-          v-for="tpl in templateList"
-          :key="tpl.id"
-          class="flex items-center justify-between gap-2 p-2 rounded border border-gray-200 dark:border-gray-600"
-        >
-          <div class="min-w-0">
-            <div class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ tpl.name }}</div>
-            <div class="text-xs text-gray-500">{{ tpl.matterType }} · {{ tpl.category || '—' }}</div>
-          </div>
-          <Button
-            label="Aplicar"
-            size="small"
-            :loading="templateApplyingId === tpl.id"
-            @click="applyWorkflowTemplate(tpl.id)"
-          />
-        </li>
-      </ul>
-      <p v-if="!templatesLoading && !templateList.length" class="text-sm text-gray-500 py-4">
-        No hay plantillas disponibles.
-      </p>
-    </Dialog>
-
-    <Dialog
       v-model:visible="sinoeQuickDialogVisible"
       header="SINOE y fuentes externas"
       modal
@@ -2516,19 +2071,19 @@
       :dismissable-mask="true"
       @show="loadSinoePanel"
     >
-      <p v-if="sinoePanelLoading" class="text-sm text-gray-500 py-4">Cargando…</p>
+      <p v-if="sinoePanelLoading" class="text-sm text-[var(--fg-muted)] py-4">Cargando…</p>
       <template v-else>
-        <p v-if="!externalSources.length" class="text-sm text-gray-500 m-0 mb-3">
+        <p v-if="!externalSources.length" class="text-sm text-[var(--fg-muted)] m-0 mb-3">
           No hay fuentes externas registradas para este expediente.
         </p>
         <ul v-else class="space-y-2 text-sm m-0 p-0 list-none mb-3">
           <li
             v-for="src in externalSources"
             :key="src.id"
-            class="rounded-lg border border-gray-100 dark:border-gray-600 p-3"
+            class="rounded-lg border border-[var(--surface-border)] p-3"
           >
             <span class="font-medium">{{ src.sourceType }}</span>
-            <span class="text-gray-500"> · Última verificación: {{ src.lastCheckedAt ? formatDateTime(src.lastCheckedAt) : '—' }}</span>
+            <span class="text-[var(--fg-muted)]"> · Última verificación: {{ src.lastCheckedAt ? formatDateTime(src.lastCheckedAt) : '—' }}</span>
             <p v-if="src.lastError" class="text-xs text-red-600 mt-1 m-0">{{ src.lastError }}</p>
           </li>
         </ul>
@@ -2541,7 +2096,7 @@
             :loading="sinoeTriggerLoading"
             @click="triggerSinoeScrape"
           />
-          <span v-else class="text-xs text-gray-500">Requiere permiso para disparar scraping o gestionar SINOE.</span>
+          <span v-else class="text-xs text-[var(--fg-muted)]">Requiere permiso para disparar scraping o gestionar SINOE.</span>
         </div>
       </template>
       <template #footer>
@@ -2588,11 +2143,7 @@ import Accordion from 'primevue/accordion';
 import AccordionPanel from 'primevue/accordionpanel';
 import AccordionHeader from 'primevue/accordionheader';
 import AccordionContent from 'primevue/accordioncontent';
-import Tree from 'primevue/tree';
-import type { TreeNode } from 'primevue/treenode';
-import SelectButton from 'primevue/selectbutton';
 import Message from 'primevue/message';
-import Menu from 'primevue/menu';
 import Popover from 'primevue/popover';
 import Avatar from 'primevue/avatar';
 import { useToast } from 'primevue/usetoast';
@@ -2606,7 +2157,12 @@ import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 import esLocale from '@fullcalendar/core/locales/es';
 import type { CalendarOptions, DatesSetArg, EventClickArg, EventDropArg, EventApi } from '@fullcalendar/core';
-import { apiEventToFullCalendar, parseWorkflowItemIdFromEventId, type ApiCalendarEvent } from '@/composables/useCalendarAdapter';
+import {
+  apiEventToFullCalendar,
+  parseActivityIdFromEventId,
+  parseWorkflowItemIdFromEventId,
+  type ApiCalendarEvent,
+} from '@/composables/useCalendarAdapter';
 import { matchesCalendarFilters, classifyApiEvent, type CalendarFilterKind } from '@/composables/calendarEventKind';
 import { countHearingOverlapPairs, listHearingOverlapPairs } from '@/composables/calendarOverlap';
 import { buildPeruHolidayEvents } from '@/composables/peruPublicHolidays';
@@ -2615,15 +2171,16 @@ import { useCalendarStore } from '@/stores/calendar.store';
 import CalendarSidebar from '@/views/calendar/components/CalendarSidebar.vue';
 import DaySummaryBar from '@/views/calendar/components/DaySummaryBar.vue';
 import { getRecent, recordVisit } from '@/composables/useRecentTrackableViews';
-import Draggable from 'vuedraggable';
 import * as Shared from '@tracker/shared';
 import { flattenWorkflowTree } from '@/utils/flow-transformer';
+import { flattenProcessTrackToWorkflowItems } from '@/utils/process-track-activity-mapper';
 import TemplateSearchDialog from '@/components/documents/TemplateSearchDialog.vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import FolderBrowserView from '@/views/documents/FolderBrowserView.vue';
 import TicketKey from '@/components/kanban/TicketKey.vue';
-import PriorityIcon from '@/components/kanban/PriorityIcon.vue';
-import UserAvatar from '@/components/kanban/UserAvatar.vue';
+import { createProcessTrack, createCustomActivity, patchProcessTrackActivity } from '@/api/process-tracks';
+import { useProcessTrackData } from '@/composables/useProcessTrackData';
+import ProcessStageBoardView from '@/components/expediente-v2/ProcessStageBoardView.vue';
 
 interface AssignedUser {
   id?: string;
@@ -2666,6 +2223,10 @@ interface WorkflowItem {
   allDay?: boolean;
   reminderMinutesBefore?: number[] | null;
   rrule?: string | null;
+  /** Fila vía process track / ActivityInstance (no legacy WorkflowItem). */
+  isProcessTrackActivity?: boolean;
+  processTrackId?: string;
+  stageInstanceId?: string;
 }
 
 const DEFAULT_ACCENT = '#64748b';
@@ -2705,9 +2266,22 @@ const canCommentWorkflowItem = computed(
     userPermissions.value.includes('workflow_item:comment') ||
     userPermissions.value.includes('workflow_item:update'),
 );
+/** Incluye actividades v2 (ProcessTrack) con `trackable:update`, alineado al POST de comentarios. */
+const canPostCommentOnOpenActivity = computed(() => {
+  const e = editingItem.value as (WorkflowItem & { isProcessTrackActivity?: boolean }) | null;
+  if (e?.isProcessTrackActivity) {
+    return (
+      userPermissions.value.includes('trackable:update') ||
+      userPermissions.value.includes('workflow_item:comment') ||
+      userPermissions.value.includes('workflow_item:update')
+    );
+  }
+  return canCommentWorkflowItem.value;
+});
 const canReadWorkflowItem = computed(() => userPermissions.value.includes('workflow_item:read'));
+const canReadTrackableForComments = computed(() => userPermissions.value.includes('trackable:read'));
 const canEditTrackable = computed(() => userPermissions.value.includes('trackable:update'));
-const canEditWorkflowDefinitions = computed(() => userPermissions.value.includes('workflow:update'));
+const canReadBlueprints = computed(() => userPermissions.value.includes('blueprint:read'));
 
 /** Motor configurable (workflow + transiciones vía API). Sin esto el drag Kanban está deshabilitado. */
 const useConfigurableWorkflowsEnabled = computed(
@@ -2715,6 +2289,21 @@ const useConfigurableWorkflowsEnabled = computed(
 );
 
 const trackableDetail = ref<Record<string, unknown> | null>(null);
+
+/** Motor v2: tab Actividades = ProcessTrack (tiene precedencia sobre flujos configurables). */
+const primaryProcessTrackId = computed(() => {
+  const raw = trackableDetail.value?.processTracks as { id: string; role: string }[] | undefined;
+  if (!Array.isArray(raw) || !raw.length) return null as string | null;
+  const primary = raw.find((p) => (p.role || '').toLowerCase() === 'primary');
+  return primary?.id ?? raw[0]!.id;
+});
+
+const {
+  load: loadProcessTrack,
+  loadSilent: loadProcessTrackSilent,
+  pt: processTrackRef,
+  currentStageInstanceId: ptCurrentStageId,
+} = useProcessTrackData(() => primaryProcessTrackId.value ?? '');
 const caseForm = ref({
   title: '',
   description: '',
@@ -2764,8 +2353,6 @@ const caseActivityLog = ref<Array<{
   user?: { firstName?: string; email?: string } | null;
 }>>([]);
 const caseActivityLoading = ref(false);
-const caseRecentDocs = ref<Array<{ id: string; title: string; updatedAt?: string; createdAt?: string }>>([]);
-const caseDocsLoading = ref(false);
 const caseSaving = ref(false);
 /** Solo en modo edición se muestran inputs en «Datos generales». */
 const caseGeneralEditing = ref(false);
@@ -2806,23 +2393,14 @@ async function loadClientsForCase() {
 async function loadCaseTabExtras() {
   if (!trackableId.value) return;
   caseActivityLoading.value = true;
-  caseDocsLoading.value = true;
   try {
-    const [logRes, docsRes] = await Promise.all([
-      apiClient.get(`/activity-log/trackable/${trackableId.value}`, { params: { limit: 40 } }),
-      apiClient.get('/documents', { params: { trackableId: trackableId.value, limit: 10 } }),
-    ]);
+    const logRes = await apiClient.get(`/activity-log/trackable/${trackableId.value}`, { params: { limit: 40 } });
     const logPayload = logRes.data;
     caseActivityLog.value = Array.isArray(logPayload?.data) ? logPayload.data : [];
-    const docPayload = docsRes.data;
-    const raw = Array.isArray(docPayload?.data) ? docPayload.data : docPayload;
-    caseRecentDocs.value = Array.isArray(raw) ? raw : [];
   } catch {
     caseActivityLog.value = [];
-    caseRecentDocs.value = [];
   } finally {
     caseActivityLoading.value = false;
-    caseDocsLoading.value = false;
   }
 }
 
@@ -2893,6 +2471,25 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const { t, locale: i18nLocale } = useI18n();
+
+function formatActivityAction(action: string): string {
+  const a = (action || '').trim();
+  if (!a) return '';
+  const key = `activityLog.action.${a}`;
+  const translated = t(key);
+  if (translated !== key) return translated;
+  return a.charAt(0).toUpperCase() + a.slice(1).replace(/_/g, ' ');
+}
+
+function formatActivityEntity(entityType: string): string {
+  const e = (entityType || '').trim().toLowerCase();
+  if (!e) return '';
+  const key = `activityLog.entity.${e}`;
+  const translated = t(key);
+  if (translated !== key) return translated;
+  return e.charAt(0).toUpperCase() + e.slice(1);
+}
+
 const calStore = useCalendarStore();
 const { filters: calFilters } = storeToRefs(calStore);
 const trackableId = computed(() => String(route.params.id ?? ''));
@@ -2954,6 +2551,10 @@ function onTrackableSwitch(newId: string | null) {
 
 const activeTab = ref(0);
 
+function openActividadesTab() {
+  activeTab.value = 1;
+}
+
 /** Resumen: panel Ficha integrado (colapsable); SINOE en modal desde la barra rápida */
 const fichaSectionOpen = ref(false);
 const fichaSectionRef = ref<HTMLElement | null>(null);
@@ -2973,16 +2574,40 @@ function scrollToFichaAndEdit() {
 }
 
 const workflowTree = ref<WorkflowItem[]>([]);
-const items = computed(() => flattenWorkflowTree(workflowTree.value as any));
-const flowViewMode = ref<'tree' | 'kanban' | 'timeline' | 'table'>('kanban');
-const flowViewModeOptions = [
-  { label: 'Kanban', value: 'kanban' },
-  { label: 'Árbol', value: 'tree' },
-  { label: 'Línea de tiempo', value: 'timeline' },
-  { label: 'Tabla', value: 'table' },
-];
+const items = computed((): WorkflowItem[] => {
+  const ptId = primaryProcessTrackId.value;
+  if (ptId && processTrackRef.value?.stageInstances) {
+    const prefix = (processTrackRef.value as { prefix?: string }).prefix || 'P';
+    return flattenProcessTrackToWorkflowItems(
+      ptId,
+      prefix,
+      processTrackRef.value as any,
+    ) as unknown as WorkflowItem[];
+  }
+  return flattenWorkflowTree(workflowTree.value as any) as WorkflowItem[];
+});
+const creatingProcessTrack = ref(false);
 
-const summaryActivityLogPreview = computed(() => caseActivityLog.value.slice(0, 10));
+async function ensureFreeformProcessTrack() {
+  const id = trackableId.value;
+  if (!id || !canEditTrackable.value) return;
+  creatingProcessTrack.value = true;
+  try {
+    await createProcessTrack({ trackableId: id });
+    await loadTrackable();
+    await loadItems();
+    toast.add({ severity: 'success', summary: t('common.success'), life: 2500 });
+  } catch (e) {
+    toast.add({
+      severity: 'error',
+      summary: t('processTrack.emptyState.createError'),
+      detail: extractApiErrorMessage(e, t('processTrack.emptyState.createError')),
+      life: 5000,
+    });
+  } finally {
+    creatingProcessTrack.value = false;
+  }
+}
 
 const activityDrawerVisible = ref(false);
 const drawerActivityLoading = ref(false);
@@ -3022,13 +2647,13 @@ const commandPaletteVisible = ref(false);
 const commandPaletteFilter = ref('');
 
 const commandPaletteItems = computed(() => [
-  { id: 'new-act', label: 'Nueva actuación', hint: 'Actuaciones', run: () => quickNewActuacion() },
-  { id: 'hearing', label: 'Agendar audiencia', hint: 'Actuaciones', run: () => openScheduleHearingDialog() },
+  { id: 'new-act', label: 'Nueva actividad', hint: 'Actividades', run: () => quickNewActuacion() },
+  { id: 'hearing', label: 'Agendar audiencia', hint: 'Actividades / Calendario', run: () => openScheduleHearingDialog() },
   { id: 'docs', label: 'Ir a documentos', hint: 'Documentos', run: () => goToDocumentosTab() },
-  { id: 'template', label: 'Aplicar plantilla', hint: 'Actuaciones', run: () => quickApplyTemplate() },
   { id: 'bitacora', label: 'Abrir bitácora', hint: 'Panel', run: () => void openActivityDrawer() },
   { id: 'edit-ficha', label: 'Editar ficha del caso', hint: 'Resumen', run: () => { scrollToFichaAndEdit(); } },
   { id: 'resumen', label: 'Ir a resumen', hint: 'Resumen', run: () => { activeTab.value = 0; } },
+  { id: 'actividades', label: 'Ir a actividades', hint: 'Actividades', run: () => { openActividadesTab(); } },
 ]);
 
 const filteredCommandPalette = computed(() => {
@@ -3053,11 +2678,6 @@ function quickNewActuacion() {
   void nextTick(() => openRootCreateDialog());
 }
 
-function quickApplyTemplate() {
-  activeTab.value = 1;
-  void nextTick(() => openTemplatePicker());
-}
-
 function openScheduleHearingDialog() {
   createItemError.value = '';
   newItem.value = {
@@ -3066,7 +2686,6 @@ function openScheduleHearingDialog() {
     kind: 'Audiencia',
     actionType: 'schedule_hearing',
     assignedToId: '',
-    parentId: '',
     priority: '',
     location: '',
     allDay: true,
@@ -3077,6 +2696,8 @@ function openScheduleHearingDialog() {
     reminderMinutesBefore: [],
     rrule: '',
     secondaryAssigneeIds: [],
+    stageInstanceId: ptCurrentStageId.value || '',
+    workflowStateCategory: 'todo',
   };
   showCreateDialog.value = true;
 }
@@ -3240,81 +2861,16 @@ async function deletePartyRow(row: TrackablePartyRow) {
   }
 }
 
-const primeTreeNodes = computed(() => buildPrimeTreeNodes(workflowTree.value));
-
-function buildPrimeTreeNodes(nodes: WorkflowItem[]): any[] {
-  if (!nodes?.length) return [];
-  return nodes.map((n) => ({
-    key: n.id,
-    label: `${n.title}${n.kind ? ` · ${n.kind}` : ''}${n.isLegalDeadline ? ' · Plazo legal' : ''}`,
-    data: n,
-    children: n.children?.length ? buildPrimeTreeNodes(n.children) : undefined,
-  }));
-}
-
-function onTreeNodeSelect(node: TreeNode) {
-  const d = node.data as WorkflowItem | undefined;
-  if (d) void openSidebar(d);
-}
-
-const timelineItems = computed(() => {
-  const list = [...items.value];
-  return list
-    .filter((i) => i.dueDate || i.startDate)
-    .sort((a, b) => {
-      const da = new Date(a.dueDate || a.startDate || 0).getTime();
-      const db = new Date(b.dueDate || b.startDate || 0).getTime();
-      return da - db;
-    });
-});
-
-const showTemplatePicker = ref(false);
-const templateList = ref<Array<{ id: string; name: string; matterType: string; category?: string }>>([]);
-const templatesLoading = ref(false);
-const templateApplyingId = ref<string | null>(null);
-
-async function openTemplatePicker() {
-  showTemplatePicker.value = true;
-  templatesLoading.value = true;
-  try {
-    const { data } = await apiClient.get('/workflow-templates', { params: { includeSystem: true } });
-    templateList.value = Array.isArray(data) ? data : [];
-  } catch {
-    templateList.value = [];
-    toast.add({ severity: 'error', summary: 'No se pudieron cargar las plantillas', life: 3000 });
-  } finally {
-    templatesLoading.value = false;
-  }
-}
-
-async function applyWorkflowTemplate(templateId: string) {
-  templateApplyingId.value = templateId;
-  try {
-    await apiClient.post(`/workflow-templates/${templateId}/instantiate`, {
-      trackableId: trackableId.value,
-      startDate: new Date().toISOString().slice(0, 10),
-    });
-    await loadItems();
-    showTemplatePicker.value = false;
-    toast.add({ severity: 'success', summary: 'Plantilla aplicada', life: 3000 });
-  } catch {
-    toast.add({ severity: 'error', summary: 'Error al aplicar plantilla', life: 3000 });
-  } finally {
-    templateApplyingId.value = null;
-  }
-}
 const selectedItem = ref<WorkflowItem | null>(null);
 const editingItem = ref<WorkflowItem | null>(null);
 /** Solo hojas pueden cambiar de workflow en backend. */
 const sidebarItemHasChildren = computed(() => {
   if (!editingItem.value) return false;
-  const flat = flattenWorkflowTree(workflowTree.value as any) as WorkflowItem[];
-  return flat.some((i) => i.parentId === editingItem.value!.id);
+  return items.value.some((i) => i.parentId === editingItem.value!.id);
 });
 /** Modo edición explícito en el diálogo de detalle (solo con permiso workflow_item:update). */
 const isEditingDetail = ref(false);
 const editingItemSnapshot = ref<string | null>(null);
-const statusTransitionMenuRef = ref<InstanceType<typeof Menu> | null>(null);
 const detailAccentPopoverRef = ref<InstanceType<typeof Popover> | null>(null);
 const createAccentPopoverRef = ref<InstanceType<typeof Popover> | null>(null);
 
@@ -3358,10 +2914,6 @@ function onEditDueDate(d: unknown) {
   editingItem.value.dueDate = v ? v.toISOString() : undefined;
 }
 const itemSaving = ref(false);
-type WorkflowTransitionRow = { to: string; label: string; category?: string };
-const availableTransitions = ref<WorkflowTransitionRow[]>([]);
-/** Transiciones válidas durante drag Kanban (para tooltips y toasts). */
-const cachedDragTransitions = ref<WorkflowTransitionRow[]>([]);
 const detailWorkflowName = ref<string | null>(null);
 const workflowDefinitionsPicker = ref<Array<{ id: string; name: string; slug: string; isSystem: boolean }>>([]);
 const workflowPickerValue = ref<string | null>(null);
@@ -3374,6 +2926,14 @@ const itemDetailDialogContentStyle = {
   overflow: 'hidden',
 };
 const showCreateDialog = ref(false);
+const processBoardRef = ref<InstanceType<typeof ProcessStageBoardView> | null>(null);
+
+/** `useProcessTrackData` vive en este view y otra instancia en ProcessStageBoardView; al mutar comentarios/archivos hay que actualizar ambos `pt` para el sidebar y el Kanban. */
+function refreshProcessTrackDataInUI() {
+  void loadProcessTrackSilent();
+  const board = processBoardRef.value as { refresh?: () => Promise<unknown> } | null;
+  if (board?.refresh) void board.refresh();
+}
 const createItemSaving = ref(false);
 const createItemError = ref('');
 const users = ref<Array<{ id: string; firstName?: string; lastName?: string; email: string; avatarUrl?: string | null }>>([]);
@@ -3394,7 +2954,7 @@ function formatWorkflowItemCreateError(err: unknown): string {
   if (typeof raw === 'string') return raw;
   if (typeof ax.response?.data?.error === 'string') return ax.response.data.error;
   if (err instanceof Error && err.message) return err.message;
-  return 'No se pudo crear la actuación.';
+  return 'No se pudo crear la actividad.';
 }
 
 const rootFolderId = ref<string | null>(null);
@@ -3426,426 +2986,6 @@ const folderOptions = computed(() => {
   return options;
 });
 
-type KanbanCol = { key: string; label: string; bg: string; border: string };
-
-const defaultKanbanColumns: KanbanCol[] = [
-  { key: 'pending', label: 'Pendiente', bg: 'bg-gray-100 dark:bg-gray-800', border: 'border-gray-400' },
-  { key: 'active', label: 'Activo', bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-blue-500' },
-  { key: 'in_progress', label: 'En progreso', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-500' },
-  { key: 'under_review', label: 'En revisión', bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-500' },
-  { key: 'validated', label: 'Validado', bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-500' },
-  { key: 'closed', label: 'Cerrado', bg: 'bg-gray-50 dark:bg-gray-800', border: 'border-gray-400' },
-];
-
-/** Columnas unificadas por WorkflowStateCategory (flujos distintos por actividad en el mismo expediente). */
-const categoryKanbanColumns: KanbanCol[] = [
-  { key: 'todo', label: 'Por hacer', bg: 'bg-gray-100 dark:bg-gray-800', border: 'border-gray-400' },
-  { key: 'in_progress', label: 'En curso', bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-500' },
-  { key: 'in_review', label: 'En revisión', bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-500' },
-  { key: 'done', label: 'Hecho', bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-500' },
-  { key: 'cancelled', label: 'Cancelado', bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-400' },
-];
-
-function categoryToKanbanStyle(cat: string): Pick<KanbanCol, 'bg' | 'border'> {
-  switch (cat) {
-    case 'todo':
-      return { bg: 'bg-gray-100 dark:bg-gray-800', border: 'border-gray-400' };
-    case 'in_progress':
-      return { bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-500' };
-    case 'in_review':
-      return { bg: 'bg-amber-50 dark:bg-amber-900/20', border: 'border-amber-500' };
-    case 'done':
-      return { bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-500' };
-    case 'cancelled':
-      return { bg: 'bg-red-50 dark:bg-red-900/20', border: 'border-red-400' };
-    default:
-      return { bg: 'bg-slate-50 dark:bg-slate-900/30', border: 'border-slate-400' };
-  }
-}
-
-/** Definición de workflow cargada para columnas Kanban «por estados» (vista avanzada). */
-const workflowBoardDetail = ref<{
-  states: Array<{ key: string; name: string; category: string; sortOrder: number; color?: string | null }>;
-} | null>(null);
-
-/** `category` = columnas por WorkflowStateCategory; `states` = una columna por estado del workflow cargado. */
-const kanbanBoardLayout = ref<'category' | 'states'>('category');
-const kanbanBoardLayoutOptions = [
-  { label: 'Por categoría', value: 'category' },
-  { label: 'Por estados', value: 'states' },
-];
-
-const kanbanColumns = computed<KanbanCol[]>(() => {
-  const ff = authStore.organization?.featureFlags?.useConfigurableWorkflows;
-  if (ff && kanbanBoardLayout.value === 'category') {
-    return categoryKanbanColumns;
-  }
-  const states = workflowBoardDetail.value?.states;
-  if (ff && kanbanBoardLayout.value === 'states' && states?.length) {
-    const sorted = [...states].sort((a, b) => a.sortOrder - b.sortOrder || a.key.localeCompare(b.key));
-    return sorted.map((s) => {
-      const st = categoryToKanbanStyle(s.category);
-      return { key: s.key, label: s.name, bg: st.bg, border: st.border };
-    });
-  }
-  return defaultKanbanColumns;
-});
-
-/** Listas mutables por columna Kanban (mismo objeto que en `items` vía árbol aplanado). */
-const kanbanLists = ref<Record<string, WorkflowItem[]>>({});
-const draggingItem = ref<WorkflowItem | null>(null);
-const validTargetStatuses = ref<Set<string>>(new Set());
-const kanbanBoardScrollRef = ref<HTMLElement | null>(null);
-/** Tras soltar drag, ignorar el click fantasma que abre el detalle. */
-const kanbanSuppressClickUntil = ref(0);
-const visibleKanbanColumnKeys = ref<Set<string>>(new Set());
-const kanbanMinimapOpen = ref(false);
-let kanbanColumnObserver: IntersectionObserver | null = null;
-
-function kanbanColumnKeyForItem(i: WorkflowItem): string {
-  const ff = authStore.organization?.featureFlags?.useConfigurableWorkflows;
-  const sk = i.stateKey ?? (i as any).status;
-  const category =
-    i.stateCategory ?? Shared.legacyWorkflowCategoryForStatus(sk as any);
-  if (ff) {
-    if (kanbanBoardLayout.value === 'category') {
-      return category;
-    }
-    return sk;
-  }
-  return sk;
-}
-
-function stateHexFromItem(item: WorkflowItem): string | null {
-  const key = String(item.stateKey ?? item.status ?? '');
-  const st = workflowBoardDetail.value?.states?.find((s) => s.key === key);
-  const c = st?.color?.trim();
-  if (c && /^#[0-9a-fA-F]{6}$/i.test(c)) return c;
-  return null;
-}
-
-function stateHumanName(item: WorkflowItem): string {
-  const key = String(item.stateKey ?? item.status ?? '');
-  const st = workflowBoardDetail.value?.states?.find((s) => s.key === key);
-  if (st?.name) return st.name;
-  return statusLabel(key);
-}
-
-function kanbanCardAriaLabel(item: WorkflowItem): string {
-  const parts: string[] = [];
-  if (item.ticketKey) parts.push(item.ticketKey);
-  parts.push(item.title || 'Actuación');
-  if (useConfigurableWorkflowsEnabled.value && (item.stateKey || item.status)) {
-    parts.push(stateHumanName(item));
-  }
-  return parts.join(' · ');
-}
-
-function rebuildKanbanLists() {
-  const flat = flattenWorkflowTree(workflowTree.value as any) as WorkflowItem[];
-  const next: Record<string, WorkflowItem[]> = {};
-  for (const col of kanbanColumns.value) {
-    next[col.key] = flat.filter((i) => kanbanColumnKeyForItem(i) === col.key);
-  }
-  kanbanLists.value = next;
-}
-
-kanbanLists.value = {};
-
-async function computeValidTargets(item: WorkflowItem) {
-  if (!authStore.organization?.featureFlags?.useConfigurableWorkflows) {
-    validTargetStatuses.value = new Set();
-    cachedDragTransitions.value = [];
-    return;
-  }
-  try {
-    const { data } = await apiClient.get<WorkflowTransitionRow[]>(`/workflow-items/${item.id}/transitions`);
-    cachedDragTransitions.value = Array.isArray(data) ? data : [];
-    const valid = new Set<string>();
-    for (const t of cachedDragTransitions.value) {
-      const cat = t.category ?? Shared.legacyWorkflowCategoryForStatus(t.to as any);
-      if (kanbanBoardLayout.value === 'category') {
-        valid.add(cat);
-      } else {
-        valid.add(t.to);
-      }
-    }
-    validTargetStatuses.value = valid;
-  } catch {
-    validTargetStatuses.value = new Set();
-    cachedDragTransitions.value = [];
-  }
-}
-
-function formatDragTransitionHintForKanban(): string {
-  const arr = cachedDragTransitions.value;
-  const item = draggingItem.value;
-  if (!arr.length || !item) return '';
-  const from = String(item.stateKey ?? item.status ?? '?');
-  const parts = arr.map((tr) => `${tr.label}→${tr.to}`);
-  return t('trackables.flow.transitionHint', { state: from, list: parts.join(', ') });
-}
-
-function toastIfNoTransitionsFromDrag(item: WorkflowItem) {
-  if (!useConfigurableWorkflowsEnabled.value) return;
-  if (validTargetStatuses.value.size > 0) return;
-  const stateLabel = String(item.stateKey ?? item.status ?? '?');
-  const detail = !item.workflowId
-    ? t('trackables.flow.noWorkflowAssigned')
-    : t('trackables.flow.noOutgoingTransitions', {
-        state: stateLabel,
-        settingsLink: router.resolve({
-          name: 'settings-workflows',
-          query: { workflowId: item.workflowId },
-        }).href,
-      });
-  toast.add({
-    severity: 'info',
-    summary: t('trackables.flow.noTransitionsTitle'),
-    detail,
-    life: 6000,
-  });
-}
-
-function reasonForInvalidDrop(_from: string, _to: string): string {
-  const hint = formatDragTransitionHintForKanban();
-  const base =
-    kanbanBoardLayout.value === 'category'
-      ? t('trackables.flow.invalidDropCategory')
-      : t('trackables.flow.invalidDropStates');
-  return hint ? `${base} ${hint}` : base;
-}
-
-async function onKanbanDragStart(evt: { oldIndex?: number; oldDraggableIndex?: number }, sourceColKey: string) {
-  if (!canEditWorkflowItem.value) return;
-  const idx = evt.oldIndex ?? evt.oldDraggableIndex;
-  if (idx === undefined || idx < 0) return;
-  const list = kanbanLists.value[sourceColKey];
-  const item = list?.[idx];
-  if (!item) return;
-  draggingItem.value = item;
-  await computeValidTargets(item);
-  toastIfNoTransitionsFromDrag(item);
-}
-
-function onKanbanDragEnd() {
-  draggingItem.value = null;
-  validTargetStatuses.value = new Set();
-  cachedDragTransitions.value = [];
-  kanbanSuppressClickUntil.value = Date.now() + 220;
-}
-
-function onKanbanCardClick(item: WorkflowItem) {
-  if (Date.now() < kanbanSuppressClickUntil.value) return;
-  void openSidebar(item);
-}
-
-function kanbanColumnClass(colKey: string): string {
-  const di = draggingItem.value;
-  if (!di) return '';
-  if (colKey === kanbanColumnKeyForItem(di)) return '';
-  if (validTargetStatuses.value.has(colKey)) {
-    return 'ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-gray-900 rounded-lg transition-shadow';
-  }
-  return 'opacity-40 cursor-not-allowed transition-opacity';
-}
-
-function kanbanColumnTitleAttr(colKey: string): string {
-  const di = draggingItem.value;
-  if (!di || colKey === kanbanColumnKeyForItem(di)) return '';
-  if (validTargetStatuses.value.has(colKey)) return '';
-  return reasonForInvalidDrop(kanbanColumnKeyForItem(di), colKey);
-}
-
-function onKanbanMove(evt: { draggedContext?: { element: WorkflowItem } }): boolean {
-  if (!canEditWorkflowItem.value) return false;
-  return !!evt.draggedContext?.element;
-}
-
-async function onKanbanColumnChange(targetColKey: string, evt: { added?: { element: WorkflowItem } }) {
-  if (!evt.added) return;
-  const item = evt.added.element;
-  await applyKanbanTransition(item, targetColKey);
-}
-
-async function applyKanbanTransition(item: WorkflowItem, targetColKey: string) {
-  if (!canEditWorkflowItem.value) {
-    rebuildKanbanLists();
-    return;
-  }
-  if (kanbanColumnKeyForItem(item) === targetColKey) {
-    rebuildKanbanLists();
-    return;
-  }
-  const allowedSnapshot = new Set(validTargetStatuses.value);
-  if (!allowedSnapshot.has(targetColKey)) {
-    toast.add({
-      severity: 'warn',
-      summary: 'Transición no permitida',
-      detail: reasonForInvalidDrop(kanbanColumnKeyForItem(item), targetColKey),
-      life: 4000,
-    });
-    rebuildKanbanLists();
-    return;
-  }
-  let statusToApply = targetColKey;
-  const ff = authStore.organization?.featureFlags?.useConfigurableWorkflows;
-  if (ff && kanbanBoardLayout.value === 'category') {
-    try {
-      const { data } = await apiClient.get<Array<{ to: string; label: string }>>(
-        `/workflow-items/${item.id}/category-transitions`,
-        { params: { category: targetColKey } },
-      );
-      if (!data?.length) {
-        toast.add({
-          severity: 'warn',
-          summary: 'Transición no permitida',
-          detail: 'No hay transición disponible hacia esa categoría.',
-          life: 4000,
-        });
-        rebuildKanbanLists();
-        return;
-      }
-      statusToApply = data[0].to;
-      if (data.length > 1) {
-        toast.add({
-          severity: 'info',
-          summary: 'Varias transiciones posibles',
-          detail: `Se aplica: ${data[0].label}`,
-          life: 3500,
-        });
-      }
-    } catch (err: unknown) {
-      toast.add({
-        severity: 'error',
-        summary: 'No se pudo obtener la transición',
-        detail: extractApiErrorMessage(err, 'Error al consultar transiciones por categoría.'),
-        life: 4000,
-      });
-      rebuildKanbanLists();
-      return;
-    }
-  }
-  try {
-    await apiClient.patch(`/workflow-items/${item.id}/transition`, { status: statusToApply });
-    toast.add({ severity: 'success', summary: 'Estado actualizado', life: 2000 });
-    await loadItems();
-    if (editingItem.value?.id === item.id) {
-      const refreshed = items.value.find((i) => i.id === item.id);
-      if (refreshed) await openSidebar(refreshed);
-    }
-  } catch (err: unknown) {
-    toast.add({
-      severity: 'error',
-      summary: 'No se pudo mover',
-      detail: extractApiErrorMessage(err, 'Error'),
-      life: 4000,
-    });
-    await loadItems();
-  }
-}
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined' || !window.matchMedia) return false;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
-function scrollKanbanToColumn(key: string) {
-  const root = kanbanBoardScrollRef.value;
-  const col = root?.querySelector(`[data-kanban-col="${key}"]`);
-  col?.scrollIntoView({
-    behavior: prefersReducedMotion() ? 'auto' : 'smooth',
-    inline: 'nearest',
-    block: 'nearest',
-  });
-}
-
-/** Invalida el mini-mapa al hacer scroll horizontal. */
-const kanbanScrollTick = ref(0);
-
-const kanbanMinimapViewportStyle = computed(() => {
-  kanbanScrollTick.value;
-  const el = kanbanBoardScrollRef.value;
-  if (!el || el.scrollWidth <= 0) {
-    return { left: '0%', width: '100%' };
-  }
-  const leftPct = (el.scrollLeft / el.scrollWidth) * 100;
-  const widthPct = (el.clientWidth / el.scrollWidth) * 100;
-  return {
-    left: `${leftPct}%`,
-    width: `${Math.min(100, widthPct)}%`,
-  };
-});
-
-function onKanbanBoardScroll() {
-  kanbanScrollTick.value += 1;
-}
-
-let minimapDragCleanup: (() => void) | null = null;
-
-function onKanbanMinimapPointerDown(e: PointerEvent) {
-  const root = kanbanBoardScrollRef.value;
-  if (!root || root.scrollWidth <= root.clientWidth) return;
-  minimapDragCleanup?.();
-  const startX = e.clientX;
-  const startScroll = root.scrollLeft;
-  const maxScroll = root.scrollWidth - root.clientWidth;
-
-  const move = (ev: PointerEvent) => {
-    const dx = ev.clientX - startX;
-    const trackWidth = 200 - 16;
-    const ratio = maxScroll / Math.max(trackWidth, 1);
-    root.scrollLeft = Math.max(0, Math.min(maxScroll, startScroll + dx * ratio * (root.scrollWidth / trackWidth)));
-  };
-  const up = () => {
-    window.removeEventListener('pointermove', move);
-    window.removeEventListener('pointerup', up);
-    minimapDragCleanup = null;
-  };
-  window.addEventListener('pointermove', move);
-  window.addEventListener('pointerup', up);
-  minimapDragCleanup = up;
-}
-
-function setupKanbanColumnObserver() {
-  kanbanColumnObserver?.disconnect();
-  kanbanColumnObserver = null;
-  if (flowViewMode.value !== 'kanban') return;
-  void nextTick(() => {
-    const root = kanbanBoardScrollRef.value;
-    if (!root) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const next = new Set(visibleKanbanColumnKeys.value);
-        for (const entry of entries) {
-          const k = (entry.target as HTMLElement).dataset.kanbanCol;
-          if (!k) continue;
-          if (entry.isIntersecting) next.add(k);
-          else next.delete(k);
-        }
-        visibleKanbanColumnKeys.value = next;
-      },
-      { root, rootMargin: '0px', threshold: [0.15, 0.35, 0.55] },
-    );
-    for (const col of kanbanColumns.value) {
-      const el = root.querySelector(`[data-kanban-col="${col.key}"]`);
-      if (el) obs.observe(el);
-    }
-    kanbanColumnObserver = obs;
-  });
-}
-
-watch([flowViewMode, kanbanColumns, kanbanBoardLayout], () => {
-  if (flowViewMode.value === 'kanban') {
-    rebuildKanbanLists();
-    setupKanbanColumnObserver();
-  } else {
-    kanbanColumnObserver?.disconnect();
-    kanbanColumnObserver = null;
-    visibleKanbanColumnKeys.value = new Set();
-  }
-});
-
 const statusMap: Record<string, string> = {
   pending: 'Pendiente',
   active: 'Activo',
@@ -3857,21 +2997,9 @@ const statusMap: Record<string, string> = {
   skipped: 'Omitido',
 };
 
-/** Colores alineados con columnas Kanban y barra segmentada del Resumen. */
-const workflowStatusChartColors: Record<string, string> = {
-  pending: '#94a3b8',
-  active: '#3b82f6',
-  in_progress: '#8b5cf6',
-  under_review: '#f59e0b',
-  rejected: '#ef4444',
-  validated: '#22c55e',
-  closed: '#6b7280',
-  skipped: '#9ca3af',
-};
-
 const kindOptions = [
   { label: 'Fase', value: 'Fase' },
-  { label: 'Actuación', value: 'Actuacion' },
+  { label: 'Actividad (ítem)', value: 'Actuacion' },
   { label: 'Diligencia', value: 'Diligencia' },
   { label: 'Escrito', value: 'Escrito' },
   { label: 'Audiencia', value: 'Audiencia' },
@@ -4009,12 +3137,11 @@ const detailAssigneeDisplay = computed(() => {
 
 const detailAssigneeInitials = computed(() => {
   const a = editingItem.value?.assignedTo;
-  if (!a) return '';
+  if (!a) return '?';
   const f = a.firstName?.[0] ?? '';
-  const l = (a as { lastName?: string }).lastName?.[0] ?? '';
+  const l = a.lastName?.[0] ?? '';
   const fromEmail = a.email?.[0]?.toUpperCase() ?? '';
-  const ini = (f + l || fromEmail).slice(0, 2);
-  return ini.toUpperCase();
+  return (f + l || fromEmail).slice(0, 2).toUpperCase();
 });
 
 function secondaryAssigneeName(userId: string): string {
@@ -4039,7 +3166,6 @@ const newItem = ref({
   kind: '',
   actionType: '',
   assignedToId: '',
-  parentId: '',
   priority: '',
   location: '',
   allDay: true as boolean,
@@ -4050,6 +3176,16 @@ const newItem = ref({
   reminderMinutesBefore: [] as number[],
   rrule: '' as string,
   secondaryAssigneeIds: [] as string[],
+  /** Motor v2: etapa y columna al crear desde tablero */
+  stageInstanceId: '' as string,
+  workflowStateCategory: 'todo' as string,
+});
+
+const createDialogStateColumnLabel = computed(() => {
+  const c = (newItem.value.workflowStateCategory || 'todo').toLowerCase();
+  if (c === 'done') return t('processTrack.activity.state.done');
+  if (c === 'in_progress' || c === 'in_review') return t('processTrack.expedienteBoard.colInProgress');
+  return t('processTrack.activity.state.todo');
 });
 
 const newItemAccentPickerValue = computed(() => {
@@ -4097,26 +3233,20 @@ const caseDisplayAssignee = computed(() => {
   return userOptions.value.find((u) => u.value === caseForm.value.assignedToId)?.label ?? '—';
 });
 
-const parentOptions = computed(() =>
-  items.value.map((i) => ({ label: i.title, value: i.id })),
-);
+const createDialogTitle = computed(() => t('globalCalendar.newActivityDialogTitle'));
 
-/** Subtareas directas de la actuación abierta en el detalle (lista plana del árbol). */
-const itemChildren = computed(() => {
-  const id = editingItem.value?.id;
-  if (!id) return [];
-  return (items.value as WorkflowItem[]).filter((i) => i.parentId === id);
-});
+function onOpenCreateActivityFromBoard(payload?: { stageInstanceId: string; workflowStateCategory: string }) {
+  openRootCreateDialog(payload);
+}
 
-const createDialogTitle = computed(() => {
-  if (newItem.value.parentId) {
-    const p = items.value.find((i) => i.id === newItem.value.parentId);
-    return p ? `Nueva diligencia · bajo «${p.title}»` : 'Nueva diligencia';
-  }
-  return 'Nueva actuación';
-});
+function onOpenActivityFromBoard(id: string) {
+  const it = items.value.find((i) => i.id === id);
+  if (it) void openSidebar(it);
+}
 
-function openRootCreateDialog() {
+function openRootCreateDialog(
+  pre?: { stageInstanceId: string; workflowStateCategory: string } | null,
+) {
   createItemError.value = '';
   newItem.value = {
     title: '',
@@ -4124,7 +3254,6 @@ function openRootCreateDialog() {
     kind: '',
     actionType: '',
     assignedToId: '',
-    parentId: '',
     priority: '',
     location: '',
     allDay: true,
@@ -4135,44 +3264,10 @@ function openRootCreateDialog() {
     reminderMinutesBefore: [],
     rrule: '',
     secondaryAssigneeIds: [],
+    stageInstanceId: pre?.stageInstanceId?.trim() || ptCurrentStageId.value || '',
+    workflowStateCategory: (pre?.workflowStateCategory || 'todo').toLowerCase(),
   };
   showCreateDialog.value = true;
-}
-
-function openSubtaskFromDetail() {
-  if (!editingItem.value) return;
-  createItemError.value = '';
-  newItem.value = {
-    title: '',
-    description: '',
-    kind: 'Diligencia',
-    actionType: '',
-    assignedToId: editingItem.value.assignedTo?.id ?? '',
-    parentId: editingItem.value.id,
-    priority: '',
-    location: '',
-    allDay: true,
-    dueDate: null,
-    startDate: null,
-    isLegalDeadline: false,
-    accentColor: DEFAULT_ACCENT,
-    reminderMinutesBefore: [],
-    rrule: '',
-    secondaryAssigneeIds: [],
-  };
-  showCreateDialog.value = true;
-}
-
-function columnItems(status: string): WorkflowItem[] {
-  return items.value.filter((i) => i.status === status) as WorkflowItem[];
-}
-
-function kindSeverity(kind?: string | null): string {
-  if (!kind) return 'secondary';
-  if (kind === 'Fase') return 'info';
-  if (kind === 'Plazo' || kind === 'Escrito') return 'warn';
-  if (kind === 'Audiencia') return 'success';
-  return 'secondary';
 }
 
 function statusLabel(status: string): string {
@@ -4252,21 +3347,6 @@ function formatCommentAuthor(u: WorkflowItemCommentRow['user']): string {
   return name || u.email || 'Usuario';
 }
 
-function itemAccentStyle(item: WorkflowItem): Record<string, string> {
-  const hex = item.accentColor && /^#[0-9A-Fa-f]{6}$/.test(item.accentColor) ? item.accentColor : '';
-  if (!hex) return {};
-  return { borderLeftWidth: '4px', borderLeftColor: hex, borderLeftStyle: 'solid' };
-}
-
-/** Barra vertical en tarjeta Kanban (evita doble borde con `itemAccentStyle`). */
-function itemAccentBarStyle(item: WorkflowItem): Record<string, string> {
-  const hex = item.accentColor && /^#[0-9A-Fa-f]{6}$/.test(item.accentColor) ? item.accentColor : '';
-  if (hex) return { backgroundColor: hex };
-  const stateHex = stateHexFromItem(item);
-  if (stateHex) return { backgroundColor: stateHex };
-  return {};
-}
-
 const accentPickerValue = computed(() => {
   const v = editingItem.value?.accentColor;
   return v && /^#[0-9A-Fa-f]{6}$/.test(v) ? v : DEFAULT_ACCENT;
@@ -4338,7 +3418,44 @@ function extractApiErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
+function isProcessTrackActivityId(itemId: string | undefined): boolean {
+  if (!itemId) return false;
+  const row = items.value.find((i) => i.id === itemId) as
+    | (WorkflowItem & { isProcessTrackActivity?: boolean })
+    | undefined;
+  return Boolean(row?.isProcessTrackActivity);
+}
+
+function isCurrentEditingProcessTrackItem(): boolean {
+  return isProcessTrackActivityId(editingItem.value?.id);
+}
+
 async function loadWorkflowItemComments(itemId: string) {
+  if (isProcessTrackActivityId(itemId)) {
+    const row = items.value.find((i) => i.id === itemId) as
+      | (WorkflowItem & { processTrackId?: string; isProcessTrackActivity?: boolean })
+      | undefined;
+    const ptId = row?.processTrackId ?? primaryProcessTrackId.value;
+    if (!ptId) {
+      workflowItemComments.value = [];
+      commentsLoadError.value = null;
+      commentsLoading.value = false;
+      return;
+    }
+    commentsLoading.value = true;
+    commentsLoadError.value = null;
+    newCommentText.value = '';
+    try {
+      const { data } = await apiClient.get(`/process-tracks/${ptId}/activities/${itemId}/comments`);
+      workflowItemComments.value = Array.isArray(data) ? data : [];
+    } catch (err) {
+      workflowItemComments.value = [];
+      commentsLoadError.value = extractApiErrorMessage(err, 'No se pudieron cargar los comentarios.');
+    } finally {
+      commentsLoading.value = false;
+    }
+    return;
+  }
   commentsLoading.value = true;
   commentsLoadError.value = null;
   newCommentText.value = '';
@@ -4361,6 +3478,33 @@ function retryLoadWorkflowItemComments() {
 async function postWorkflowItemComment() {
   const text = newCommentText.value.trim();
   if (!editingItem.value || !text) return;
+  const ptId =
+    (editingItem.value as WorkflowItem & { processTrackId?: string }).processTrackId ??
+    primaryProcessTrackId.value;
+  if (isCurrentEditingProcessTrackItem()) {
+    if (!ptId) {
+      toast.add({ severity: 'error', summary: 'Comentario', detail: 'No hay proceso vinculado a esta actividad.', life: 4000 });
+      return;
+    }
+    commentPosting.value = true;
+    try {
+      const { data } = await apiClient.post(
+        `/process-tracks/${ptId}/activities/${editingItem.value.id}/comments`,
+        { body: text },
+      );
+      workflowItemComments.value = [...workflowItemComments.value, data];
+      newCommentText.value = '';
+      commentsLoadError.value = null;
+      toast.add({ severity: 'success', summary: 'Comentario publicado', life: 2200 });
+      refreshProcessTrackDataInUI();
+    } catch (err) {
+      const detail = extractApiErrorMessage(err, 'No se pudo publicar el comentario.');
+      toast.add({ severity: 'error', summary: 'Comentario', detail, life: 4500 });
+    } finally {
+      commentPosting.value = false;
+    }
+    return;
+  }
   commentPosting.value = true;
   try {
     const { data } = await apiClient.post(`/workflow-items/${editingItem.value.id}/comments`, { body: text });
@@ -4368,6 +3512,7 @@ async function postWorkflowItemComment() {
     newCommentText.value = '';
     commentsLoadError.value = null;
     toast.add({ severity: 'success', summary: 'Comentario publicado', life: 2200 });
+    if (primaryProcessTrackId.value) refreshProcessTrackDataInUI();
   } catch (err) {
     const detail = extractApiErrorMessage(err, 'No se pudo publicar el comentario.');
     toast.add({ severity: 'error', summary: 'Comentario', detail, life: 4500 });
@@ -4377,30 +3522,12 @@ async function postWorkflowItemComment() {
 }
 
 // ── Data loading ───────────────────────────────────────────────────────────────
-function flatHasChild(flat: WorkflowItem[], id: string): boolean {
-  return flat.some((i) => i.parentId === id);
-}
-
-async function loadKanbanWorkflowBoard() {
-  workflowBoardDetail.value = null;
-  await authStore.ensureOrganizationLoaded();
-  if (!authStore.organization?.featureFlags?.useConfigurableWorkflows) return;
-  const flat = flattenWorkflowTree(workflowTree.value as any) as WorkflowItem[];
-  const leaf = flat.find((i) => !flatHasChild(flat, i.id) && i.workflowId);
-  if (!leaf?.workflowId) return;
-  try {
-    const { data } = await apiClient.get(`/workflow-definitions/${leaf.workflowId}`);
-    workflowBoardDetail.value = { states: (data as any).states ?? [] };
-  } catch {
-    workflowBoardDetail.value = null;
-  }
-}
-
 async function loadItems() {
   const { data } = await apiClient.get(`/trackables/${trackableId.value}/tree`);
   workflowTree.value = Array.isArray(data) ? data : [];
-  await loadKanbanWorkflowBoard();
-  rebuildKanbanLists();
+  if (primaryProcessTrackId.value) {
+    await loadProcessTrack();
+  }
 }
 
 async function loadTrackable() {
@@ -4435,6 +3562,15 @@ async function loadFolders() {
 async function loadItemDocuments(itemId: string) {
   try {
     documentsLoading.value = true;
+    const isPt = items.value.find((i) => i.id === itemId) as
+      | (WorkflowItem & { isProcessTrackActivity?: boolean })
+      | undefined;
+    if (isPt?.isProcessTrackActivity) {
+      const { data } = await apiClient.get('/documents', { params: { activityInstanceId: itemId, limit: 50 } });
+      const raw = Array.isArray(data) ? data : data.data || [];
+      itemDocuments.value = Array.isArray(raw) ? raw : [];
+      return;
+    }
     const { data } = await apiClient.get('/documents', { params: { workflowItemId: itemId } });
     itemDocuments.value = Array.isArray(data) ? data : data.data || [];
   } catch (error) {
@@ -4451,8 +3587,10 @@ function refreshCurrentTab() {
     void loadDashboardData();
     void loadSinoePanel();
     void loadParties();
-  } else if (activeTab.value === 1) loadItems();
-  else if (activeTab.value === 3) {
+  } else if (activeTab.value === 1) {
+    void loadItems();
+    void loadDashboardData();
+  } else if (activeTab.value === 3) {
     void loadItems();
     void calFcRef.value?.getApi()?.refetchEvents();
   } else if (activeTab.value === 2) {
@@ -4479,6 +3617,30 @@ async function applyWorkflowFromPicker(newWorkflowId: string | null) {
     return;
   }
   if (newWorkflowId === (editingItem.value.workflowId ?? null)) return;
+  if ((editingItem.value as WorkflowItem & { isProcessTrackActivity?: boolean }).isProcessTrackActivity) {
+    const ptId = (editingItem.value as WorkflowItem & { processTrackId?: string }).processTrackId ?? primaryProcessTrackId.value;
+    if (!ptId) return;
+    workflowChangeLoading.value = true;
+    try {
+      await patchProcessTrackActivity(ptId, editingItem.value.id, { workflowId: newWorkflowId });
+      await loadItems();
+      await processBoardRef.value?.refresh();
+      const refreshed = items.value.find((i) => i.id === editingItem.value!.id);
+      if (refreshed) await openSidebar(refreshed);
+      toast.add({ severity: 'success', summary: t('trackables.flow.changeFlowSuccess'), life: 3000 });
+    } catch (err: unknown) {
+      workflowPickerValue.value = editingItem.value.workflowId ?? null;
+      toast.add({
+        severity: 'error',
+        summary: t('trackables.flow.changeFlowError'),
+        detail: extractApiErrorMessage(err, t('trackables.flow.changeFlowError')),
+        life: 5000,
+      });
+    } finally {
+      workflowChangeLoading.value = false;
+    }
+    return;
+  }
   if (sidebarItemHasChildren.value) {
     toast.add({
       severity: 'warn',
@@ -4526,7 +3688,6 @@ async function openSidebar(item: WorkflowItem) {
   if (editingItem.value.rrule === undefined || editingItem.value.rrule === null) {
     editingItem.value.rrule = '';
   }
-  initDeliverables(item.kind || 'Actuacion');
   workflowPickerValue.value = item.workflowId ?? null;
   detailWorkflowName.value = null;
   await ensureWorkflowDefinitionsPicker();
@@ -4534,12 +3695,7 @@ async function openSidebar(item: WorkflowItem) {
   const wfMetaPromise = item.workflowId
     ? apiClient.get(`/workflow-definitions/${item.workflowId}`).catch(() => null)
     : Promise.resolve(null);
-
-  const [transRes, wfRes] = await Promise.all([
-    apiClient.get(`/workflow-items/${item.id}/transitions`),
-    wfMetaPromise,
-  ]);
-  availableTransitions.value = transRes.data;
+  const wfRes = await wfMetaPromise;
   if (wfRes && wfRes.data) {
     detailWorkflowName.value = (wfRes.data as { name?: string }).name ?? null;
   }
@@ -4557,8 +3713,8 @@ async function openDeadlineRow(row: { id: string }) {
   }
   toast.add({
     severity: 'info',
-    summary: 'Actuación no disponible',
-    detail: 'Recarga el expediente o abre la pestaña Actuaciones.',
+    summary: 'Actividad no disponible',
+    detail: 'Recarga el expediente o abre la pestaña Actividades.',
     life: 4000,
   });
 }
@@ -4570,7 +3726,6 @@ function closeSidebar() {
   editingItem.value = null;
   detailWorkflowName.value = null;
   workflowPickerValue.value = null;
-  currentDeliverables.value = [];
   workflowItemComments.value = [];
   commentsLoadError.value = null;
   newCommentText.value = '';
@@ -4581,24 +3736,51 @@ async function saveItem() {
   try {
     itemSaving.value = true;
     const descRaw = editingItem.value.description ?? '';
-    await apiClient.patch(`/workflow-items/${editingItem.value.id}`, {
-      title: editingItem.value.title,
-      kind: editingItem.value.kind || undefined,
-      description: descriptionHasDisplayContent(descRaw) ? descRaw : '',
-      assignedToId: editingAssignedToId.value || undefined,
-      startDate: editingItem.value.startDate,
-      dueDate: editingItem.value.dueDate,
-      isLegalDeadline: editingItem.value.isLegalDeadline,
-      metadata: editingItem.value.metadata,
-      accentColor: editingItem.value.accentColor ?? null,
-      priority: editingItem.value.priority || undefined,
-      location: editingItem.value.location?.trim() || undefined,
-      allDay: editingItem.value.allDay,
-      reminderMinutesBefore: editingItem.value.reminderMinutesBefore ?? [],
-      rrule: editingItem.value.rrule ?? '',
-      secondaryAssigneeIds: editingSecondaryAssigneeIds.value,
-    });
+    if ((editingItem.value as WorkflowItem & { isProcessTrackActivity?: boolean }).isProcessTrackActivity) {
+      const ptId = (editingItem.value as WorkflowItem & { processTrackId?: string }).processTrackId
+        ?? primaryProcessTrackId.value;
+      if (!ptId) throw new Error('No process track');
+      await patchProcessTrackActivity(ptId, editingItem.value.id, {
+        title: editingItem.value.title,
+        kind: editingItem.value.kind || undefined,
+        actionType: editingItem.value.actionType || undefined,
+        description: descriptionHasDisplayContent(descRaw) ? descRaw : '',
+        assignedToId: editingAssignedToId.value || null,
+        startDate: editingItem.value.startDate,
+        dueDate: editingItem.value.dueDate,
+        isLegalDeadline: editingItem.value.isLegalDeadline,
+        metadata: editingItem.value.metadata,
+        accentColor: editingItem.value.accentColor ?? null,
+        priority: editingItem.value.priority || undefined,
+        location: editingItem.value.location?.trim() || null,
+        allDay: editingItem.value.allDay,
+        reminderMinutesBefore: editingItem.value.reminderMinutesBefore ?? [],
+        rrule: (editingItem.value.rrule?.trim() ? editingItem.value.rrule : null) as string | null,
+        secondaryAssigneeIds: editingSecondaryAssigneeIds.value,
+      });
+    } else {
+      await apiClient.patch(`/workflow-items/${editingItem.value.id}`, {
+        title: editingItem.value.title,
+        kind: editingItem.value.kind || undefined,
+        description: descriptionHasDisplayContent(descRaw) ? descRaw : '',
+        assignedToId: editingAssignedToId.value || undefined,
+        startDate: editingItem.value.startDate,
+        dueDate: editingItem.value.dueDate,
+        isLegalDeadline: editingItem.value.isLegalDeadline,
+        metadata: editingItem.value.metadata,
+        accentColor: editingItem.value.accentColor ?? null,
+        priority: editingItem.value.priority || undefined,
+        location: editingItem.value.location?.trim() || undefined,
+        allDay: editingItem.value.allDay,
+        reminderMinutesBefore: editingItem.value.reminderMinutesBefore ?? [],
+        rrule: editingItem.value.rrule ?? '',
+        secondaryAssigneeIds: editingSecondaryAssigneeIds.value,
+      });
+    }
     await loadItems();
+    if ((editingItem.value as WorkflowItem & { isProcessTrackActivity?: boolean }).isProcessTrackActivity) {
+      await processBoardRef.value?.refresh();
+    }
     const refreshed = items.value.find((i) => i.id === editingItem.value!.id);
     if (refreshed) {
       selectedItem.value = refreshed;
@@ -4633,24 +3815,6 @@ function onDetailDialogVisible(v: boolean) {
   closeSidebar();
 }
 
-async function handleTransition(itemId: string, targetStatus: string) {
-  await apiClient.patch(`/workflow-items/${itemId}/transition`, { status: targetStatus });
-  await loadItems();
-  if (editingItem.value?.id === itemId) {
-    const refreshed = items.value.find((i) => i.id === itemId);
-    if (refreshed) await openSidebar(refreshed);
-  }
-}
-
-const statusTransitionMenuItems = computed(() =>
-  availableTransitions.value.map((t) => ({
-    label: t.label,
-    command: () => {
-      if (editingItem.value) void handleTransition(editingItem.value.id, t.to);
-    },
-  })),
-);
-
 function emptyNewItem() {
   return {
     title: '',
@@ -4658,7 +3822,6 @@ function emptyNewItem() {
     kind: '',
     actionType: '',
     assignedToId: '',
-    parentId: '',
     priority: '',
     location: '',
     allDay: true,
@@ -4669,65 +3832,110 @@ function emptyNewItem() {
     reminderMinutesBefore: [] as number[],
     rrule: '' as string,
     secondaryAssigneeIds: [] as string[],
+    stageInstanceId: '' as string,
+    workflowStateCategory: 'todo' as string,
   };
 }
 
 async function createItem() {
   createItemError.value = '';
-  const parentForRefresh = newItem.value.parentId || undefined;
-  const payload: Record<string, unknown> = {
-    title: newItem.value.title,
-    trackableId: trackableId.value,
-  };
   const descRaw = newItem.value.description?.trim() ?? '';
-  if (descriptionHasDisplayContent(descRaw)) payload.description = descRaw;
-  if (newItem.value.kind) payload.kind = newItem.value.kind;
-  if (newItem.value.actionType) payload.actionType = newItem.value.actionType;
-  if (newItem.value.assignedToId) payload.assignedToId = newItem.value.assignedToId;
-  if (newItem.value.parentId) payload.parentId = newItem.value.parentId;
-  if (newItem.value.dueDate) payload.dueDate = newItem.value.dueDate.toISOString();
-  if (newItem.value.startDate) payload.startDate = newItem.value.startDate.toISOString();
-  if (newItem.value.isLegalDeadline) payload.isLegalDeadline = true;
-  if (newItem.value.accentColor && newItem.value.accentColor !== DEFAULT_ACCENT) {
-    payload.accentColor = newItem.value.accentColor;
-  }
-  if (newItem.value.priority) {
-    payload.priority = newItem.value.priority;
-  }
-  const loc = newItem.value.location?.trim();
-  if (loc) payload.location = loc;
-  if (newItem.value.allDay === false) payload.allDay = false;
-  if (newItem.value.reminderMinutesBefore.length) {
-    payload.reminderMinutesBefore = newItem.value.reminderMinutesBefore;
-  }
-  if (newItem.value.rrule) payload.rrule = newItem.value.rrule;
-  if (newItem.value.secondaryAssigneeIds.length) {
-    payload.secondaryAssigneeIds = newItem.value.secondaryAssigneeIds;
-  }
+  const ptId = primaryProcessTrackId.value;
 
   createItemSaving.value = true;
   try {
-    const { data: created } = await apiClient.post<WorkflowItem>('/workflow-items', payload);
-    showCreateDialog.value = false;
-    newItem.value = emptyNewItem();
-    await loadItems();
-    const createdId = created?.id;
-    if (createdId) {
-      const refreshed = items.value.find((i) => i.id === createdId);
-      if (refreshed) await openSidebar(refreshed);
-    } else if (parentForRefresh && editingItem.value?.id === parentForRefresh) {
-      const parent = items.value.find((i) => i.id === parentForRefresh);
-      if (parent) await openSidebar(parent);
+    if (ptId) {
+      const stageId = newItem.value.stageInstanceId?.trim() || ptCurrentStageId.value;
+      if (!stageId) {
+        throw new Error('Falta etapa. Abre de nuevo o selecciona una etapa en el tablero.');
+      }
+      const created = await createCustomActivity(ptId, {
+        title: newItem.value.title,
+        stageInstanceId: stageId,
+        workflowStateCategory: newItem.value.workflowStateCategory || 'todo',
+        description: descriptionHasDisplayContent(descRaw) ? descRaw : undefined,
+        kind: newItem.value.kind || undefined,
+        actionType: newItem.value.actionType || undefined,
+        assignedToId: newItem.value.assignedToId || null,
+        dueDate: newItem.value.dueDate ? newItem.value.dueDate.toISOString() : null,
+        startDate: newItem.value.startDate ? newItem.value.startDate.toISOString() : null,
+        isLegalDeadline: newItem.value.isLegalDeadline || undefined,
+        accentColor:
+          newItem.value.accentColor && newItem.value.accentColor !== DEFAULT_ACCENT
+            ? newItem.value.accentColor
+            : null,
+        priority: newItem.value.priority || undefined,
+        location: newItem.value.location?.trim() || undefined,
+        allDay: newItem.value.allDay,
+        reminderMinutesBefore: newItem.value.reminderMinutesBefore.length
+          ? newItem.value.reminderMinutesBefore
+          : null,
+        rrule: newItem.value.rrule || null,
+        secondaryAssigneeIds: newItem.value.secondaryAssigneeIds.length
+          ? newItem.value.secondaryAssigneeIds
+          : undefined,
+        metadata: undefined,
+      });
+      showCreateDialog.value = false;
+      newItem.value = emptyNewItem();
+      await loadItems();
+      await processBoardRef.value?.refresh();
+      const createdId = (created as { id?: string } | undefined)?.id;
+      if (createdId) {
+        const refreshed = items.value.find((i) => i.id === createdId);
+        if (refreshed) await openSidebar(refreshed);
+      }
+    } else {
+      const payload: Record<string, unknown> = {
+        title: newItem.value.title,
+        trackableId: trackableId.value,
+      };
+      if (descriptionHasDisplayContent(descRaw)) payload.description = descRaw;
+      if (newItem.value.kind) payload.kind = newItem.value.kind;
+      if (newItem.value.actionType) payload.actionType = newItem.value.actionType;
+      if (newItem.value.assignedToId) payload.assignedToId = newItem.value.assignedToId;
+      if (newItem.value.dueDate) payload.dueDate = newItem.value.dueDate.toISOString();
+      if (newItem.value.startDate) payload.startDate = newItem.value.startDate.toISOString();
+      if (newItem.value.isLegalDeadline) payload.isLegalDeadline = true;
+      if (newItem.value.accentColor && newItem.value.accentColor !== DEFAULT_ACCENT) {
+        payload.accentColor = newItem.value.accentColor;
+      }
+      if (newItem.value.priority) {
+        payload.priority = newItem.value.priority;
+      }
+      const loc = newItem.value.location?.trim();
+      if (loc) payload.location = loc;
+      if (newItem.value.allDay === false) payload.allDay = false;
+      if (newItem.value.reminderMinutesBefore.length) {
+        payload.reminderMinutesBefore = newItem.value.reminderMinutesBefore;
+      }
+      if (newItem.value.rrule) payload.rrule = newItem.value.rrule;
+      if (newItem.value.secondaryAssigneeIds.length) {
+        payload.secondaryAssigneeIds = newItem.value.secondaryAssigneeIds;
+      }
+
+      const { data: created } = await apiClient.post<WorkflowItem>('/workflow-items', payload);
+      showCreateDialog.value = false;
+      newItem.value = emptyNewItem();
+      await loadItems();
+      const createdId = created?.id;
+      if (createdId) {
+        const refreshed = items.value.find((i) => i.id === createdId);
+        if (refreshed) await openSidebar(refreshed);
+      }
     }
-    toast.add({ severity: 'success', summary: 'Actuación creada', life: 4000 });
+    toast.add({ severity: 'success', summary: 'Actividad creada', life: 4000 });
   } catch (err) {
     let msg = formatWorkflowItemCreateError(err);
+    if (err instanceof Error && err.message?.includes('Falta etapa')) {
+      msg = err.message;
+    }
     if (/column.*kind|kind.*does not exist/i.test(msg)) {
       msg +=
         ' La base de datos no tiene la migración legal aplicada. En el proyecto ejecuta: pnpm --filter @tracker/db migrate';
     }
     createItemError.value = msg;
-    toast.add({ severity: 'error', summary: 'Error al crear actuación', detail: msg, life: 8000 });
+    toast.add({ severity: 'error', summary: 'Error al crear actividad', detail: msg, life: 8000 });
   } finally {
     createItemSaving.value = false;
   }
@@ -4767,13 +3975,20 @@ async function handleFileUpload(event: Event) {
     formData.append('title', file.name.replace(/\.[^/.]+$/, ''));
     formData.append('folderId', uploadFolderId);
     formData.append('trackableId', trackableId.value);
-    formData.append('workflowItemId', editingItem.value.id);
+    if ((editingItem.value as WorkflowItem & { isProcessTrackActivity?: boolean }).isProcessTrackActivity) {
+      formData.append('activityInstanceId', editingItem.value.id);
+    } else {
+      formData.append('workflowItemId', editingItem.value.id);
+    }
 
     await apiClient.post('/documents/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
     await loadItemDocuments(editingItem.value.id);
+    if ((editingItem.value as WorkflowItem & { isProcessTrackActivity?: boolean }).isProcessTrackActivity) {
+      refreshProcessTrackDataInUI();
+    }
     toast.add({ severity: 'success', summary: 'Archivo subido', life: 3000 });
   } catch (error) {
     toast.add({ severity: 'error', summary: 'Error al subir archivo', life: 3000 });
@@ -4803,11 +4018,14 @@ async function createDocument() {
 
   try {
     let docId: string;
+    const isPt = (editingItem.value as WorkflowItem & { isProcessTrackActivity?: boolean }).isProcessTrackActivity;
 
     if (selectedTemplateDoc.value) {
       const { data } = await apiClient.post(`/documents/${selectedTemplateDoc.value.id}/copy`, {
         targetFolderId: newDocFolderId.value,
-        targetWorkflowItemId: editingItem.value.id,
+        ...(isPt
+          ? { targetActivityInstanceId: editingItem.value.id }
+          : { targetWorkflowItemId: editingItem.value.id }),
         trackableId: trackableId.value,
       });
       docId = data.id;
@@ -4817,74 +4035,20 @@ async function createDocument() {
         title: newDocTitle.value,
         folderId: newDocFolderId.value,
         trackableId: trackableId.value,
-        workflowItemId: editingItem.value.id,
+        ...(isPt ? { activityInstanceId: editingItem.value.id } : { workflowItemId: editingItem.value.id }),
       });
       docId = data.id;
     }
 
     closeNewDocDialog();
     await loadItemDocuments(editingItem.value.id);
+    if (isPt) refreshProcessTrackDataInUI();
     router.push(`/documents/${docId}/edit`);
     toast.add({ severity: 'success', summary: 'Documento creado', life: 3000 });
   } catch (error) {
     toast.add({ severity: 'error', summary: 'Error al crear documento', life: 3000 });
   }
 }
-
-// ── Deliverables ───────────────────────────────────────────────────────────────
-const deliverablesByKind: Record<string, string[]> = {
-  Fase: [
-    'Alcance definido',
-    'Hitos acordados',
-    'Ejecución',
-    'Control de calidad',
-    'Cierre',
-  ],
-  Actuacion: [
-    'Análisis',
-    'Planificación',
-    'Ejecución',
-    'Revisión',
-    'Entrega',
-  ],
-  Diligencia: [
-    'Preparación',
-    'Ejecución',
-    'Verificación',
-    'Registro',
-  ],
-  Escrito: [
-    'Borrador',
-    'Revisión interna',
-    'Presentación',
-    'Constancia',
-  ],
-  default: [
-    'Preparación',
-    'Ejecución',
-    'Verificación',
-    'Cierre',
-  ],
-};
-
-interface Deliverable {
-  label: string;
-  done: boolean;
-}
-
-const currentDeliverables = ref<Deliverable[]>([]);
-
-function initDeliverables(kind: string) {
-  const labels = deliverablesByKind[kind] ?? deliverablesByKind.default;
-  currentDeliverables.value = labels.map((label) => ({ label, done: false }));
-}
-
-const deliverablesProgress = computed(() => {
-  const total = currentDeliverables.value.length;
-  if (total === 0) return 0;
-  const done = currentDeliverables.value.filter((d) => d.done).length;
-  return Math.round((done / total) * 100);
-});
 
 // ── Calendar tab (FullCalendar, alineado con vista global) ────────────────────
 const calFcRef = ref<InstanceType<typeof FullCalendar> | null>(null);
@@ -5096,7 +4260,19 @@ const calFcOptions = computed((): CalendarOptions => {
       setAssistantCalendarViewportFromFc(arg);
     },
     eventClick: (info: EventClickArg) => {
-      const wiId = parseWorkflowItemIdFromEventId(String(info.event.id));
+      const evId = String(info.event.id);
+      const parsed = parseActivityIdFromEventId(evId);
+      if (parsed?.kind === 'ai') {
+        activeTab.value = 1;
+        toast.add({
+          severity: 'info',
+          summary: t('processTrack.activities'),
+          detail: t('processTrack.expedienteBoard.openActivityInTab'),
+          life: 3000,
+        });
+        return;
+      }
+      const wiId = parseWorkflowItemIdFromEventId(evId);
       if (wiId) {
         const found = items.value.find((x) => x.id === wiId);
         if (found) {
@@ -5133,7 +4309,6 @@ const calFcOptions = computed((): CalendarOptions => {
         kind: '',
         actionType: '',
         assignedToId: '',
-        parentId: '',
         priority: '',
         location: '',
         allDay: true,
@@ -5144,6 +4319,8 @@ const calFcOptions = computed((): CalendarOptions => {
         reminderMinutesBefore: [],
         rrule: '',
         secondaryAssigneeIds: [],
+        stageInstanceId: ptCurrentStageId.value || '',
+        workflowStateCategory: 'todo',
       };
       showCreateDialog.value = true;
       arg.view.calendar.unselect();
@@ -5158,13 +4335,17 @@ const calFcOptions = computed((): CalendarOptions => {
 });
 
 async function handleCalReschedule(arg: EventDropArg | { event: EventApi; revert: () => void }) {
-  const id = parseWorkflowItemIdFromEventId(String(arg.event.id));
-  if (!id) {
+  const raw = String(arg.event.id);
+  if (
+    !parseActivityIdFromEventId(raw)
+    && !parseWorkflowItemIdFromEventId(raw)
+    && !/^[0-9a-f-]{36}$/i.test(raw)
+  ) {
     arg.revert();
     return;
   }
   try {
-    await apiClient.patch(`/calendar/events/${id}/reschedule`, {
+    await apiClient.patch(`/calendar/events/${encodeURIComponent(raw)}/reschedule`, {
       startDate: arg.event.start?.toISOString(),
       dueDate: arg.event.end?.toISOString(),
       allDay: arg.event.allDay,
@@ -5194,38 +4375,10 @@ function onCalSidebarDate(d: Date) {
   calFcRef.value?.getApi()?.gotoDate(d);
 }
 
-// ── Activities tab ─────────────────────────────────────────────────────────────
-const activityStatusFilter = ref<string | null>(null);
-const activityTypeFilter = ref<string | null>(null);
-const statusFilterOptions = ['pending', 'active', 'in_progress', 'under_review', 'validated', 'closed'];
-
-const filteredActivities = computed(() => {
-  let result = items.value;
-  if (activityStatusFilter.value) {
-    result = result.filter((i) => i.status === activityStatusFilter.value);
-  }
-  if (activityTypeFilter.value) {
-    result = result.filter((i) => i.kind === activityTypeFilter.value);
-  }
-  return result;
-});
-
 // ── Dashboard / Resumen tab ────────────────────────────────────────────────────
-const dashboardStats = ref<any[]>([]);
 const dashboardDeadlines = ref<any[]>([]);
 const dashboardOverdue = ref<any[]>([]);
 const dashboardWorkload = ref<any[]>([]);
-
-const STATUS_SEGMENT_ORDER = [
-  'pending',
-  'active',
-  'in_progress',
-  'under_review',
-  'rejected',
-  'validated',
-  'closed',
-  'skipped',
-] as const;
 
 function startOfLocalDay(d: Date): Date {
   const x = new Date(d);
@@ -5252,39 +4405,84 @@ function nextHearingLabel(item: WorkflowItem): string {
 
 const dashboardOverdueCount = computed(() => dashboardOverdue.value.length);
 
-const summaryCards = computed(() => {
-  const rows = dashboardStats.value;
-  const total = rows.reduce((s, t: any) => s + Number.parseInt(String(t.count), 10), 0);
-  const activeRow = rows.find((t: any) => t.status === 'active');
-  const active = activeRow ? Number.parseInt(String(activeRow.count), 10) : 0;
-  return [
-    { label: 'Total actuaciones', value: total, color: 'text-gray-800 dark:text-gray-100' },
-    { label: 'Activos', value: active, color: 'text-blue-600 dark:text-blue-400' },
-    { label: 'Vencidos', value: dashboardOverdueCount.value, color: 'text-red-600 dark:text-red-400' },
-    { label: 'Próximos 14 días', value: dashboardDeadlines.value.length, color: 'text-amber-600 dark:text-amber-400' },
-  ];
+/** Orden y actividades alineados con ProcessStageBoardView (excl. canceladas). */
+const expedienteOrderedStages = computed(() => {
+  const list = processTrackRef.value?.stageInstances ?? [];
+  return [...list].sort((a, b) => a.order - b.order);
 });
 
-const statusSegments = computed(() => {
-  const rows = dashboardStats.value;
-  const map = new Map(rows.map((t: any) => [t.status, Number.parseInt(String(t.count), 10)]));
-  const total = rows.reduce((s, t: any) => s + Number.parseInt(String(t.count), 10), 0);
-  const segments = STATUS_SEGMENT_ORDER.map((status) => {
-    const count = map.get(status) ?? 0;
-    return {
-      status,
-      label: statusMap[status] ?? status,
-      count,
-      color: workflowStatusChartColors[status] ?? '#cbd5e1',
-      pct: total > 0 ? (count / total) * 100 : 0,
-    };
-  }).filter((s) => s.count > 0);
-  return { segments, total };
+/** Etapas del track principal: total y en estado activo (misma noción que el tablero). */
+const expedienteStagesSummary = computed(() => {
+  const stages = expedienteOrderedStages.value;
+  const total = stages.length;
+  const active = stages.filter((s) => (s.status || '').toLowerCase() === 'active').length;
+  return { total, active };
 });
 
-const statusSegmentsLegend = computed(() =>
-  statusSegments.value.segments.map((s) => `${s.label} ${s.count}`).join(' · '),
-);
+const expedienteActivityMetrics = computed(() => {
+  const all: Array<{ workflowStateCategory: string; dueDate?: string | null }> = [];
+  for (const st of expedienteOrderedStages.value) {
+    for (const a of st.activities ?? []) {
+      if ((a.workflowStateCategory || '').toLowerCase() === 'cancelled') continue;
+      all.push({ workflowStateCategory: a.workflowStateCategory, dueDate: a.dueDate });
+    }
+  }
+  const total = all.length;
+  const done = all.filter((a) => (a.workflowStateCategory || '').toLowerCase() === 'done').length;
+  const inProgress = all.filter((a) => {
+    const c = (a.workflowStateCategory || '').toLowerCase();
+    return c === 'in_progress' || c === 'in_review';
+  }).length;
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const overdue = all.filter((a) => {
+    if ((a.workflowStateCategory || '').toLowerCase() === 'done') return false;
+    if (!a.dueDate) return false;
+    const d = new Date(a.dueDate);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime() < start.getTime();
+  }).length;
+  const donePct = !total ? 0 : Math.min(100, Math.round((done / total) * 100));
+  const globalActivePct = !total
+    ? 0
+    : Math.min(100, Math.round(((done + inProgress) / total) * 100));
+  return { total, done, inProgress, overdue, donePct, globalActivePct };
+});
+
+const summaryCards = computed(() => [
+  {
+    id: 'stagesActive',
+    label: t('trackables.expedienteSummary.stagesActive'),
+    value: expedienteStagesSummary.value.active,
+    hint:
+      expedienteStagesSummary.value.total > 0
+        ? t('trackables.expedienteSummary.stagesTotalHint', { total: expedienteStagesSummary.value.total })
+        : '',
+    icon: 'pi pi-th-large',
+    tone: 'from-[#0F6E7A]/12 to-[#0F6E7A]/3 text-[#0F6E7A] dark:from-emerald-300/12 dark:to-emerald-300/5 dark:text-emerald-200',
+  },
+  {
+    id: 'totalActivities',
+    label: t('trackables.expedienteSummary.totalActivities'),
+    value: expedienteActivityMetrics.value.total,
+    icon: 'pi pi-list-check',
+    tone: 'from-[#2D3FBF]/12 to-[#2D3FBF]/3 text-[#2D3FBF] dark:from-blue-300/12 dark:to-blue-300/5 dark:text-blue-200',
+  },
+  {
+    id: 'next14',
+    label: t('trackables.expedienteSummary.next14Days'),
+    value: dashboardDeadlines.value.length,
+    icon: 'pi pi-calendar-clock',
+    tone: 'from-amber-400/18 to-amber-400/5 text-amber-700 dark:from-amber-300/12 dark:to-amber-300/5 dark:text-amber-200',
+  },
+  {
+    id: 'overdue',
+    label: t('trackables.expedienteSummary.overdue'),
+    value: dashboardOverdueCount.value,
+    icon: 'pi pi-exclamation-triangle',
+    tone: 'from-red-500/14 to-red-500/5 text-red-700 dark:from-red-300/12 dark:to-red-300/5 dark:text-red-200',
+  },
+]);
 
 const deadlineGroups = computed(() => {
   const map = new Map<string, any>();
@@ -5314,7 +4512,7 @@ const deadlineGroups = computed(() => {
   return { overdue, today: day0, week, twoWeeks: two };
 });
 
-const nextActuaciones = computed(() => {
+const nextActividades = computed(() => {
   const active = new Set(['active', 'in_progress', 'under_review']);
   const list = items.value.filter((i) => active.has(i.status));
   const withDue = (a: WorkflowItem, b: WorkflowItem) => {
@@ -5362,13 +4560,11 @@ const nextHearing = computed((): WorkflowItem | null => {
 
 async function loadDashboardData() {
   const params = { trackableId: trackableId.value };
-  const [stats, dl, overdue, wl] = await Promise.all([
-    apiClient.get('/dashboard/workflow-items-by-status', { params }),
+  const [dl, overdue, wl] = await Promise.all([
     apiClient.get('/dashboard/upcoming-deadlines', { params }),
     apiClient.get('/dashboard/overdue', { params }),
     apiClient.get('/dashboard/workload', { params }),
   ]);
-  dashboardStats.value = stats.data;
   dashboardDeadlines.value = dl.data;
   dashboardOverdue.value = overdue.data;
   dashboardWorkload.value = wl.data;
@@ -5384,6 +4580,10 @@ watch(activeTab, (newTab) => {
       dashboardLoaded.value = true;
       void loadDashboardData();
     }
+  }
+  if (newTab === 1 && trackableId.value) {
+    void loadItems();
+    void loadDashboardData();
   }
   if (newTab === 3) {
     calStore.setFilters({ trackables: [] });
@@ -5401,6 +4601,11 @@ async function applyWorkflowItemFromQuery() {
       await openSidebar(target);
     }
   }
+  const fromCal = route.query.tab as string | undefined;
+  const actId = route.query.activityInstanceId as string | undefined;
+  if (actId || fromCal === '1') {
+    activeTab.value = 1;
+  }
 }
 
 watch(trackableId, async (id, prev) => {
@@ -5409,7 +4614,8 @@ watch(trackableId, async (id, prev) => {
   fichaSectionOpen.value = false;
   closeSidebar();
   dashboardLoaded.value = false;
-  await Promise.all([loadTrackable(), loadItems(), loadFolders(), loadTrackablesForSwitcher()]);
+  await loadTrackable();
+  await Promise.all([loadItems(), loadFolders(), loadTrackablesForSwitcher()]);
   await applyWorkflowItemFromQuery();
   if (activeTab.value === 0) {
     await loadDashboardData();
@@ -5430,8 +4636,8 @@ function onGlobalKeydown(e: KeyboardEvent) {
 
 onMounted(async () => {
   window.addEventListener('keydown', onGlobalKeydown);
+  await loadTrackable();
   await Promise.all([
-    loadTrackable(),
     loadItems(),
     loadUsers(),
     loadFolders(),
@@ -5450,9 +4656,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onGlobalKeydown);
-  kanbanColumnObserver?.disconnect();
-  kanbanColumnObserver = null;
-  minimapDragCleanup?.();
 });
 </script>
 
@@ -5476,7 +4679,7 @@ onUnmounted(() => {
   padding: 0 1.5rem;
 }
 
-/* Tab «Actuaciones» (segundo): resalta modos de vista */
+/* Tab Actividades (2.º): resalta modos de vista */
 .trackable-tabs :deep(.p-tabview-nav li:nth-child(2) .p-tabview-nav-link) {
   font-size: 1.0625rem;
   font-weight: 600;
@@ -5488,7 +4691,7 @@ onUnmounted(() => {
   font-size: 0.9375rem;
 }
 
-/* Actuaciones: ocupa el alto disponible del tab; el scroll va dentro de cada vista (Kanban: columnas), no en la página. */
+/* Actividades: tablero/etapas con scroll interno. */
 .flow-first-panel {
   flex: 1 1 0%;
   min-height: 0;
@@ -5509,6 +4712,83 @@ onUnmounted(() => {
 }
 
 .kanban-col-header {
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  isolation: isolate;
+  background-color: var(--surface-raised);
+  box-shadow:
+    0 4px 6px -2px rgba(0, 0, 0, 0.06),
+    0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* ── Animations ── */
+
+/* Hero entrance */
+.exp-hero-entrance {
+  animation: expFadeSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Summary cards stagger entrance */
+.exp-summary-card {
+  animation: expFadeSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--stagger-delay, 0ms);
+}
+
+/* Ficha expand/collapse (CSS Grid trick) */
+.ficha-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.28s ease;
+}
+
+.ficha-collapse.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+/* Ficha chevron rotation */
+.ficha-chevron {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ficha-chevron.is-open {
+  transform: rotate(180deg);
+}
+
+/* Team row hover */
+@media (hover: hover) {
+  .exp-team-row:hover {
+    background-color: var(--surface-sunken);
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes expFadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .exp-hero-entrance,
+  .exp-summary-card {
+    animation: none !important;
+  }
+
+  .ficha-collapse {
+    transition: none !important;
+  }
+
+  .ficha-chevron {
+    transition: none !important;
+  }
+
 }
 </style>

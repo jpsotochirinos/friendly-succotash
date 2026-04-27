@@ -14,6 +14,13 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 onMounted(() => {
+  if (route.query.error) {
+    void router.replace({
+      name: 'login',
+      query: { error: String(route.query.error) },
+    });
+    return;
+  }
   const token = route.query.token as string;
   if (token) {
     localStorage.setItem('accessToken', token);
@@ -22,7 +29,7 @@ onMounted(() => {
       router.push('/');
     });
   } else {
-    router.push('/auth/login');
+    void router.push('/auth/login');
   }
 });
 </script>

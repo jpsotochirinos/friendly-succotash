@@ -1,7 +1,7 @@
 /** Persisted in localStorage + sent as Organization.onboardingState (partial fields). */
 export const ONBOARDING_DRAFT_KEY = 'alega:onboarding:draft';
 
-export const ONBOARDING_DRAFT_VERSION = 1 as const;
+export const ONBOARDING_DRAFT_VERSION = 2 as const;
 
 export interface OnboardingInviteRow {
   email: string;
@@ -27,7 +27,26 @@ export interface OnboardingDraft {
   interestsFreeform: string;
   referralSource: string;
   invites: OnboardingInviteRow[];
+  /** Main outcome the user wants from Alega (card selection). */
+  primaryIntent: string;
+  /** Optional friction points (preset toggles). */
+  painPoints: string[];
+  /** Optional first-setup priority. */
+  setupPriority: string;
 }
+
+/** Suggested goals/use cases when user picks a primary intent (only applied when arrays were empty). */
+export const PRIMARY_INTENT_SUGGESTIONS: Record<
+  string,
+  { goals: string[]; useCases: string[] }
+> = {
+  matters: { goals: ['organizeMatters'], useCases: ['matters'] },
+  deadlines: { goals: ['deadlines'], useCases: ['tasks'] },
+  documents: { goals: ['compliance'], useCases: ['documents'] },
+  team: { goals: ['collaborate'], useCases: ['matters', 'clients'] },
+  signatures: { goals: ['compliance'], useCases: ['documents'] },
+  reporting: { goals: ['reporting'], useCases: ['matters'] },
+};
 
 export function defaultOnboardingDraft(): OnboardingDraft {
   return {
@@ -49,18 +68,35 @@ export function defaultOnboardingDraft(): OnboardingDraft {
     interestsFreeform: '',
     referralSource: '',
     invites: [{ email: '', role: '' }],
+    primaryIntent: '',
+    painPoints: [],
+    setupPriority: '',
   };
 }
 
 export function loadOnboardingDraft(): OnboardingDraft {
+  const base = defaultOnboardingDraft();
   try {
     const raw = localStorage.getItem(ONBOARDING_DRAFT_KEY);
-    if (!raw) return defaultOnboardingDraft();
-    const parsed = JSON.parse(raw) as Partial<OnboardingDraft>;
-    if (parsed.version !== ONBOARDING_DRAFT_VERSION) return defaultOnboardingDraft();
-    return { ...defaultOnboardingDraft(), ...parsed, invites: parsed.invites?.length ? parsed.invites : [{ email: '', role: '' }] };
+    if (!raw) return base;
+    const parsed = JSON.parse(raw) as Partial<OnboardingDraft> & { version?: number };
+    const prevVersion = parsed.version ?? 1;
+    if (prevVersion > ONBOARDING_DRAFT_VERSION) return base;
+
+    return {
+      ...base,
+      ...parsed,
+      version: ONBOARDING_DRAFT_VERSION,
+      primaryIntent: typeof parsed.primaryIntent === 'string' ? parsed.primaryIntent : base.primaryIntent,
+      painPoints: Array.isArray(parsed.painPoints) ? [...parsed.painPoints] : base.painPoints,
+      setupPriority: typeof parsed.setupPriority === 'string' ? parsed.setupPriority : base.setupPriority,
+      practiceAreas: Array.isArray(parsed.practiceAreas) ? [...parsed.practiceAreas] : base.practiceAreas,
+      goals: Array.isArray(parsed.goals) ? [...parsed.goals] : base.goals,
+      useCases: Array.isArray(parsed.useCases) ? [...parsed.useCases] : base.useCases,
+      invites: parsed.invites?.length ? parsed.invites.map((i) => ({ ...i })) : base.invites,
+    };
   } catch {
-    return defaultOnboardingDraft();
+    return base;
   }
 }
 
@@ -105,6 +141,34 @@ export const USE_CASE_KEYS = ['matters', 'clients', 'documents', 'tasks', 'heari
 export const VOLUME_KEYS = ['lt10', 's10_50', 's50_200', 'gt200'] as const;
 export const ROLE_KEYS = ['partner', 'associate', 'admin', 'paralegal', 'other'] as const;
 export const REFERRAL_KEYS = ['google', 'referral', 'event', 'social', 'other'] as const;
+
+export const PRIMARY_INTENT_KEYS = [
+  'matters',
+  'deadlines',
+  'documents',
+  'team',
+  'signatures',
+  'reporting',
+] as const;
+
+export const PAIN_POINT_KEYS = [
+  'scattered_info',
+  'missed_deadlines',
+  'coordination',
+  'reporting',
+  'client_visibility',
+  'workload',
+] as const;
+
+export const SETUP_PRIORITY_KEYS = [
+  'matters_first',
+  'deadlines_first',
+  'docs_first',
+  'team_first',
+  'reporting_first',
+] as const;
+
+export type OnboardingStepPreviewKey = 'intent' | 'firm' | 'practice' | 'workflow' | 'team';
 
 export const TIMEZONE_OPTIONS = [
   'America/Lima',

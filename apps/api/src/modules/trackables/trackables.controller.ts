@@ -41,11 +41,12 @@ export class TrackablesController {
     @Query('assignedTo') assignedToId?: string,
     @Query('search') search?: string,
     @Query('scope') scope?: 'active' | 'archived',
+    @Query('activityFilter') activityFilter?: 'total' | 'urgentToday' | 'overdue' | 'next14Days',
   ) {
     return this.trackablesService.findByFilters(
       user.organizationId,
       { page, limit, sortBy, sortOrder },
-      { scope: scope ?? 'active', status, type, assignedToId, search },
+      { scope: scope ?? 'active', status, type, assignedToId, search, activityFilter },
     );
   }
 
@@ -85,7 +86,7 @@ export class TrackablesController {
   @Get(':id')
   @RequirePermissions('trackable:read')
   async findOne(@Param('id') id: string) {
-    return this.trackablesService.findOne(id, {
+    return this.trackablesService.findOneWithBlueprintData(id, {
       populate: ['createdBy', 'assignedTo', 'folders', 'client'] as any,
     });
   }

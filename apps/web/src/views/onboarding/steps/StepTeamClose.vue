@@ -55,7 +55,11 @@
       />
     </div>
 
-    <div class="text-center px-2 py-6 rounded-xl" :style="{ backgroundColor: 'var(--surface-ground)' }">
+    <div
+      v-if="showCelebration"
+      class="text-center px-2 py-6 rounded-xl"
+      :style="{ backgroundColor: 'var(--surface-ground)' }"
+    >
       <i class="pi pi-check-circle text-5xl text-brand-zafiro mb-3" aria-hidden="true" />
       <h4 class="text-lg font-semibold text-brand-medianoche dark:text-brand-papel">{{ $t('onboarding.doneTitle') }}</h4>
       <p class="text-gray-500 dark:text-brand-hielo/85 mt-2 max-w-md mx-auto text-sm">
@@ -75,10 +79,15 @@ import FloatLabel from 'primevue/floatlabel';
 import type { OnboardingInviteRow } from '../onboarding.types';
 import { REFERRAL_KEYS } from '../onboarding.types';
 
-const props = defineProps<{
-  invites: OnboardingInviteRow[];
-  referralSource: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    invites: OnboardingInviteRow[];
+    referralSource: string;
+    /** When false, hides the “all set” celebration block (e.g. split onboarding shell). */
+    showCelebration?: boolean;
+  }>(),
+  { showCelebration: true },
+);
 
 const emit = defineEmits<{
   'update:invites': [value: OnboardingInviteRow[]];

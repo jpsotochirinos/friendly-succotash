@@ -19,7 +19,7 @@ Referencia viva: [apps/web/src/views/trackables/ExpedienteView.vue](apps/web/src
 ## Anatomía canónica
 
 ```
-┌ Dialog (contentStyle: maxHeight + flex column + overflow hidden) ─────────────┐
+┌ Dialog headless #container (shell propio sin padding de .p-dialog-content) ───┐
 │ Header: TicketKey | eyebrow (“Detalle…” / “Editando…”) | Tag solo lectura | [Editar] [Guardar] [share] | X │
 ├───────────────────────────────────────────────────────────────────────────────┤
 │ Main (scroll-y)              │ Aside (scroll-y)                                │
@@ -51,6 +51,7 @@ Referencia viva: [apps/web/src/views/trackables/ExpedienteView.vue](apps/web/src
 6. **Valores vacíos** en lectura: mostrar **—** o placeholder claro.
 7. **Acciones que mutan la actuación** (p. ej. “Nueva diligencia”, cambio de estado en la franja meta) exigen **modo edición** además del permiso, salvo que el producto defina otra regla.
 8. **Cierre con cambios**: `window.confirm` si `dirty && editingMode && canEdit`.
+9. **Edge-to-edge**: si el diseño necesita sidebar o columnas hasta el borde, usar `#container` y un shell propio (`matter-dialog-shell` / `item-detail-shell`), no el slot default de `Dialog`.
 
 ## Accesibilidad
 
@@ -61,23 +62,29 @@ Referencia viva: [apps/web/src/views/trackables/ExpedienteView.vue](apps/web/src
 
 ## Tokens y skills relacionadas
 
-- [alega-ui-coherence](.agents/skills/alega-ui-coherence/SKILL.md) — PageHeader, tokens `--fg-*`, `--surface-*`.
-- [alega-ui-context](.agents/skills/alega-ui-context/SKILL.md) — marca y convenciones globales.
-- [primevue](.agents/skills/primevue/SKILL.md) — `Dialog`, `Menu`, `Popover`, `Tag`.
+- [alega-ui-coherence](../alega-ui-coherence/SKILL.md) — PageHeader, tokens `--fg-*`, `--surface-*`.
+- [alega-ui-context](../alega-ui-context/SKILL.md) — marca y convenciones globales.
+- [primevue](../primevue/SKILL.md) — `Dialog`, `Menu`, `Popover`, `Tag`.
 
 ## Snippets (referencia)
 
 **Dirty snapshot (idea):** serializar los mismos campos que el `PATCH` / create envía al API.
 
-**CSS mínimo del diálogo:**
+**CSS mínimo del diálogo headless:**
 
 ```css
-.item-detail-dialog :deep(.p-dialog-content) {
-  overflow: hidden;
-  min-height: 0;
+:deep(.item-detail-dialog.p-dialog) {
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
-.item-detail-dialog :deep(.p-dialog-footer) {
-  display: none;
+.item-detail-shell {
+  max-height: min(88vh, 760px);
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-raised);
 }
 ```
 

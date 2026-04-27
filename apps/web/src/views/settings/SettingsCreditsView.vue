@@ -1,6 +1,7 @@
 <template>
   <div class="max-w-4xl flex flex-col gap-8">
     <PageHeader
+      v-if="!embedded"
       :title="t('settings.sections.credits')"
       :subtitle="t('settings.billingUi.creditsPageSubtitle')"
     />
@@ -166,6 +167,8 @@ import {
   type CreditWalletDto,
 } from '@/api/billing';
 import { useAuthStore } from '@/stores/auth.store';
+
+withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
 
 const { t } = useI18n();
 const toast = useToast();

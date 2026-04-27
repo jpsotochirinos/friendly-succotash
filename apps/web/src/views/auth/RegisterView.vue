@@ -1,5 +1,7 @@
 <template>
-  <AuthShell>
+  <AuthShell showcase-variant="register" :pitch-mobile="$t('auth.registerShowcaseSubtitle')">
+    <template #sideTitle>{{ $t('auth.registerShowcaseTitle') }}</template>
+    <template #sideSubtitle>{{ $t('auth.registerShowcaseSubtitle') }}</template>
     <template #title>
       {{ step === 0 ? $t('auth.registerStep1Title') : $t('auth.registerStep2Title') }}
     </template>
@@ -119,7 +121,7 @@
 
     <template #footer>
       <span>{{ $t('auth.hasAccount') }}</span>
-      <RouterLink :to="{ name: 'login' }" class="text-primary font-medium hover:underline ml-1">
+      <RouterLink :to="{ name: 'login' }" class="ml-1 font-medium text-accent hover:underline">
         {{ $t('auth.login') }}
       </RouterLink>
     </template>
@@ -128,7 +130,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/api/client';

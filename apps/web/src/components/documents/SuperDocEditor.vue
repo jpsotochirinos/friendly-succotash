@@ -51,6 +51,15 @@
         />
         <Button label="Exportar DOCX" icon="pi pi-download" size="small" outlined @click="exportDocument" />
         <Button
+          v-if="canEdit && (canRequestSignatures)"
+          label="Solicitar firmas"
+          icon="pi pi-pencil"
+          size="small"
+          severity="help"
+          outlined
+          @click="showSignatureDialog = true"
+        />
+        <Button
           v-if="
             canEdit &&
             (reviewStatus === 'draft' || reviewStatus === 'revision_needed') &&
@@ -65,6 +74,12 @@
         />
       </div>
     </div>
+
+    <SignatureRequestComposerDialog
+      v-model:modelValue="showSignatureDialog"
+      :document-id="documentId"
+      :title="documentTitle || 'Documento'"
+    />
 
     <!-- SuperDoc built-in toolbar -->
     <div id="sd-toolbar" class="border-b shrink-0" />
@@ -222,6 +237,8 @@ import Tag from 'primevue/tag';
 import Textarea from 'primevue/textarea';
 import { useToast } from 'primevue/usetoast';
 import StatusBadge from '@/components/common/StatusBadge.vue';
+import SignatureRequestComposerDialog from '@/components/signatures/SignatureRequestComposerDialog.vue';
+import { useAuthStore } from '@/stores/auth.store';
 import { apiClient } from '@/api/client';
 import { makeAuthFetch } from '@/utils/makeAuthFetch';
 
@@ -248,6 +265,12 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
+const authStore = useAuthStore();
+const showSignatureDialog = ref(false);
+const canRequestSignatures = computed(() => {
+  const p = authStore.user?.permissions ?? [];
+  return p.includes('signature:create') || p.includes('signature:sign');
+});
 const documentTitle = ref('');
 const reviewStatus = ref('');
 const hasUnsavedChanges = ref(false);

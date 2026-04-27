@@ -134,10 +134,21 @@ const loading = ref(false);
 const searchQuery = ref('');
 const selectedTemplate = ref<TemplateDoc | null>(null);
 
+const WORD_MIMES = new Set([
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+
 const filteredTemplates = computed(() => {
   const q = searchQuery.value.toLowerCase().trim();
-  if (!q) return templates.value;
-  return templates.value.filter(
+  const wordOnly = templates.value.filter((t) => {
+    const m = (t.mimeType || '').trim();
+    if (!m) return true;
+    if (m === 'application/pdf') return false;
+    return WORD_MIMES.has(m);
+  });
+  if (!q) return wordOnly;
+  return wordOnly.filter(
     (t) =>
       t.title.toLowerCase().includes(q) ||
       t.folder?.trackable?.title?.toLowerCase().includes(q),

@@ -1,22 +1,23 @@
 <template>
   <div
     v-if="!canDocRead"
-    class="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-gray-600 dark:text-gray-300 min-h-[12rem]"
+    class="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center text-[var(--fg-muted)] min-h-[12rem]"
   >
-    <i class="pi pi-lock text-4xl text-gray-400" />
+    <i class="pi pi-lock text-4xl text-[var(--fg-subtle)]" />
     <p class="max-w-md">No tenés permiso para ver carpetas ni documentos de este expediente.</p>
   </div>
   <div v-else class="flex h-full min-h-0">
     <!-- Folder tree sidebar (colapsable) -->
     <aside
       :class="[
-        'shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gray-50/90 dark:bg-gray-800/90 flex flex-col overflow-hidden transition-[width] duration-200 ease-out',
+        'folder-sidebar shrink-0 border-r border-[var(--surface-border)] bg-[var(--surface-raised)] flex flex-col overflow-hidden transition-[width] duration-200 ease-out',
         treeCollapsed ? 'w-11' : 'w-[min(17rem,40vw)] max-w-72',
       ]"
     >
       <template v-if="!treeCollapsed">
-        <div class="flex items-center justify-between gap-1 px-2.5 py-2 border-b border-gray-100 dark:border-gray-700/80">
-          <span class="text-sm font-semibold text-gray-700 dark:text-gray-200 truncate">Carpetas</span>
+        <div class="relative flex items-center justify-between gap-1 px-2.5 py-2 border-b border-[var(--surface-border)]">
+          <div class="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[var(--brand-zafiro)] via-[var(--brand-real)] to-[var(--brand-zafiro)] opacity-70" />
+          <span class="text-sm font-semibold text-[var(--fg-default)] truncate">Carpetas</span>
           <div class="flex items-center shrink-0">
             <Button
               v-if="canDocCreate"
@@ -24,6 +25,7 @@
               text
               rounded
               size="small"
+              class="add-folder-btn"
               v-tooltip.bottom="'Nueva carpeta'"
               @click="openNewRootFolderDialog"
             />
@@ -32,19 +34,19 @@
               text
               rounded
               size="small"
-              class="text-gray-500"
+              class="text-[var(--fg-subtle)]"
               v-tooltip.bottom="'Ocultar panel'"
               @click="setTreeCollapsed(true)"
             />
           </div>
         </div>
 
-        <div class="flex-1 overflow-y-auto p-2.5 flex flex-col gap-2 min-h-0">
+        <div class="folder-tree-scroll flex-1 overflow-y-auto scroll-smooth p-2.5 flex flex-col gap-2 min-h-0 [scrollbar-gutter:stable]">
           <div v-if="foldersLoading" class="text-center py-4">
-            <i class="pi pi-spin pi-spinner text-gray-400" />
+            <i class="pi pi-spin pi-spinner text-[var(--fg-subtle)]" />
           </div>
 
-          <div v-else-if="folderTree.length === 0" class="text-xs text-gray-400 text-center py-6 leading-relaxed">
+          <div v-else-if="folderTree.length === 0" class="folder-empty-state text-xs text-[var(--fg-subtle)] text-center py-6 leading-relaxed rounded-lg border border-dashed border-[var(--surface-border)] bg-[var(--surface-sunken)]/30">
             No hay carpetas. Pulsa <i class="pi pi-plus" /> para crear una.
           </div>
 
@@ -109,23 +111,24 @@
     </aside>
 
     <!-- Documents area -->
-    <div class="flex-1 min-w-0 p-4 md:p-5 dark:bg-gray-900 overflow-y-auto">
-      <div class="flex items-center justify-between gap-2 mb-3 flex-wrap">
+    <div class="folder-main-area flex-1 min-w-0 p-4 md:p-5 bg-[var(--surface-app)] overflow-y-auto scroll-smooth [scrollbar-gutter:stable]">
+      <div class="folder-main-entrance flex items-center justify-between gap-2 mb-3 flex-wrap">
         <div class="flex items-center gap-2">
-          <span v-if="breadcrumb.length > 0" class="flex items-center gap-1 text-sm text-gray-400">
+          <nav v-if="breadcrumb.length > 0" class="flex items-center gap-1 text-sm text-[var(--fg-subtle)]" aria-label="Ruta de carpetas">
             <span
               v-for="(crumb, i) in breadcrumb"
               :key="crumb.id"
-              class="flex items-center gap-1"
+              class="breadcrumb-segment flex items-center gap-1"
             >
               <span
-                class="cursor-pointer hover:text-primary-500"
+                class="cursor-pointer rounded px-1 py-0.5 transition-colors duration-150 hover:text-[var(--accent)] hover:bg-[var(--accent-soft)]"
                 @click="navigateToCrumb(crumb)"
               >{{ crumb.emoji ? crumb.emoji + ' ' : '' }}{{ crumb.name }}</span>
-              <i v-if="i < breadcrumb.length - 1" class="pi pi-angle-right text-xs" />
+              <i v-if="i < breadcrumb.length - 1" class="pi pi-angle-right text-[10px] text-[var(--fg-subtle)]" />
             </span>
-          </span>
-          <h2 v-else class="text-lg font-semibold text-gray-800 dark:text-gray-100">
+          </nav>
+          <h2 v-else class="text-lg font-semibold text-[var(--fg-default)] folder-main-entrance">
+            <i class="pi pi-folder-open text-[var(--accent)] mr-2 text-base" />
             Selecciona una carpeta
           </h2>
         </div>
@@ -157,23 +160,29 @@
         </div>
       </div>
 
-      <div v-if="!selectedFolder" class="flex flex-col items-center justify-center py-20 text-gray-400">
-        <i class="pi pi-folder-open text-5xl mb-4" />
-        <p>Selecciona una carpeta del panel izquierdo para ver sus documentos.</p>
+      <div v-if="!selectedFolder" class="folder-no-selection flex flex-col items-center justify-center py-20 text-[var(--fg-subtle)]">
+        <div class="folder-no-selection-bg pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden">
+          <div class="h-64 w-64 rounded-full bg-[var(--accent)]/5 blur-3xl" />
+        </div>
+        <div class="folder-empty-icon-wrap mb-4 relative">
+          <i class="pi pi-folder-open text-5xl" />
+        </div>
+        <p class="text-sm relative">Selecciona una carpeta del panel izquierdo para ver sus documentos.</p>
       </div>
 
       <template v-else>
         <!-- Subfolders grid -->
-        <div v-if="subfolders.length > 0" class="mb-4">
-          <p class="text-xs font-semibold uppercase text-gray-400 mb-2 tracking-wide">Subcarpetas</p>
+        <div v-if="subfolders.length > 0" class="mb-5">
+          <p class="text-[10px] font-semibold uppercase text-[var(--fg-subtle)] mb-2 tracking-wide">Subcarpetas</p>
           <div class="flex flex-wrap gap-2">
             <button
-              v-for="sf in subfolders"
+              v-for="(sf, sfIdx) in subfolders"
               :key="sf.key"
-              class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+              class="subfolder-card subfolder-entrance flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] text-sm font-medium text-[var(--fg-default)] cursor-pointer"
+              :style="{ '--stagger-delay': `${sfIdx * 50}ms` }"
               @click="onFolderSelect(sf)"
             >
-              <i class="pi pi-folder text-yellow-500" />
+              <i class="pi pi-folder text-amber-500 subfolder-icon" />
               <span>{{ sf.data.emoji ? sf.data.emoji + ' ' : '' }}{{ sf.label }}</span>
             </button>
           </div>
@@ -189,9 +198,12 @@
           striped-rows
         >
           <template #empty>
-            <div class="text-center py-8 text-gray-400">
-              <i class="pi pi-file text-3xl mb-2 block" />
-              <span>No hay documentos en esta carpeta</span>
+            <div class="folder-docs-empty text-center py-12 text-[var(--fg-subtle)] relative overflow-hidden">
+              <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div class="h-40 w-40 rounded-full bg-[var(--accent)]/5 blur-3xl" />
+              </div>
+              <i class="pi pi-file text-4xl mb-3 block folder-empty-icon-wrap relative" />
+              <span class="text-sm relative">No hay documentos en esta carpeta</span>
             </div>
           </template>
 
@@ -199,7 +211,13 @@
             <template #body="{ data }">
               <div class="flex items-center gap-2 flex-wrap">
                 <i :class="getFileIcon(data.mimeType)" />
-                <span>{{ data.title }}</span>
+                <button
+                  type="button"
+                  class="doc-title-link font-medium text-left text-[var(--accent)] hover:text-[var(--accent-hover)] cursor-pointer bg-transparent border-0 p-0 transition-colors duration-150"
+                  @click.stop="openEditor(data)"
+                >
+                  {{ data.title }}
+                </button>
                 <Tag v-if="data.isTemplate" value="Plantilla" severity="info" />
                 <Tag
                   v-for="tag in (data.tags || [])"
@@ -220,7 +238,7 @@
           <Column field="evaluationScore" header="Evaluación">
             <template #body="{ data }">
               <EvaluationBadge v-if="data.evaluationScore != null" :score="data.evaluationScore" />
-              <span v-else class="text-gray-400">-</span>
+              <span v-else class="text-[var(--fg-subtle)]">-</span>
             </template>
           </Column>
           <Column field="updatedAt" header="Modificado" sortable>
@@ -237,7 +255,7 @@
                   text
                   severity="secondary"
                   size="small"
-                  class="!w-9 !h-9"
+                  class="folder-doc-action-btn !w-9 !h-9"
                   type="button"
                   :aria-label="'Acciones del documento: ' + (data.title || data.id)"
                   v-tooltip.left="{
@@ -280,7 +298,7 @@
       :style="{ width: '400px' }"
     >
       <div v-if="tagDoc" class="space-y-3">
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ tagDoc.title }}</p>
+        <p class="text-sm text-[var(--fg-muted)]">{{ tagDoc.title }}</p>
         <div class="flex flex-wrap gap-2">
           <Tag
             v-for="tag in (tagDoc.tags || [])"
@@ -291,7 +309,7 @@
             @click="removeDocTag(tag)"
             v-tooltip.top="'Clic para eliminar'"
           />
-          <span v-if="!tagDoc.tags?.length" class="text-sm text-gray-400">Sin etiquetas</span>
+          <span v-if="!tagDoc.tags?.length" class="text-sm text-[var(--fg-subtle)]">Sin etiquetas</span>
         </div>
         <div class="flex gap-2">
           <InputText
@@ -317,7 +335,7 @@
           <button
             v-for="emoji in emojiList"
             :key="emoji"
-            class="text-2xl p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="text-2xl p-1 rounded hover:bg-[var(--accent-soft)] transition-colors duration-150"
             @click="applyEmoji(emoji)"
           >{{ emoji }}</button>
         </div>
@@ -364,13 +382,13 @@
       modal
       :style="{ width: 'min(440px, 96vw)' }"
     >
-      <p v-if="linkWorkflowDoc" class="text-sm text-gray-600 dark:text-gray-300 m-0 mb-3">
+      <p v-if="linkWorkflowDoc" class="text-sm text-[var(--fg-muted)] m-0 mb-3">
         Documento: <strong>{{ linkWorkflowDoc.title }}</strong>
       </p>
-      <div v-if="workflowItemsForLinkLoading" class="text-sm text-gray-500 py-4">Cargando actuaciones…</div>
+      <div v-if="workflowItemsForLinkLoading" class="text-sm text-[var(--fg-muted)] py-4">Cargando actuaciones…</div>
       <template v-else>
         <label class="text-sm font-medium block mb-2">Actuación del expediente</label>
-        <Dropdown
+        <Select
           v-model="selectedWorkflowItemIdForLink"
           :options="workflowItemsForLinkOptions"
           option-label="title"
@@ -431,6 +449,7 @@ import FileUpload from 'primevue/fileupload';
 import Tag from 'primevue/tag';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
+import Select from 'primevue/select';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import ConfirmDialog from 'primevue/confirmdialog';
@@ -489,28 +508,30 @@ const FolderTreeNode = defineComponent({
       return h('div', { class: 'select-none' }, [
         h('div', {
           class: [
-            'flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer text-sm transition-colors group',
+            'flex items-center gap-1 px-2 py-1.5 rounded-lg cursor-pointer text-sm transition-colors duration-150 group',
             isSelected.value
-              ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 font-medium'
-              : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300',
+              ? 'folder-tree-node-selected font-medium'
+              : 'folder-tree-node-idle',
           ],
           style: { paddingLeft: `${props.depth * 12 + 8}px` },
         }, [
           props.reorderEnabled
-            ? h('i', { class: 'drag-handle pi pi-bars text-gray-300 cursor-grab text-xs mr-1 opacity-0 group-hover:opacity-100 transition-opacity' })
+            ? h('i', { class: 'drag-handle pi pi-bars cursor-grab text-xs mr-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150', style: 'color: var(--fg-subtle)' })
             : h('span', { class: 'w-4 shrink-0 mr-1' }),
           children.length > 0
             ? h('i', {
-                class: ['pi text-xs text-gray-400', expanded.value ? 'pi-chevron-down' : 'pi-chevron-right'],
+                class: ['pi text-xs', expanded.value ? 'pi-chevron-down' : 'pi-chevron-right'],
+                style: 'color: var(--fg-subtle)',
                 onClick: (e: Event) => { e.stopPropagation(); toggle(); },
               })
             : h('span', { class: 'w-3' }),
-          h('i', { class: 'pi pi-folder text-yellow-500 text-sm' }),
+          h('i', { class: 'pi pi-folder text-amber-500 text-sm' }),
           h('span', { class: 'flex-1 truncate', onClick: () => emit('select', node) }, label),
           ...(props.emojiEnabled
             ? [
                 h('i', {
-                  class: 'pi pi-face-smile text-gray-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-yellow-500',
+                  class: 'pi pi-face-smile text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-150 cursor-pointer hover:text-amber-500',
+                  style: 'color: var(--fg-subtle)',
                   onClick: (e: Event) => { e.stopPropagation(); emit('update-emoji', node); },
                 }),
               ]
@@ -981,8 +1002,7 @@ async function downloadDoc(docId: string) {
 }
 
 function openEditor(doc: any) {
-  const mime = doc.mimeType || '';
-  if (isWordDoc(mime) || !mime) {
+  if (isWordDocument(doc)) {
     router.push(`/documents/${doc.id}/edit`);
   } else {
     openPreview(doc);
@@ -1073,16 +1093,35 @@ async function removeDocTag(tag: string) {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function isWordDoc(mimeType: string): boolean {
-  return !!(
-    mimeType?.includes('word') ||
-    mimeType?.includes('officedocument.wordprocessingml')
+  const m = mimeType || '';
+  return (
+    m.includes('word') ||
+    m.includes('officedocument.wordprocessingml') ||
+    m === 'application/msword'
   );
+}
+
+/** Editable in SuperDoc: Word MIME or .doc/.docx inferred from title/filename */
+function isWordDocument(doc: { mimeType?: string; title?: string; filename?: string }): boolean {
+  if (isWordDoc(doc.mimeType || '')) return true;
+  const title = (doc.title || '').toLowerCase();
+  const filename = (doc.filename || '').toLowerCase();
+  const fromName =
+    title.endsWith('.doc') ||
+    title.endsWith('.docx') ||
+    filename.endsWith('.doc') ||
+    filename.endsWith('.docx');
+  const m = (doc.mimeType || '').trim();
+  if (!m || m === 'application/octet-stream') {
+    if (fromName) return true;
+  }
+  return false;
 }
 
 /** Menú popup de acciones (mismo conjunto que antes en SpeedDial). Labels cortas; el botón principal tiene tooltip explicativo. */
 function buildDocActionsMenuItems(doc: any): MenuItem[] {
   const items: MenuItem[] = [];
-  const word = isWordDoc(doc.mimeType || '');
+  const word = isWordDocument(doc);
   const canSendReview =
     (doc.reviewStatus === 'draft' || doc.reviewStatus === 'revision_needed') && word;
 
@@ -1176,9 +1215,9 @@ function buildDocActionsMenuItems(doc: any): MenuItem[] {
 
 function getFileIcon(mimeType: string): string {
   if (mimeType?.includes('pdf')) return 'pi pi-file-pdf text-red-500';
-  if (isWordDoc(mimeType)) return 'pi pi-file-word text-blue-500';
-  if (mimeType?.includes('image')) return 'pi pi-image text-green-500';
-  return 'pi pi-file text-gray-500';
+  if (isWordDoc(mimeType)) return 'pi pi-file-word text-[var(--accent)]';
+  if (mimeType?.includes('image')) return 'pi pi-image text-emerald-500';
+  return 'pi pi-file text-[var(--fg-subtle)]';
 }
 
 onMounted(() => {
@@ -1187,6 +1226,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ── Layout ── */
 .folder-doc-actions-wrap {
   display: flex;
   justify-content: flex-end;
@@ -1196,6 +1236,221 @@ onMounted(() => {
 
 .folder-browser-doc-table :deep(.p-datatable-tbody > tr > td:last-child) {
   overflow: visible;
+}
+
+/* ── Sidebar ── */
+.folder-sidebar {
+  box-shadow:
+    inset -1px 0 0 var(--surface-border),
+    2px 0 12px -4px color-mix(in srgb, var(--brand-abismo) 6%, transparent);
+}
+
+/* ── Folder tree node states ── */
+.folder-tree-node-selected {
+  background-color: var(--accent-soft);
+  color: var(--accent);
+}
+
+.folder-tree-node-idle {
+  color: var(--fg-default);
+}
+
+@media (hover: hover) {
+  .folder-tree-node-idle:hover {
+    background-color: var(--surface-sunken);
+  }
+}
+
+/* ── Subfolder cards ── */
+.subfolder-card {
+  will-change: transform, box-shadow;
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease-out,
+    border-color 0.28s ease;
+}
+
+@media (hover: hover) {
+  .subfolder-card:hover {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--accent) 35%, var(--surface-border));
+    box-shadow:
+      0 4px 14px color-mix(in srgb, var(--brand-abismo) 8%, transparent),
+      0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+}
+
+.subfolder-entrance {
+  animation: fadeSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--stagger-delay, 0ms);
+}
+
+/* ── Empty state icon pulse ── */
+.folder-empty-icon-wrap {
+  animation: emptyIconPulse 3s ease-in-out infinite;
+}
+
+.folder-empty-state {
+  animation: emptyStatePulse 2.8s ease-in-out infinite;
+}
+
+/* ── Document title link ── */
+.doc-title-link {
+  text-decoration: none;
+  position: relative;
+}
+
+.doc-title-link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent);
+  transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .doc-title-link:hover::after {
+    width: 100%;
+  }
+}
+
+/* ── Add folder button icon ── */
+.add-folder-btn :deep(.p-button-icon) {
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .add-folder-btn:hover :deep(.p-button-icon) {
+    transform: rotate(90deg) scale(1.1);
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes emptyIconPulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes emptyStatePulse {
+  0%, 100% {
+    border-color: var(--surface-border);
+    background-color: color-mix(in srgb, var(--surface-sunken) 25%, transparent);
+  }
+  50% {
+    border-color: color-mix(in srgb, var(--accent) 22%, var(--surface-border));
+    background-color: color-mix(in srgb, var(--surface-sunken) 38%, transparent);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .subfolder-entrance,
+  .folder-empty-icon-wrap,
+  .folder-empty-state,
+  .folder-main-entrance,
+  .folder-no-selection,
+  .folder-docs-empty {
+    animation: none !important;
+  }
+
+  .subfolder-card,
+  .subfolder-card .subfolder-icon {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .doc-title-link::after {
+    transition: none !important;
+  }
+
+  .folder-tree-scroll {
+    scroll-behavior: auto;
+  }
+
+  .folder-main-area {
+    scroll-behavior: auto;
+  }
+
+  .add-folder-btn :deep(.p-button-icon),
+  .folder-doc-action-btn :deep(.p-button-icon) {
+    transition: none !important;
+  }
+
+  .folder-browser-doc-table :deep(.p-datatable-tbody > tr) {
+    transition: none !important;
+  }
+}
+
+/* ── Content entrance ── */
+.folder-main-entrance {
+  animation: fadeSlideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── No-selection state ── */
+.folder-no-selection {
+  position: relative;
+  animation: fadeSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Documents empty state ── */
+.folder-docs-empty {
+  animation: fadeSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Subfolder icon: slight bounce on hover ── */
+@media (hover: hover) {
+  .subfolder-card:hover .subfolder-icon {
+    animation: subfolderIconBounce 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* ── DataTable row hover glow ── */
+.folder-browser-doc-table :deep(.p-datatable-tbody > tr) {
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (hover: hover) {
+  .folder-browser-doc-table :deep(.p-datatable-tbody > tr:hover) {
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+}
+
+/* ── Action button spin ── */
+.folder-doc-action-btn :deep(.p-button-icon) {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) {
+  .folder-doc-action-btn:hover :deep(.p-button-icon) {
+    transform: rotate(90deg);
+  }
+}
+
+@keyframes subfolderIconBounce {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2) rotate(-8deg); }
+  70% { transform: scale(0.95) rotate(2deg); }
+  100% { transform: scale(1) rotate(0); }
 }
 </style>
 

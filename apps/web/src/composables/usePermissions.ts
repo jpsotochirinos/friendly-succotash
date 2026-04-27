@@ -7,7 +7,6 @@ import { useAuthStore } from '@/stores/auth.store';
  * - trackable:* → trackables, clients list/actions
  * - document:read | create | update | delete → folders tree, documents list, editor read vs edit
  * - workflow_item:* → ExpedienteView, workflow dialogs (passed as props there)
- * - workflow_template:* → template views
  * - user:*, role:manage → settings
  * - workflow:assign|review|validate|close|reject|skip → flow actions
  * - org:manage, scraping:trigger → settings / scraping

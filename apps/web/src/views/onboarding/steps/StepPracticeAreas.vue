@@ -1,6 +1,10 @@
 <template>
-  <div role="form" :aria-labelledby="headingId" class="space-y-5 pt-2">
-    <h3 :id="headingId" class="text-lg font-semibold text-brand-medianoche dark:text-brand-papel">
+  <div role="form" :aria-labelledby="hideHeading ? undefined : headingId" class="space-y-5 pt-2">
+    <h3
+      v-if="!hideHeading"
+      :id="headingId"
+      class="text-lg font-semibold text-brand-medianoche dark:text-brand-papel"
+    >
       {{ $t('onboarding.stepPracticeHeading') }}
     </h3>
     <p class="text-sm" :style="{ color: 'var(--fg-muted)' }">{{ $t('onboarding.practiceAreas') }}</p>
@@ -33,6 +37,8 @@ import { PRACTICE_AREA_KEYS } from '../onboarding.types';
 
 const props = defineProps<{
   modelValue: { practiceAreas: string[]; practiceAreasOther: string };
+  /** When true, skip the page title (parent provides context). */
+  hideHeading?: boolean;
 }>();
 
 const emit = defineEmits<{

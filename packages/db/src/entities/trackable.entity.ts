@@ -16,6 +16,7 @@ import type { Folder } from './folder.entity';
 import type { ExternalSource } from './external-source.entity';
 import type { Client } from './client.entity';
 import type { TrackableParty } from './trackable-party.entity';
+import type { ProcessTrack } from './process-track.entity';
 
 @Entity({ tableName: 'trackables' })
 export class Trackable extends TenantBaseEntity {
@@ -80,4 +81,7 @@ export class Trackable extends TenantBaseEntity {
 
   @OneToMany('TrackableParty', 'trackable')
   parties = new Collection<TrackableParty>(this);
+
+  @OneToMany('ProcessTrack', 'trackable')
+  processTracks = new Collection<ProcessTrack>(this);
 }

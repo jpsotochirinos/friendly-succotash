@@ -1,5 +1,7 @@
 <template>
-  <AuthShell>
+  <AuthShell narrow showcase-variant="invite" :pitch-mobile="$t('auth.inviteShowcaseSubtitle')">
+    <template #sideTitle>{{ $t('auth.inviteShowcaseTitle') }}</template>
+    <template #sideSubtitle>{{ $t('auth.inviteShowcaseSubtitle') }}</template>
     <template #title>{{ $t('auth.inviteTitle') }}</template>
     <template #subtitle>{{ $t('auth.inviteSubtitle') }}</template>
 
@@ -65,7 +67,7 @@
 
     <template #footer>
       <span>{{ $t('auth.hasAccount') }}</span>
-      <RouterLink :to="{ name: 'login' }" class="text-primary font-medium hover:underline ml-1">
+      <RouterLink :to="{ name: 'login' }" class="ml-1 font-medium text-accent hover:underline">
         {{ $t('auth.login') }}
       </RouterLink>
     </template>

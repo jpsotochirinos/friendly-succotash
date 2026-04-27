@@ -94,12 +94,20 @@
       </div>
     </form>
 
+    <Message severity="info" :closable="false" class="text-sm">
+      Motor v2 — <code>sinoePolicy</code> en la organización (umbrales auto-aplicación). Editar vía API/DB por ahora:
+      <pre class="mt-2 text-xs overflow-x-auto">{{ sinoePolicyJson }}</pre>
+    </Message>
+
     <ConfirmDialog />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { storeToRefs } from 'pinia';
+import { useAuthStore } from '@/stores/auth.store';
+import Message from 'primevue/message';
 import { useI18n } from 'vue-i18n';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
@@ -111,6 +119,11 @@ import { apiClient } from '@/api/client';
 import PageHeader from '@/components/common/PageHeader.vue';
 
 const { t } = useI18n();
+const auth = useAuthStore();
+const { organization } = storeToRefs(auth);
+const sinoePolicyJson = computed(() =>
+  JSON.stringify(organization.value?.featureFlags?.sinoePolicy ?? { autoApplyThreshold: 0.85 }, null, 2),
+);
 const toast = useToast();
 const confirm = useConfirm();
 

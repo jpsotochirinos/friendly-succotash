@@ -52,6 +52,14 @@ export class WorkflowDefinition extends BaseEntity {
   @Property({ default: false })
   isDefault: boolean = false;
 
+  /** Código normativo aplicable (p. ej. CPC, NCPP). */
+  @Property({ length: 50, nullable: true })
+  applicableLaw?: string;
+
+  /** Código estable del tipo procesal (p. ej. civil_ordinario). */
+  @Property({ length: 80, nullable: true })
+  legalProcessCode?: string;
+
   /** Null = workflow global del sistema; si no, pertenece al despacho. */
   @ManyToOne('Organization', { nullable: true })
   organization?: Organization;

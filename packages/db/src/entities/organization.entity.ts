@@ -29,9 +29,14 @@ export class Organization extends BaseEntity {
   @Property({ type: JsonType, nullable: true })
   onboardingState?: Record<string, unknown>;
 
-  /** Feature flags (p. ej. `{ "useConfigurableWorkflows": true }`). */
+  /**
+   * Feature flags (e.g. useConfigurableWorkflows, sinoePolicy).
+   */
   @Property({ type: JsonType, nullable: true })
-  featureFlags?: { useConfigurableWorkflows?: boolean } & Record<string, unknown>;
+  featureFlags?: {
+    useConfigurableWorkflows?: boolean;
+    sinoePolicy?: Record<string, unknown>;
+  } & Record<string, unknown>;
 
   /**
    * Overrides por org: action type (string) → workflow definition id (uuid).

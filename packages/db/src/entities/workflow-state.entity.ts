@@ -9,7 +9,11 @@ import {
   OptionalProps,
   Unique,
 } from '@mikro-orm/core';
-import { WorkflowStateCategory } from '@tracker/shared';
+import {
+  WorkflowStateCategory,
+  DeadlineType,
+  DeadlineCalendarType,
+} from '@tracker/shared';
 import { BaseEntity } from './base.entity';
 import type { WorkflowDefinition } from './workflow-definition.entity';
 import type { WorkflowTransition } from './workflow-transition.entity';
@@ -18,7 +22,12 @@ import type { WorkflowTransition } from './workflow-transition.entity';
 @Unique({ properties: ['workflow', 'key'] })
 @Index({ properties: ['workflow'] })
 export class WorkflowState extends BaseEntity {
-  [OptionalProps]?: 'sortOrder' | 'isInitial' | 'color';
+  [OptionalProps]?:
+    | 'sortOrder'
+    | 'isInitial'
+    | 'color'
+    | 'deadlineType'
+    | 'deadlineCalendarType';
 
   @ManyToOne('WorkflowDefinition', { nullable: false })
   workflow!: WorkflowDefinition;
@@ -41,6 +50,27 @@ export class WorkflowState extends BaseEntity {
 
   @Property({ default: false })
   isInitial: boolean = false;
+
+  @Enum({ items: () => DeadlineType, default: 'none' })
+  deadlineType!: DeadlineType;
+
+  @Property({ type: 'int', nullable: true })
+  deadlineDays?: number;
+
+  @Enum({
+    items: () => DeadlineCalendarType,
+    default: 'judicial',
+  })
+  deadlineCalendarType!: DeadlineCalendarType;
+
+  @Property({ length: 120, nullable: true })
+  deadlineLawRef?: string;
+
+  @Property({ type: 'array', nullable: true })
+  sinoeKeywords?: string[];
+
+  @Property({ type: 'int', nullable: true })
+  stageOrderIndex?: number;
 
   @OneToMany('WorkflowTransition', 'fromState')
   outgoingTransitions = new Collection<WorkflowTransition>(this);

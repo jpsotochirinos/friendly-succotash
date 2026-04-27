@@ -26,6 +26,8 @@ interface DeadlineRow {
   trackable_owner_id: string | null;
   organization_id: string;
   trackable_title: string | null;
+  /** v2 blueprint `ActivityInstance` vs legacy `WorkflowItem` */
+  source: 'workflow_item' | 'activity_instance';
 }
 
 function bucketForRow(due: Date, today: Date): Bucket | null {
@@ -97,7 +99,7 @@ export function createDeadlineNotificationsWorker(orm: MikroORM) {
       const conn = em.getConnection();
       const today = new Date();
 
-      const rows = (await conn.execute(
+      const wiRows = (await conn.execute(
         `
         SELECT
           wi.id,
@@ -124,7 +126,39 @@ export function createDeadlineNotificationsWorker(orm: MikroORM) {
           )
         `,
         [UPCOMING_DAYS],
-      )) as DeadlineRow[];
+      )) as Omit<DeadlineRow, 'source'>[];
+
+      const actRows = (await conn.execute(
+        `
+        SELECT
+          ai.id,
+          ai.title,
+          ai.due_date,
+          ai.assigned_to_id,
+          pt.trackable_id,
+          t.assigned_to_id AS trackable_owner_id,
+          ai.organization_id,
+          t.title AS trackable_title
+        FROM activity_instances ai
+        INNER JOIN stage_instances si ON si.id = ai.stage_instance_id
+        INNER JOIN process_tracks pt ON pt.id = si.process_track_id
+        INNER JOIN trackables t ON t.id = pt.trackable_id
+        WHERE ai.due_date IS NOT NULL
+          AND ai.is_reverted = false
+          AND ai.workflow_state_category NOT IN ('done', 'cancelled')
+          AND (
+            ai.due_date < CURRENT_DATE
+            OR ai.due_date = CURRENT_DATE
+            OR (ai.due_date > CURRENT_DATE AND ai.due_date <= CURRENT_DATE + (?::int) * INTERVAL '1 day')
+          )
+        `,
+        [UPCOMING_DAYS],
+      )) as Omit<DeadlineRow, 'source'>[];
+
+      const rows: DeadlineRow[] = [
+        ...wiRows.map((r) => ({ ...r, source: 'workflow_item' as const })),
+        ...actRows.map((r) => ({ ...r, source: 'activity_instance' as const })),
+      ];
 
       let created = 0;
       const runDate = today.toISOString().slice(0, 10);
@@ -144,7 +178,10 @@ export function createDeadlineNotificationsWorker(orm: MikroORM) {
               ? NOTIFICATION_SEVERITY.DUE_TODAY
               : NOTIFICATION_SEVERITY.UPCOMING;
 
-        const dedupeKey = `deadline:${row.id}:${bucket}:${runDate}`;
+        const dedupeKey =
+          row.source === 'activity_instance'
+            ? `deadline:act:${row.id}:${bucket}:${runDate}`
+            : `deadline:${row.id}:${bucket}:${runDate}`;
         const dueStr = due.toISOString().slice(0, 10);
         const title =
           bucket === 'overdue'
@@ -156,20 +193,26 @@ export function createDeadlineNotificationsWorker(orm: MikroORM) {
           ? `${title} — expediente «${row.trackable_title}».`
           : title;
 
+        const dataPayload: Record<string, unknown> = {
+          severity: sev,
+          source: NOTIFICATION_SOURCE.SCHEDULER,
+          dueDate: dueStr,
+        };
+        if (row.source === 'activity_instance') {
+          dataPayload.activityInstanceId = row.id;
+        } else {
+          dataPayload.workflowItemId = row.id;
+        }
+
         const result = await createNotificationEventWithRecipients(em, {
           organizationId: row.organization_id,
           trackableId: row.trackable_id,
           type: NOTIFICATION_TYPES.DEADLINE_REMINDER,
           title,
           message,
-          data: {
-            severity: sev,
-            source: NOTIFICATION_SOURCE.SCHEDULER,
-            workflowItemId: row.id,
-            dueDate: dueStr,
-          },
+          data: dataPayload,
           dedupeKey,
-          sourceEntityType: 'workflow_item',
+          sourceEntityType: row.source === 'activity_instance' ? 'activity_instance' : 'workflow_item',
           sourceEntityId: row.id,
           recipients,
         });
