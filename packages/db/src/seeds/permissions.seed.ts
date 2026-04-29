@@ -2,7 +2,11 @@ const PERMISSIONS = [
   { code: 'trackable:create', category: 'trackable', description: 'Create trackables' },
   { code: 'trackable:read', category: 'trackable', description: 'View trackables' },
   { code: 'trackable:update', category: 'trackable', description: 'Edit trackables' },
-  { code: 'trackable:delete', category: 'trackable', description: 'Delete trackables' },
+  {
+    code: 'trackable_view:share',
+    category: 'trackable',
+    description: 'Share saved expedientes list views with the organization',
+  },
   { code: 'workflow_item:create', category: 'workflow', description: 'Create workflow items' },
   { code: 'workflow_item:read', category: 'workflow', description: 'View workflow items' },
   { code: 'workflow_item:update', category: 'workflow', description: 'Edit workflow items' },

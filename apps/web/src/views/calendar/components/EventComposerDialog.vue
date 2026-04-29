@@ -289,6 +289,8 @@ import { apiClient } from '@/api/client';
 const props = defineProps<{
   visible: boolean;
   defaultDay?: Date | null;
+  /** Si viene de “Por expediente”, preselecciona el trackable al abrir. */
+  presetTrackableId?: string | null;
   trackableOptions: Array<{ label: string; value: string }>;
   userOptions: Array<{ label: string; value: string }>;
 }>();
@@ -411,7 +413,7 @@ watch(
       const day = props.defaultDay ? new Date(props.defaultDay) : new Date();
       day.setHours(12, 0, 0, 0);
       form.value = {
-        trackableId: '',
+        trackableId: props.presetTrackableId?.trim() || '',
         title: '',
         description: '',
         kind: '',

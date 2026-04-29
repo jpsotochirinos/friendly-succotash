@@ -11,140 +11,261 @@
     </template>
     <template v-else>
       <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden pb-4 md:pb-0">
-      <PageHeader :title="t('globalCalendar.pageTitle')" :subtitle="t('globalCalendar.pageSubtitle')">
-        <template #actions>
-          <SelectButton
-            v-model="calStore.scope"
-            :options="scopeOptions"
-            option-label="label"
-            option-value="value"
-            :allow-empty="false"
-            class="text-sm"
-          />
-          <Button
-            v-if="canCreate"
-            :label="t('globalCalendar.addActivity')"
-            icon="pi pi-plus"
-            size="small"
-            type="button"
-            @click="openComposer()"
-          />
-        </template>
-      </PageHeader>
+        <PageHeader :title="t('globalCalendar.pageTitle')" :subtitle="t('globalCalendar.pageSubtitle')">
+          <template #lead>
+            <DayHeader :scope="calStore.scope" />
+          </template>
+        </PageHeader>
 
-      <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden xl:flex-row">
-        <CalendarSidebar
-          v-model="navDate"
-          :kpis="kpiCards"
-          :events-by-day="eventsByDayMap"
-          :trackable-options="trackableOptions"
-          :user-options="userOptions"
-          :show-assignee-filter="calStore.scope === 'team' && canViewTeam"
-          @select-date="onSidebarDate"
-        />
+        <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row">
+          <CalendarSidebar
+            v-model="navDate"
+            :kpis="null"
+            :month-summary-rows="monthSummaryStats"
+            :events-by-day="eventsByDayMap"
+            :trackable-options="trackableOptions"
+            :user-options="assigneeFilterOptions"
+            :show-assignee-filter="calStore.scope === 'team' && canViewTeam"
+            :show-sidebar-filters="false"
+            @select-date="onSidebarDate"
+          />
 
-        <div class="flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden">
-          <div class="flex shrink-0 flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div class="flex flex-wrap items-center gap-2 min-w-0">
-              <ButtonGroup class="[&_.p-button]:py-1.5">
+          <div class="cal-redesign cal-redesign--product flex min-h-0 min-w-0 flex-1 flex-col gap-3 overflow-hidden">
+            <div class="cal-redesign__toolbar">
+              <div class="cal-redesign__toolbar-primary">
+                <div
+                  v-if="summaryConflicts > 0 && viewMode !== 'team'"
+                  class="cal-redesign__toolbar-primary-lead"
+                >
+                  <div class="cal-redesign__toolbar-track">
+                    <button
+                      type="button"
+                      class="self-start rounded border border-[var(--surface-border)] bg-[var(--surface-raised)] px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-200"
+                      @click="showConflictDialog = true"
+                    >
+                      {{ t('globalCalendar.summaryConflicts', { n: summaryConflicts }) }}
+                    </button>
+                  </div>
+                </div>
+                <div class="cal-redesign__toolbar-primary-tail">
+                  <div class="cal-redesign__toolbar-quick" role="toolbar" :aria-label="t('globalCalendar.pageTitle')">
+                    <div class="cal-redesign__toolbar-quick-end">
+                      <SelectButton
+                        :model-value="viewMode"
+                        :options="viewButtonOptions"
+                        option-label="label"
+                        option-value="value"
+                        :allow-empty="false"
+                        size="small"
+                        class="cal-redesign__views text-xs sm:text-sm [&_.p-button]:py-1.5"
+                        :aria-label="t('globalCalendar.pageTitle')"
+                        @update:model-value="onViewModeSelect"
+                      >
+                        <template #option="{ option }">
+                          <span class="cal-redesign__view-opt">
+                            <span
+                              v-if="option.value === 'hoy'"
+                              class="cal-redesign__view-dayball"
+                              aria-hidden="true"
+                            >{{ navDayOfMonth }}</span>
+                            <i v-else :class="option.icon" aria-hidden="true" />
+                            <span class="inline max-w-[5.5rem] truncate text-[10px] leading-tight sm:max-w-none sm:text-xs sm:leading-normal">{{ option.label }}</span>
+                          </span>
+                        </template>
+                      </SelectButton>
+                    </div>
+                    <span class="cal-redesign__toolbar-quick-sep" aria-hidden="true" />
+                    <div class="cal-redesign__toolbar-quick-start">
+                      <SelectButton
+                        v-model="calStore.scope"
+                        :options="scopeOptions"
+                        option-label="label"
+                        option-value="value"
+                        :allow-empty="false"
+                        size="small"
+                        class="cal-redesign__scope text-sm"
+                        :aria-label="t('globalCalendar.scopeMine')"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="cal-redesign__toolbar-actions">
+                <IconField class="cal-redesign__search-field">
+                  <InputIcon class="pi pi-search" />
+                  <InputText
+                    id="cal-search-input"
+                    v-model="searchQ"
+                    size="small"
+                    class="cal-redesign__search w-full min-w-0"
+                    :placeholder="t('globalCalendar.searchPlaceholder')"
+                    autocomplete="off"
+                  />
+                </IconField>
+                <div class="cal-redesign__toolbar-filters-inline">
+                  <GlobalCalendarFiltersBar
+                    :show-assignee-filter="calStore.scope === 'team' && canViewTeam"
+                    :user-options="assigneeFilterOptions"
+                  />
+                </div>
                 <Button
-                  v-tooltip.bottom="t('globalCalendar.navPrev')"
-                  icon="pi pi-chevron-left"
-                  outlined
+                  v-if="canCreate"
+                  icon="pi pi-plus"
+                  :label="t('globalCalendar.addActivity')"
                   size="small"
-                  type="button"
-                  @click="calendarPrev"
-                />
-                <Button
-                  v-tooltip.bottom="t('globalCalendar.navNext')"
-                  icon="pi pi-chevron-right"
                   outlined
-                  size="small"
+                  severity="secondary"
                   type="button"
-                  @click="calendarNext"
+                  class="cal-redesign__add-btn cal-redesign__toolbar-add"
+                  :aria-label="t('globalCalendar.addActivity')"
+                  @click="openComposer()"
                 />
-                <Button :label="t('globalCalendar.today')" outlined size="small" type="button" @click="calendarToday" />
-              </ButtonGroup>
-              <h2 class="text-xl md:text-2xl font-semibold m-0 text-[var(--fg-default)] truncate">{{ displayRangeTitle }}</h2>
+              </div>
             </div>
-            <div class="flex flex-wrap gap-2 items-center justify-end">
-              <IconField class="w-full sm:w-auto">
-                <InputIcon class="pi pi-search" />
-                <InputText
-                  id="cal-search-input"
-                  v-model="searchQ"
-                  class="w-full sm:w-64"
-                  :placeholder="t('globalCalendar.searchPlaceholder')"
-                />
-              </IconField>
-              <SelectButton
-                :model-value="viewMode"
-                :options="viewButtonOptions"
-                option-label="label"
-                option-value="value"
-                :allow-empty="false"
-                class="text-xs sm:text-sm cal-view-select [&_.p-button]:py-1.5"
-                @update:model-value="onViewModeSelect"
+
+            <p v-if="loadError" class="m-0 shrink-0 text-sm text-red-600 dark:text-red-400">{{ loadError }}</p>
+
+            <div class="relative min-h-0 flex-1 overflow-hidden">
+              <div
+                v-if="!calendarFirstSuccessfulLoad && viewMode !== 'team'"
+                class="absolute inset-0 z-[1] flex flex-col gap-3 p-4 animate-pulse"
+                aria-hidden="true"
               >
-                <template #option="{ option }">
-                  <span class="inline-flex items-center gap-1.5">
-                    <i :class="option.icon" aria-hidden="true" />
-                    <span class="hidden sm:inline">{{ option.label }}</span>
-                  </span>
+                <div class="h-8 w-1/3 rounded-md bg-[var(--surface-sunken)]" />
+                <div class="min-h-[320px] flex-1 rounded-lg bg-[var(--surface-sunken)]/80" />
+              </div>
+
+              <ExampleFrame
+                v-if="viewMode === 'team'"
+                class="relative z-[2] h-full min-h-0"
+                scrollable-content
+              >
+                <template #heading>
+                  <CalendarProductFrameHeading
+                    :primary="t('globalCalendar.teamViewTitle')"
+                    :secondary="teamFrameDaySubtitle"
+                    :nav-prev-label="t('globalCalendar.navPrev')"
+                    :nav-next-label="t('globalCalendar.navNext')"
+                    @prev="calendarPrev"
+                    @next="calendarNext"
+                  />
                 </template>
-              </SelectButton>
+                <TeamTimelineView
+                  class="min-h-0"
+                  :users="filteredTeamUsers"
+                  :events="timelineDayEvents"
+                  @select="onTimelineSelect"
+                />
+              </ExampleFrame>
+
+              <template v-else>
+                <ExampleFrame
+                  v-if="viewMode === 'hoy'"
+                  class="relative z-[2] h-full min-h-0"
+                  scrollable-content
+                >
+                  <template #heading>
+                    <CalendarProductFrameHeading
+                      :primary="dayFrameTitle"
+                      :secondary="dayFrameSubtitle"
+                      :nav-prev-label="t('globalCalendar.navPrev')"
+                      :nav-next-label="t('globalCalendar.navNext')"
+                      @prev="calendarPrev"
+                      @next="calendarNext"
+                    />
+                  </template>
+                  <HoyView
+                    hide-day-header
+                    :date="navDate"
+                    :scope="calStore.scope"
+                    :actuaciones="actuacionesModel"
+                    :sinoe="sinoeEmpty"
+                    :mi-usuario-id="miUsuarioId"
+                    :usuarios="usuariosModel"
+                    :expedientes="expedientesModel"
+                    @open="openActuacion"
+                    @select-day="selectDay"
+                  />
+                </ExampleFrame>
+
+                <ExampleFrame
+                  v-else-if="viewMode === 'semana'"
+                  class="relative z-[2] h-full min-h-0"
+                  scrollable-content
+                >
+                  <template #heading>
+                    <CalendarProductFrameHeading
+                      :primary="t('globalCalendar.viewWeek')"
+                      :secondary="semanaFrameWeekRange"
+                      :nav-prev-label="t('globalCalendar.navPrev')"
+                      :nav-next-label="t('globalCalendar.navNext')"
+                      @prev="calendarPrev"
+                      @next="calendarNext"
+                    />
+                  </template>
+                  <SemanaView
+                    :start-date="navDate"
+                    :actuaciones="actuacionesModel"
+                    :expedientes="expedientesModel"
+                    :usuarios="usuariosModel"
+                    @select="openActuacion"
+                  />
+                </ExampleFrame>
+
+                <ExampleFrame
+                  v-else-if="viewMode === 'mes'"
+                  class="relative z-[2] h-full min-h-0"
+                  scrollable-content
+                >
+                  <template #heading>
+                    <CalendarProductFrameHeading
+                      :primary="mesFrameMonthTitle"
+                      :secondary="t('globalCalendar.pageSubtitle')"
+                      :nav-prev-label="t('globalCalendar.navPrev')"
+                      :nav-next-label="t('globalCalendar.navNext')"
+                      @prev="calendarPrev"
+                      @next="calendarNext"
+                    />
+                  </template>
+                  <MesView :month-date="navDate" :actuaciones="actuacionesModel" @select-day="selectDay" />
+                </ExampleFrame>
+
+                <ExampleFrame
+                  v-else
+                  class="relative z-[2] h-full min-h-0"
+                  scrollable-content
+                >
+                  <template #heading>
+                    <CalendarProductFrameHeading
+                      :primary="t('globalCalendar.viewByMatter')"
+                      :secondary="displayRangeTitle"
+                      :nav-prev-label="t('globalCalendar.navPrev')"
+                      :nav-next-label="t('globalCalendar.navNext')"
+                      @prev="calendarPrev"
+                      @next="calendarNext"
+                    />
+                  </template>
+                  <ExpedienteView
+                    :actuaciones="actuacionesModel"
+                    :expedientes="expedientesModel"
+                    :usuarios="usuariosModel"
+                    @open="openActuacion"
+                    @add="openComposerForExpediente"
+                  />
+                </ExampleFrame>
+              </template>
             </div>
           </div>
-
-          <DaySummaryBar
-            class="shrink-0"
-            :conflicts="summaryConflicts"
-            :due-today="summaryDueToday"
-            :unassigned="summaryUnassigned"
-            :birthdays="summaryBirthdays"
-            @open-conflicts="showConflictDialog = true"
-          />
-
-          <p v-if="loadError" class="m-0 shrink-0 text-sm text-red-600 dark:text-red-400">{{ loadError }}</p>
-
-          <div
-            v-if="viewMode !== 'team'"
-            class="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-0.5 sm:p-1"
-          >
-            <div
-              v-if="fcReady && !calendarFirstSuccessfulLoad"
-              class="absolute inset-0 z-[1] flex flex-col gap-3 p-4 animate-pulse"
-              aria-hidden="true"
-            >
-              <div class="h-8 w-1/3 rounded-md bg-[var(--surface-sunken)]" />
-              <div class="min-h-[320px] flex-1 rounded-lg bg-[var(--surface-sunken)]/80" />
-            </div>
-            <FullCalendar
-              v-if="fcReady"
-              ref="fcRef"
-              class="global-calendar-fc relative z-[2] h-full min-h-0"
-              :options="fcOptions"
-            />
-          </div>
-
-          <TeamTimelineView
-            v-else
-            class="min-h-0 flex-1 overflow-auto"
-            :title="t('globalCalendar.teamViewTitle')"
-            :day="navDate"
-            :users="teamUsers"
-            :events="timelineDayEvents"
-            @select="onTimelineSelect"
-          />
         </div>
-      </div>
       </div>
 
       <EventComposerDialog
         v-model:visible="showComposer"
         :default-day="composerDay"
+        :preset-trackable-id="composerPresetTrackableId"
         :trackable-options="trackableOptions"
         :user-options="userOptions"
+        @close="composerPresetTrackableId = null"
         @created="onCreated"
       />
 
@@ -158,57 +279,39 @@
       />
 
       <Dialog
-        v-model:visible="showDayOverflowDialog"
-        :header="dayOverflowDialogTitle"
-        modal
-        :style="{ width: 'min(520px, 95vw)' }"
-        @hide="clearDayOverflowDialog"
-      >
-        <ul v-if="dayOverflowRows.length" class="m-0 max-h-[min(60vh,28rem)] list-none space-y-2 overflow-y-auto p-0 text-sm">
-          <li v-for="row in dayOverflowRows" :key="row.id">
-            <button
-              type="button"
-              class="w-full rounded-lg border border-[var(--surface-border)] bg-[var(--surface-raised)] px-3 py-2 text-left transition hover:bg-[var(--surface-sunken)]"
-              @click="onDayOverflowRowClick(row)"
-            >
-              <span class="font-medium text-[var(--fg-default)]">{{ row.title }}</span>
-            </button>
-          </li>
-        </ul>
-        <p v-else class="m-0 text-sm text-[var(--fg-muted)]">{{ t('globalCalendar.noEventsThisDay') }}</p>
-      </Dialog>
-
-      <Dialog
         v-model:visible="showConflictDialog"
         :header="t('globalCalendar.drawerConflictTitle')"
         modal
         :style="{ width: 'min(520px, 95vw)' }"
       >
-        <ul v-if="conflictPairs.length" class="m-0 p-0 list-none space-y-2 text-sm">
+        <ul v-if="conflictPairs.length" class="m-0 list-none space-y-2 p-0 text-sm">
           <li v-for="(pair, idx) in conflictPairs" :key="idx" class="rounded-lg border border-[var(--surface-border)] p-2">
             <span class="font-medium">{{ pair.a.title }}</span>
             <span class="text-[var(--fg-muted)]"> · </span>
             <span class="font-medium">{{ pair.b.title }}</span>
           </li>
         </ul>
-        <p v-else class="text-sm text-[var(--fg-muted)] m-0">{{ t('globalCalendar.summaryNoConflicts') }}</p>
+        <p v-else class="m-0 text-sm text-[var(--fg-muted)]">{{ t('globalCalendar.summaryNoConflicts') }}</p>
       </Dialog>
 
       <Dialog v-model:visible="showHelp" :header="t('globalCalendar.shortcutsTitle')" modal :style="{ width: 'min(400px, 95vw)' }">
-        <ul class="text-sm space-y-2 m-0 p-0 list-none text-[var(--fg-default)]">
-          <li><kbd class="px-1 rounded bg-[var(--surface-sunken)]">M</kbd> {{ t('globalCalendar.shortcutMonth') }}</li>
-          <li><kbd class="px-1 rounded bg-[var(--surface-sunken)]">W</kbd> {{ t('globalCalendar.shortcutWeek') }}</li>
-          <li><kbd class="px-1 rounded bg-[var(--surface-sunken)]">D</kbd> {{ t('globalCalendar.shortcutDay') }}</li>
-          <li><kbd class="px-1 rounded bg-[var(--surface-sunken)]">A</kbd> {{ t('globalCalendar.shortcutAgenda') }}</li>
-          <li><kbd class="px-1 rounded bg-[var(--surface-sunken)]">T</kbd> {{ t('globalCalendar.today') }}</li>
-          <li><kbd class="px-1 rounded bg-[var(--surface-sunken)]">N</kbd> {{ t('globalCalendar.shortcutNew') }}</li>
-          <li><kbd class="px-1 rounded bg-[var(--surface-sunken)]">←</kbd>/<kbd class="px-1 rounded bg-[var(--surface-sunken)]">→</kbd> {{ t('globalCalendar.shortcutNav') }}</li>
+        <ul class="m-0 list-none space-y-2 p-0 text-sm text-[var(--fg-default)]">
+          <li><kbd class="rounded bg-[var(--surface-sunken)] px-1">M</kbd> {{ t('globalCalendar.shortcutMonth') }}</li>
+          <li><kbd class="rounded bg-[var(--surface-sunken)] px-1">W</kbd> {{ t('globalCalendar.shortcutWeek') }}</li>
+          <li><kbd class="rounded bg-[var(--surface-sunken)] px-1">D</kbd> {{ t('globalCalendar.shortcutDay') }}</li>
+          <li><kbd class="rounded bg-[var(--surface-sunken)] px-1">A</kbd> {{ t('globalCalendar.shortcutAgenda') }}</li>
+          <li><kbd class="rounded bg-[var(--surface-sunken)] px-1">T</kbd> {{ t('globalCalendar.today') }}</li>
+          <li><kbd class="rounded bg-[var(--surface-sunken)] px-1">N</kbd> {{ t('globalCalendar.shortcutNew') }}</li>
+          <li>
+            <kbd class="rounded bg-[var(--surface-sunken)] px-1">←</kbd>/<kbd class="rounded bg-[var(--surface-sunken)] px-1">→</kbd>
+            {{ t('globalCalendar.shortcutNav') }}
+          </li>
         </ul>
       </Dialog>
 
       <Button
         v-if="canCreate"
-        class="md:!hidden !fixed bottom-6 right-6 z-10 shadow-lg"
+        class="!fixed bottom-6 right-6 z-10 shadow-lg md:!hidden"
         rounded
         icon="pi pi-plus"
         type="button"
@@ -220,46 +323,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, shallowRef, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import ProgressSpinner from 'primevue/progressspinner';
 import Button from 'primevue/button';
-import ButtonGroup from 'primevue/buttongroup';
 import Dialog from 'primevue/dialog';
 import SelectButton from 'primevue/selectbutton';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import FullCalendar from '@fullcalendar/vue3';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import listPlugin from '@fullcalendar/list';
-import interactionPlugin from '@fullcalendar/interaction';
-import esLocale from '@fullcalendar/core/locales/es';
-import type { CalendarOptions, DatesSetArg, EventClickArg, EventDropArg, EventApi } from '@fullcalendar/core';
 import { useI18n } from 'vue-i18n';
 import { apiClient } from '@/api/client';
 import { usePermissions } from '@/composables/usePermissions';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCalendarStore } from '@/stores/calendar.store';
-import {
-  apiEventToFullCalendar,
-  parseActivityIdFromEventId,
-  parseWorkflowItemIdFromEventId,
-  type ApiCalendarEvent,
-} from '@/composables/useCalendarAdapter';
+import type { ApiCalendarEvent } from '@/composables/useCalendarAdapter';
 import { useCalendarShortcuts } from '@/composables/useCalendarShortcuts';
 import { matchesCalendarFilters, classifyApiEvent, type CalendarFilterKind } from '@/composables/calendarEventKind';
 import { countHearingOverlapPairs, listHearingOverlapPairs } from '@/composables/calendarOverlap';
 import { buildPeruHolidayEvents } from '@/composables/peruPublicHolidays';
 import PageHeader from '@/components/common/PageHeader.vue';
+import DayHeader from '@/sandbox/recipes/CalendarRedesign/patterns/DayHeader.vue';
 import CalendarSidebar from './components/CalendarSidebar.vue';
+import GlobalCalendarFiltersBar from './components/GlobalCalendarFiltersBar.vue';
+import CalendarProductFrameHeading from './components/CalendarProductFrameHeading.vue';
 import TeamTimelineView from './components/TeamTimelineView.vue';
 import EventComposerDialog from './components/EventComposerDialog.vue';
 import EventDetailsDrawer from './components/EventDetailsDrawer.vue';
-import DaySummaryBar from './components/DaySummaryBar.vue';
+import ExampleFrame from '@/sandbox/_shared/ExampleFrame.vue';
+import HoyView from '@/sandbox/recipes/CalendarRedesign/views/HoyView.vue';
+import SemanaView from '@/sandbox/recipes/CalendarRedesign/views/SemanaView.vue';
+import MesView from '@/sandbox/recipes/CalendarRedesign/views/MesView.vue';
+import ExpedienteView from '@/sandbox/recipes/CalendarRedesign/views/ExpedienteView.vue';
+import { fmtFechaLarga } from '@/sandbox/recipes/CalendarRedesign/urgency';
+import type { Actuacion, Expediente, SinoePendiente } from '@/sandbox/recipes/CalendarRedesign/mocks';
 import {
-  setAssistantCalendarViewportFromFc,
+  buildActuacionesFromApi,
+  buildExpedientesFromTrackables,
+  buildUsuariosFromDirectory,
+} from './calendarRedesignAdapter';
+import {
+  setAssistantCalendarViewportRange,
   setAssistantCalendarViewportSingleDay,
 } from '@/utils/assistant-calendar-context';
 
@@ -277,8 +381,6 @@ const canUpdate = computed(() => can('workflow_item:update'));
 const canOpenFlow = computed(() => can('trackable:read'));
 const canViewTeam = computed(() => can('calendar:view_team'));
 
-const fcRef = ref<InstanceType<typeof FullCalendar> | null>(null);
-const fcReady = ref(false);
 const navDate = ref(new Date());
 const searchQ = ref('');
 /** Debounced value used for client-side filtering (avoids refetch on every keystroke). */
@@ -288,28 +390,19 @@ const loadError = ref<string | null>(null);
 const rawEvents = ref<ApiCalendarEvent[]>([]);
 /** Set after first calendar range fetch completes (success or error) — hides initial skeleton. */
 const calendarFirstSuccessfulLoad = ref(false);
-let lastEventsFetchKey = '';
-const rangeTitle = ref('');
+let lastFetchKey = '';
 const showComposer = ref(false);
 const composerDay = ref<Date | null>(null);
+const composerPresetTrackableId = ref<string | null>(null);
 const showHelp = ref(false);
 const drawerVisible = ref(false);
 const selectedApiEvent = ref<ApiCalendarEvent | null>(null);
 const showConflictDialog = ref(false);
-const showDayOverflowDialog = ref(false);
-const dayOverflowDate = ref<Date | null>(null);
-const dayOverflowRows = ref<Array<{ id: string; title: string }>>([]);
 
-const dayOverflowDialogTitle = computed(() => {
-  const d = dayOverflowDate.value;
-  if (!d) return t('globalCalendar.dayActivitiesModalTitle');
-  return d.toLocaleDateString(i18nLocale.value, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-});
+const sinoeEmpty = [] as SinoePendiente[];
+
+type CalViewMode = 'hoy' | 'semana' | 'mes' | 'expediente' | 'team';
+const viewMode = ref<CalViewMode>('hoy');
 
 const trackableOptions = ref<Array<{ label: string; value: string }>>([]);
 const usersList = ref<Array<{ id: string; email: string; firstName?: string }>>([]);
@@ -320,40 +413,16 @@ const userOptions = computed(() =>
   })),
 );
 
-type GridViewMode = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek' | 'team';
+/** Opciones del filtro asignado: incluye «Sin asignar» (`__unassigned`). */
+const assigneeFilterOptions = computed(() => [
+  { label: t('globalCalendar.unassigned'), value: '__unassigned' },
+  ...userOptions.value,
+]);
 
-const viewMode = ref<GridViewMode>('dayGridMonth');
+const expedientesModel = computed(() => buildExpedientesFromTrackables(trackableOptions.value));
+const usuariosModel = computed(() => buildUsuariosFromDirectory(usersList.value));
 
-const displayRangeTitle = computed(() => {
-  if (viewMode.value === 'team') {
-    return navDate.value.toLocaleDateString(i18nLocale.value, {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }
-  return rangeTitle.value;
-});
-
-const scopeOptions = computed((): Array<{ label: string; value: 'mine' | 'team' }> => {
-  const opts: Array<{ label: string; value: 'mine' | 'team' }> = [{ label: t('globalCalendar.scopeMine'), value: 'mine' }];
-  if (canViewTeam.value) opts.push({ label: t('globalCalendar.scopeFirm'), value: 'team' });
-  return opts;
-});
-
-const viewButtonOptions = computed((): Array<{ label: string; value: GridViewMode; icon: string }> => {
-  const base: Array<{ label: string; value: GridViewMode; icon: string }> = [
-    { label: t('globalCalendar.viewMonth'), value: 'dayGridMonth', icon: 'pi pi-th-large' },
-    { label: t('globalCalendar.viewWeek'), value: 'timeGridWeek', icon: 'pi pi-calendar' },
-    { label: t('globalCalendar.viewDay'), value: 'timeGridDay', icon: 'pi pi-circle' },
-    { label: t('globalCalendar.viewAgenda'), value: 'listWeek', icon: 'pi pi-list' },
-  ];
-  if (canViewTeam.value && calStore.scope === 'team') {
-    base.push({ label: t('globalCalendar.viewTimeline'), value: 'team', icon: 'pi pi-users' });
-  }
-  return base;
-});
+const miUsuarioId = computed(() => String(user.value?.id ?? ''));
 
 function ymd(d: Date): string {
   const y = d.getFullYear();
@@ -362,71 +431,78 @@ function ymd(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function addDays(d: Date, n: number): Date {
-  const x = new Date(d);
-  x.setDate(x.getDate() + n);
-  return x;
+function startOfLocalDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function monthGridRange(monthAnchor: Date): { from: Date; toExclusive: Date } {
+  const first = new Date(monthAnchor.getFullYear(), monthAnchor.getMonth(), 1);
+  const dow = (first.getDay() + 6) % 7;
+  const start = new Date(first);
+  start.setDate(start.getDate() - dow);
+  start.setHours(0, 0, 0, 0);
+  const endExclusive = new Date(start);
+  endExclusive.setDate(endExclusive.getDate() + 42);
+  return { from: start, toExclusive: endExclusive };
+}
+
+function weekRange(anchor: Date): { from: Date; toExclusive: Date } {
+  const d = startOfLocalDay(anchor);
+  const dow = (d.getDay() + 6) % 7;
+  const monday = new Date(d);
+  monday.setDate(monday.getDate() - dow);
+  const endExclusive = new Date(monday);
+  endExclusive.setDate(endExclusive.getDate() + 7);
+  return { from: monday, toExclusive: endExclusive };
+}
+
+function dayRange(anchor: Date): { from: Date; toExclusive: Date } {
+  const start = startOfLocalDay(anchor);
+  const endExclusive = new Date(start);
+  endExclusive.setDate(endExclusive.getDate() + 1);
+  return { from: start, toExclusive: endExclusive };
+}
+
+function unionRanges(
+  a: { from: Date; toExclusive: Date },
+  b: { from: Date; toExclusive: Date },
+): { from: Date; toExclusive: Date } {
+  const from = a.from < b.from ? new Date(a.from) : new Date(b.from);
+  const toExclusive = a.toExclusive > b.toExclusive ? new Date(a.toExclusive) : new Date(b.toExclusive);
+  return { from, toExclusive };
+}
+
+/** Rango API: unión de la vista activa + grilla del mes de `nav` (sidebar / mini). */
+function effectiveFetchRange(view: CalViewMode, nav: Date): { from: Date; toExclusive: Date } {
+  if (view === 'team') return unionRanges(dayRange(nav), monthGridRange(nav));
+  const monthR = monthGridRange(nav);
+  if (view === 'hoy') return unionRanges(dayRange(nav), monthR);
+  if (view === 'semana') return unionRanges(weekRange(nav), monthR);
+  if (view === 'mes' || view === 'expediente') return monthR;
+  return monthR;
 }
 
 const dayYmd = computed(() => ymd(navDate.value));
 
-/** Single pass over `rawEvents` for sidebar map + KPIs + day summary chips. */
-const calendarAggregates = computed(() => {
-  const todayStr = ymd(new Date());
-  const tmr = ymd(addDays(new Date(), 1));
-  const limit = ymd(addDays(new Date(), 3));
-  const selectedDay = dayYmd.value;
+/** Día del mes (1–31) para el icono “Hoy” del selector de vistas. */
+const navDayOfMonth = computed(() => navDate.value.getDate());
 
+const calendarAggregates = computed(() => {
   const eventsByDayMap: Record<string, CalendarFilterKind[]> = {};
-  let hearings = 0;
-  let deadlinesToday = 0;
-  let deadlinesNext3 = 0;
-  let summaryDueToday = 0;
-  let summaryUnassigned = 0;
-  let summaryBirthdays = 0;
 
   for (const e of rawEvents.value) {
     const startDay = e.start.slice(0, 10);
     const kind = classifyApiEvent(e);
     if (!eventsByDayMap[startDay]) eventsByDayMap[startDay] = [];
     eventsByDayMap[startDay].push(kind);
-
-    if (e.source === 'birthday' && startDay === selectedDay) summaryBirthdays += 1;
-
-    if (e.source !== 'workflow') continue;
-
-    if (kind === 'hearing' && startDay === todayStr) hearings += 1;
-
-    if (e.extendedProps?.isLegalDeadline) {
-      const due = e.end?.slice(0, 10) || startDay;
-      if (due === todayStr) deadlinesToday += 1;
-      if (due >= tmr && due <= limit) deadlinesNext3 += 1;
-      if (due === selectedDay) summaryDueToday += 1;
-    }
-
-    if (startDay === selectedDay) {
-      const aid = e.extendedProps?.assignedToId as string | undefined;
-      if (!aid) summaryUnassigned += 1;
-    }
   }
 
-  return {
-    eventsByDayMap,
-    kpiCards: { hearings, deadlinesToday, deadlinesNext3 },
-    summaryDueToday,
-    summaryUnassigned,
-    summaryBirthdays,
-  };
+  return { eventsByDayMap };
 });
 
 const eventsByDayMap = computed(() => calendarAggregates.value.eventsByDayMap);
-const kpiCards = computed(() => calendarAggregates.value.kpiCards);
-const summaryDueToday = computed(() => calendarAggregates.value.summaryDueToday);
-const summaryUnassigned = computed(() => calendarAggregates.value.summaryUnassigned);
-const summaryBirthdays = computed(() => calendarAggregates.value.summaryBirthdays);
 
 const summaryConflicts = computed(() => countHearingOverlapPairs(dayYmd.value, rawEvents.value));
-
 const conflictPairs = computed(() => listHearingOverlapPairs(dayYmd.value, rawEvents.value));
 
 const teamUsers = computed(() => {
@@ -440,6 +516,14 @@ const teamUsers = computed(() => {
   return rows;
 });
 
+/** Columnas del timeline según filtro de asignados (vacío = todos). */
+const filteredTeamUsers = computed(() => {
+  const all = teamUsers.value;
+  const sel = calFilters.value.assignees;
+  if (sel.length === 0) return all;
+  return all.filter((u) => sel.includes(u.id));
+});
+
 const timelineDayEvents = computed((): ApiCalendarEvent[] => {
   const day = dayYmd.value;
   return rawEvents.value.filter((e) => {
@@ -449,18 +533,184 @@ const timelineDayEvents = computed((): ApiCalendarEvent[] => {
   });
 });
 
+function eventSearchHaystack(e: ApiCalendarEvent): string {
+  const xp = e.extendedProps ?? {};
+  const tid = String(xp.trackableId ?? '').trim();
+  const fromOptions = tid
+    ? (trackableOptions.value.find((o) => o.value === tid)?.label ?? '')
+    : '';
+  const parts: unknown[] = [
+    e.title,
+    xp.trackableTitle,
+    tid,
+    fromOptions,
+    xp.assignedToName,
+    xp.assignedToEmail,
+    xp.location,
+    xp.kind,
+    xp.description,
+    xp.body,
+    xp.externalId,
+    xp.provider,
+  ];
+  if (xp.metadata != null && typeof xp.metadata === 'object') {
+    try {
+      parts.push(JSON.stringify(xp.metadata));
+    } catch {
+      /* ignore */
+    }
+  }
+  return parts
+    .filter((v) => v != null && String(v).trim() !== '')
+    .map((v) => String(v))
+    .join(' ')
+    .toLowerCase();
+}
+
 function filterBySearch(e: ApiCalendarEvent): boolean {
   const q = filterSearchQ.value.trim().toLowerCase();
   if (!q) return true;
-  return e.title.toLowerCase().includes(q);
+  return eventSearchHaystack(e).includes(q);
 }
 
 function filterEvents(list: ApiCalendarEvent[]): ApiCalendarEvent[] {
   return list.filter((e) => matchesCalendarFilters(e, calFilters.value) && filterBySearch(e));
 }
 
-function invalidateCalendarEventsCache() {
-  lastEventsFetchKey = '';
+const filteredApiEvents = computed(() => filterEvents(rawEvents.value));
+
+const actuacionesModel = computed(() => buildActuacionesFromApi(filteredApiEvents.value));
+
+const monthSummaryStats = computed(() => {
+  const y = navDate.value.getFullYear();
+  const m = navDate.value.getMonth();
+  const acts = actuacionesModel.value.filter((a) => {
+    const d = new Date(a.fechaIso);
+    return d.getFullYear() === y && d.getMonth() === m;
+  });
+  return [
+    {
+      key: 'aud',
+      label: t('globalCalendar.redesignMonthSummaryAud'),
+      icon: 'pi pi-calendar',
+      count: acts.filter((a) => a.tipo === 'audiencia' || a.tipo === 'diligencia').length,
+      accent: '#0e7490',
+    },
+    {
+      key: 'plz',
+      label: t('globalCalendar.redesignMonthSummaryDl'),
+      icon: 'pi pi-flag',
+      count: acts.filter((a) => a.tipo === 'plazo').length,
+      accent: '#d97706',
+    },
+    {
+      key: 'unas',
+      label: t('globalCalendar.redesignMonthSummaryUnassigned'),
+      icon: 'pi pi-user-plus',
+      count: acts.filter((a) => !a.asignadoId).length,
+      accent: 'var(--fg-muted)',
+    },
+  ];
+});
+
+/** Calendar days from `a` to `b` (start of local day, b − a). */
+function diffCalendarDaysFromTo(a: Date, b: Date): number {
+  return Math.round((startOfLocalDay(a).getTime() - startOfLocalDay(b).getTime()) / 86400000);
+}
+
+function weekRangeLabelForDate(d: Date, loc: string): string {
+  const dow = (d.getDay() + 6) % 7;
+  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow);
+  const sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+  return `${monday.toLocaleDateString(loc, { day: 'numeric', month: 'short' })} – ${sunday.toLocaleDateString(loc, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })}`;
+}
+
+function monthYearTitleForDate(d: Date, loc: string): string {
+  return d.toLocaleDateString(loc, { month: 'long', year: 'numeric' }).replace(/^\w/, (c) => c.toUpperCase());
+}
+
+const localeTag = computed(() => (i18nLocale.value.startsWith('es') ? 'es-PE' : 'en-US'));
+
+const dayFrameTitle = computed(() => {
+  const nav = navDate.value;
+  const today = startOfLocalDay(new Date());
+  const diff = diffCalendarDaysFromTo(nav, today);
+  if (diff === 0) return t('globalCalendar.today');
+  if (diff === -1) return t('globalCalendar.relativeYesterday');
+  if (diff === 1) return t('globalCalendar.relativeTomorrow');
+  const loc = localeTag.value;
+  return fmtFechaLarga(nav, loc).replace(/^\w/, (c) => c.toUpperCase());
+});
+
+const dayFrameSubtitle = computed(() => {
+  const nav = navDate.value;
+  const today = startOfLocalDay(new Date());
+  const diff = diffCalendarDaysFromTo(nav, today);
+  if (diff < -1 || diff > 1) return '';
+  const loc = localeTag.value;
+  return nav
+    .toLocaleDateString(loc, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    .replace(/^\w/, (c) => c.toUpperCase());
+});
+
+const semanaFrameWeekRange = computed(() => weekRangeLabelForDate(navDate.value, localeTag.value));
+
+const mesFrameMonthTitle = computed(() => monthYearTitleForDate(navDate.value, localeTag.value));
+
+const teamFrameDaySubtitle = computed(() =>
+  navDate.value
+    .toLocaleDateString(localeTag.value, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    .replace(/^\w/, (c) => c.toUpperCase()),
+);
+
+const displayRangeTitle = computed(() => {
+  if (viewMode.value === 'team') {
+    return navDate.value.toLocaleDateString(i18nLocale.value, {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }
+  const loc = i18nLocale.value.startsWith('es') ? 'es-PE' : 'en-US';
+  if (viewMode.value === 'mes') {
+    return monthYearTitleForDate(navDate.value, loc);
+  }
+  if (viewMode.value === 'semana') {
+    return weekRangeLabelForDate(navDate.value, loc);
+  }
+  if (viewMode.value === 'expediente') {
+    return t('globalCalendar.viewByMatterRangeTitle', { n: trackableOptions.value.length });
+  }
+  return fmtFechaLarga(navDate.value, loc).replace(/^\w/, (c) => c.toUpperCase());
+});
+
+const scopeOptions = computed((): Array<{ label: string; value: 'mine' | 'team' }> => {
+  const opts: Array<{ label: string; value: 'mine' | 'team' }> = [{ label: t('globalCalendar.scopeMine'), value: 'mine' }];
+  if (canViewTeam.value) opts.push({ label: t('globalCalendar.scopeFirm'), value: 'team' });
+  return opts;
+});
+
+const viewButtonOptions = computed((): Array<{ label: string; value: CalViewMode; icon: string }> => {
+  const base: Array<{ label: string; value: CalViewMode; icon: string }> = [
+    { label: t('globalCalendar.viewHoy'), value: 'hoy', icon: '' },
+    { label: t('globalCalendar.viewWeek'), value: 'semana', icon: 'pi pi-calendar' },
+    { label: t('globalCalendar.viewMonth'), value: 'mes', icon: 'pi pi-th-large' },
+    { label: t('globalCalendar.viewByMatter'), value: 'expediente', icon: 'pi pi-folder' },
+  ];
+  if (canViewTeam.value && calStore.scope === 'team') {
+    base.push({ label: t('globalCalendar.viewTimeline'), value: 'team', icon: 'pi pi-users' });
+  }
+  return base;
+});
+
+function invalidateFetch() {
+  lastFetchKey = '';
 }
 
 async function fetchEventsRange(from: Date, toExclusive: Date) {
@@ -491,44 +741,38 @@ async function loadTeamDay() {
   const d = navDate.value;
   const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const endEx = new Date(start.getTime() + 86400000);
-  await fetchEventsRange(start, endEx);
+  const { from, toExclusive } = unionRanges({ from: start, toExclusive: endEx }, monthGridRange(d));
+  await fetchEventsRange(from, toExclusive);
 }
 
-async function setViewMode(v: GridViewMode) {
+async function ensureEventsLoaded(force: boolean) {
+  if (viewMode.value === 'team') return;
+  const { from, toExclusive } = effectiveFetchRange(viewMode.value, navDate.value);
+  const key = `${from.getTime()}__${toExclusive.getTime()}__${calStore.scope}`;
+  if (!force && key === lastFetchKey) return;
+  lastFetchKey = key;
+  await fetchEventsRange(from, toExclusive);
+}
+
+function setViewMode(v: CalViewMode) {
   if (v === 'team' && (!canViewTeam.value || calStore.scope !== 'team')) return;
-  const prev = viewMode.value;
+  invalidateFetch();
   viewMode.value = v;
-  if (v === 'team') {
-    invalidateCalendarEventsCache();
-    await loadTeamDay();
-    return;
-  }
-  if (prev === 'team') invalidateCalendarEventsCache();
-  await nextTick();
-  requestAnimationFrame(() => {
-    const api = fcRef.value?.getApi();
-    if (!api) return;
-    if (prev === 'team') api.updateSize();
-    api.changeView(v);
-    api.gotoDate(navDate.value);
-    requestAnimationFrame(() => api.updateSize());
-  });
 }
 
 watch(
-  () => calStore.scope,
-  async (s) => {
-    invalidateCalendarEventsCache();
-    if (s === 'team' && !canViewTeam.value) calStore.setScope('mine');
-    if (s === 'mine' && viewMode.value === 'team') await setViewMode('timeGridWeek');
-    fcRef.value?.getApi()?.refetchEvents();
+  [authReady, canReadCalendar, viewMode, navDate, () => calStore.scope],
+  async () => {
+    if (!authReady.value || !canReadCalendar.value) return;
+    if (calStore.scope === 'team' && !canViewTeam.value) {
+      calStore.setScope('mine');
+      return;
+    }
+    if (viewMode.value === 'team') await loadTeamDay();
+    else await ensureEventsLoaded(false);
   },
   { immediate: true },
 );
-
-watch([navDate, () => calStore.scope], () => {
-  if (viewMode.value === 'team') void loadTeamDay();
-});
 
 watch(
   [navDate, viewMode, displayRangeTitle],
@@ -538,7 +782,14 @@ watch(
         view: 'team',
         title: displayRangeTitle.value,
       });
+      return;
     }
+    const { from, toExclusive } = effectiveFetchRange(viewMode.value, navDate.value);
+    const endInc = new Date(toExclusive.getTime() - 86400000);
+    setAssistantCalendarViewportRange(from, endInc, {
+      view: viewMode.value,
+      title: displayRangeTitle.value,
+    });
   },
   { immediate: true },
 );
@@ -547,225 +798,76 @@ watch(searchQ, (q) => {
   if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
   searchDebounceTimer = setTimeout(() => {
     filterSearchQ.value = q;
-    fcRef.value?.getApi()?.refetchEvents();
     searchDebounceTimer = null;
   }, 150);
 });
 
 watch(
-  calFilters,
-  () => {
-    fcRef.value?.getApi()?.refetchEvents();
+  () => calStore.scope,
+  (s) => {
+    if (s === 'mine' && viewMode.value === 'team') setViewMode('mes');
   },
-  { deep: true },
 );
 
-function clearDayOverflowDialog() {
-  dayOverflowRows.value = [];
-  dayOverflowDate.value = null;
+function selectDay(d: Date) {
+  navDate.value = d;
+  if (viewMode.value !== 'team') viewMode.value = 'hoy';
 }
 
-function handleMoreLinkClick(info: { date: Date; allSegs: Array<{ event: EventApi }>; jsEvent: UIEvent }) {
-  info.jsEvent.preventDefault();
-  dayOverflowDate.value = info.date;
-  const seen = new Set<string>();
-  const rows: { id: string; title: string }[] = [];
-  for (const seg of info.allSegs) {
-    const ev = seg.event;
-    const id = String(ev.id);
-    if (seen.has(id)) continue;
-    seen.add(id);
-    rows.push({ id, title: (ev.title || '').trim() || t('globalCalendar.untitledActivity') });
-  }
-  dayOverflowRows.value = rows;
-  showDayOverflowDialog.value = true;
-}
-
-function onDayOverflowRowClick(row: { id: string; title: string }) {
-  const raw = rawEvents.value.find((r) => r.id === row.id);
+function openActuacion(a: Actuacion) {
+  const raw = rawEvents.value.find((r) => r.id === a.id);
   if (raw) {
     selectedApiEvent.value = raw;
     drawerVisible.value = true;
-    showDayOverflowDialog.value = false;
-    clearDayOverflowDialog();
-    return;
-  }
-  const api = fcRef.value?.getApi();
-  const fe = api?.getEventById(row.id);
-  if (fe) {
-    const xp = fe.extendedProps as Record<string, unknown>;
-    selectedApiEvent.value = {
-      id: String(fe.id),
-      source: String(xp.source || 'workflow'),
-      title: fe.title || '',
-      start: fe.start?.toISOString() || '',
-      end: fe.end?.toISOString() || '',
-      allDay: !!fe.allDay,
-      extendedProps: { ...xp },
-    };
-    drawerVisible.value = true;
-    showDayOverflowDialog.value = false;
-    clearDayOverflowDialog();
   }
 }
 
-async function handleReschedule(arg: EventDropArg | { event: EventApi; revert: () => void }) {
-  const raw = String(arg.event.id);
-  if (!parseActivityIdFromEventId(raw) && !parseWorkflowItemIdFromEventId(raw) && !/^[0-9a-f-]{36}$/i.test(raw)) {
-    arg.revert();
-    return;
-  }
-  try {
-    await apiClient.patch(`/calendar/events/${encodeURIComponent(raw)}/reschedule`, {
-      startDate: arg.event.start?.toISOString(),
-      dueDate: arg.event.end?.toISOString(),
-      allDay: arg.event.allDay,
-    });
-    invalidateCalendarEventsCache();
-    await fcRef.value?.getApi()?.refetchEvents();
-  } catch {
-    arg.revert();
-  }
+function openComposerForExpediente(exp: Expediente) {
+  composerPresetTrackableId.value = exp.id;
+  composerDay.value = navDate.value;
+  showComposer.value = true;
 }
 
-function buildFcOptions(): CalendarOptions {
-  const initial =
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches ? 'listWeek' : 'dayGridMonth';
-  return {
-    plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
-    initialView: initial,
-    headerToolbar: false,
-    locale: i18nLocale.value.startsWith('es') ? esLocale : 'en',
-    height: '100%',
-    fixedWeekCount: true,
-    expandRows: true,
-    dayMaxEvents: 3,
-    moreLinkClick: handleMoreLinkClick,
-    editable: canUpdate.value,
-    eventStartEditable: canUpdate.value,
-    eventDurationEditable: canUpdate.value,
-    selectable: canCreate.value,
-    selectMirror: true,
-    events: (info, successCallback, failureCallback) => {
-      void (async () => {
-        try {
-          const rangeKey = `${info.start.toISOString()}__${info.end.toISOString()}`;
-          if (rangeKey !== lastEventsFetchKey) {
-            await fetchEventsRange(info.start, info.end);
-            lastEventsFetchKey = rangeKey;
-          }
-          successCallback(filterEvents(rawEvents.value).map(apiEventToFullCalendar));
-        } catch (e: unknown) {
-          failureCallback(e instanceof Error ? e : new Error(String(e)));
-        }
-      })();
-    },
-    datesSet: (arg: DatesSetArg) => {
-      rangeTitle.value = arg.view.title;
-      navDate.value = arg.view.calendar.getDate();
-      if (viewMode.value !== 'team') {
-        setAssistantCalendarViewportFromFc(arg);
-      }
-    },
-    dateClick: (info) => {
-      composerDay.value = info.date;
-      showComposer.value = true;
-    },
-    eventClick: (info: EventClickArg) => {
-      const raw = rawEvents.value.find((r) => r.id === info.event.id);
-      if (raw) {
-        selectedApiEvent.value = raw;
-        drawerVisible.value = true;
-        return;
-      }
-      const xp = info.event.extendedProps as Record<string, unknown>;
-      selectedApiEvent.value = {
-        id: String(info.event.id),
-        source: String(xp.source || 'workflow'),
-        title: info.event.title || '',
-        start: info.event.start?.toISOString() || '',
-        end: info.event.end?.toISOString() || '',
-        allDay: !!info.event.allDay,
-        extendedProps: { ...xp },
-      };
-      drawerVisible.value = true;
-    },
-    select: (arg) => {
-      composerDay.value = arg.start;
-      showComposer.value = true;
-      arg.view.calendar.unselect();
-    },
-    eventDrop: async (arg: EventDropArg) => {
-      await handleReschedule(arg);
-    },
-    eventResize: async (arg) => {
-      await handleReschedule(arg as unknown as EventDropArg);
-    },
-  };
-}
-
-const fcOptions = shallowRef<CalendarOptions>(buildFcOptions());
-
-watch([canUpdate, canCreate, i18nLocale], () => {
-  fcOptions.value = buildFcOptions();
-  void nextTick(() => {
-    fcRef.value?.getApi()?.updateSize();
-  });
-});
-
-function onViewModeSelect(v: GridViewMode) {
-  void setViewMode(v);
+function onViewModeSelect(v: CalViewMode) {
+  setViewMode(v);
 }
 
 function calendarPrev() {
-  if (viewMode.value === 'team') {
-    const d = new Date(navDate.value);
-    d.setDate(d.getDate() - 1);
-    navDate.value = d;
-    void loadTeamDay();
-    return;
-  }
-  fcRef.value?.getApi()?.prev();
+  const d = new Date(navDate.value);
+  if (viewMode.value === 'team') d.setDate(d.getDate() - 1);
+  else if (viewMode.value === 'mes' || viewMode.value === 'expediente') d.setMonth(d.getMonth() - 1);
+  else if (viewMode.value === 'semana') d.setDate(d.getDate() - 7);
+  else d.setDate(d.getDate() - 1);
+  navDate.value = d;
 }
 
 function calendarNext() {
-  if (viewMode.value === 'team') {
-    const d = new Date(navDate.value);
-    d.setDate(d.getDate() + 1);
-    navDate.value = d;
-    void loadTeamDay();
-    return;
-  }
-  fcRef.value?.getApi()?.next();
+  const d = new Date(navDate.value);
+  if (viewMode.value === 'team') d.setDate(d.getDate() + 1);
+  else if (viewMode.value === 'mes' || viewMode.value === 'expediente') d.setMonth(d.getMonth() + 1);
+  else if (viewMode.value === 'semana') d.setDate(d.getDate() + 7);
+  else d.setDate(d.getDate() + 1);
+  navDate.value = d;
 }
 
 function calendarToday() {
   navDate.value = new Date();
-  if (viewMode.value === 'team') {
-    void loadTeamDay();
-    return;
-  }
-  fcRef.value?.getApi()?.today();
 }
 
 function onSidebarDate(d: Date) {
   navDate.value = d;
-  if (viewMode.value === 'team') {
-    void loadTeamDay();
-    return;
-  }
-  fcRef.value?.getApi()?.gotoDate(d);
 }
 
 function openComposer() {
+  composerPresetTrackableId.value = null;
   composerDay.value = navDate.value;
   showComposer.value = true;
 }
 
 function onCreated() {
-  invalidateCalendarEventsCache();
-  void fcRef.value?.getApi()?.refetchEvents();
+  invalidateFetch();
   if (viewMode.value === 'team') void loadTeamDay();
+  else void ensureEventsLoaded(true);
 }
 
 function onTimelineSelect(ev: ApiCalendarEvent) {
@@ -774,23 +876,23 @@ function onTimelineSelect(ev: ApiCalendarEvent) {
 }
 
 function onDrawerUpdated() {
-  invalidateCalendarEventsCache();
-  void fcRef.value?.getApi()?.refetchEvents();
+  invalidateFetch();
   if (viewMode.value === 'team') void loadTeamDay();
+  else void ensureEventsLoaded(true);
 }
 
 const shortcutHandlers = ref({
   onMonth: () => {
-    void setViewMode('dayGridMonth');
+    setViewMode('mes');
   },
   onWeek: () => {
-    void setViewMode('timeGridWeek');
+    setViewMode('semana');
   },
   onDay: () => {
-    void setViewMode('timeGridDay');
+    setViewMode('hoy');
   },
   onAgenda: () => {
-    void setViewMode('listWeek');
+    setViewMode('expediente');
   },
   onToday: () => calendarToday(),
   onNew: () => {
@@ -811,7 +913,6 @@ useCalendarShortcuts(shortcutHandlers, ref(true));
 
 onMounted(async () => {
   filterSearchQ.value = searchQ.value;
-  fcReady.value = true;
   if (!canReadCalendar.value) return;
   try {
     const { data: tData } = await apiClient.get('/trackables');
@@ -832,87 +933,315 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Evita scroll vertical interno en vista mes: las filas se reparten con expandRows. */
-.global-calendar-fc :deep(.fc) {
-  height: 100% !important;
-  /* Escala ligeramente el contenido del calendario según ancho/alto de ventana. */
-  font-size: clamp(0.7rem, 0.2vw + 0.65rem, 0.875rem);
-}
-.global-calendar-fc :deep(.fc-scroller) {
-  overflow: hidden !important;
-}
-.global-calendar-fc :deep(.fc-daygrid-body) {
-  width: 100% !important;
+.cal-redesign--product {
+  container-type: inline-size;
+  container-name: cal-redesign-product;
 }
 
-/* Cabecera de días (vista mes) */
-.global-calendar-fc :deep(.fc-col-header-cell) {
-  padding: 0.35rem 0.15rem;
-  font-weight: 600;
-  line-height: 1.2;
+.cal-redesign__toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-raised);
+  flex-shrink: 0;
+  overflow: hidden;
 }
-.global-calendar-fc :deep(.fc-col-header-cell-cushion) {
-  padding: 0.1rem 0.15rem;
+/* ─── PRIMARY HEADER: banda de tabs edge-to-edge, sin padding vertical ─── */
+.cal-redesign__toolbar-primary {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: stretch;        /* hijos se estiran al 100% de alto */
+  justify-content: flex-start;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0;                  /* sin padding — los botones van borde a borde */
+  border-bottom: 1px solid var(--surface-border);
+  background: color-mix(in srgb, var(--surface-sunken) 88%, var(--surface-raised));
+}
+/* Lead: solo aparece con chip de conflictos; sin padding cuando está vacío */
+.cal-redesign__toolbar-primary-lead {
+  flex: 0 0 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* Sin padding: si está vacío ocupa 0px. */
+}
+/* El chip de conflictos lleva su propio padding */
+.cal-redesign__toolbar-track {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px 10px;
+  min-width: 0;
+  max-width: 100%;
+  padding-inline: 14px;
+  padding-block: 8px;
+}
+/* Tail: ocupa todo el ancho restante y se estira */
+.cal-redesign__toolbar-primary-tail {
+  flex: 1 1 0%;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
 }
 
-/* Celdas y números de día */
-.global-calendar-fc :deep(.fc-daygrid-day-frame) {
+/* toolbar-quick: sin caja propia, sólo layout de tabs */
+.cal-redesign__toolbar-quick {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+}
+.cal-redesign__toolbar-quick-end {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: stretch;
+}
+.cal-redesign__toolbar-quick-start {
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: stretch;
+}
+/* Separador vertical: de borde a borde de la banda */
+.cal-redesign__toolbar-quick-sep {
+  align-self: stretch;
+  width: 1px;
   min-height: 0;
-}
-.global-calendar-fc :deep(.fc-daygrid-day-number) {
-  padding: 0.1rem 0.25rem 0.15rem;
-  font-size: 0.95em;
-}
-
-/* Eventos en rejilla (mes) */
-.global-calendar-fc :deep(.fc-h-event) {
-  line-height: 1.15;
-  font-size: 0.88em;
-  margin-top: 1px;
-  border-radius: 0.2rem;
-}
-.global-calendar-fc :deep(.fc-h-event .fc-event-main) {
-  padding: 0 0.1rem 0.05rem;
-}
-.global-calendar-fc :deep(.fc-daygrid-more-link) {
-  font-size: 0.85em;
-  padding: 0 0.1rem;
+  margin: 0;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--surface-border) 92%, transparent);
 }
 
-/* Semana / día: reloj y slots un poco más compactos */
-.global-calendar-fc :deep(.fc-timegrid-axis-cushion) {
-  font-size: 0.8em;
+/* ─── TABS INTEGRADOS: SelectButton sin caja, botones al 100% de alto ─── */
+.cal-redesign__views,
+.cal-redesign__scope {
+  align-self: stretch;
+  display: flex;
+  align-items: stretch;
 }
-.global-calendar-fc :deep(.fc-timegrid-slot-label) {
-  font-size: 0.78em;
-  vertical-align: top;
+.cal-redesign__toolbar-quick .cal-redesign__scope :deep(.p-selectbutton),
+.cal-redesign__toolbar-quick .cal-redesign__views :deep(.p-selectbutton) {
+  display: flex;
+  align-items: stretch;
+  min-height: 2.75rem;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 0 !important;
+  flex-wrap: nowrap;
+  gap: 0;
+  overflow: visible;
 }
-.global-calendar-fc :deep(.fc-timegrid-col-events) {
-  font-size: 0.9em;
+/* Vistas: ancho natural (no estiradas), alineadas al inicio */
+.cal-redesign__toolbar-quick .cal-redesign__views :deep(.p-selectbutton) {
+  justify-content: flex-start;
+}
+/* Cada tab: sin radius, sin borde, tamaño propio, llena el alto completo */
+.cal-redesign__toolbar-quick :deep(.p-togglebutton),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton:first-child),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton:last-child),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton:first-of-type),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton:last-of-type) {
+  align-self: stretch;
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 2.75rem;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.cal-redesign__toolbar-quick :deep(.p-togglebutton-checked),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton-checked:first-child),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton-checked:last-child) {
+  border-radius: 0 !important;
+  /* Misma base que la fila de filtros / toolbar-actions (surface-raised). */
+  background: var(--surface-raised) !important;
+  color: var(--fg-default) !important;
+  border: none !important;
+  box-shadow: inset 0 0 0 1px var(--surface-border) !important;
+}
+.cal-redesign__toolbar-quick :deep(.p-togglebutton:not(.p-togglebutton-checked)) {
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--p-togglebutton-color, var(--fg-default)) !important;
+}
+/* El span interno (Aura) no debe pintar “pastilla” redondeada encima del botón */
+.cal-redesign__toolbar-quick :deep(.p-togglebutton .p-togglebutton-content),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton-checked .p-togglebutton-content) {
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+/* El contenido ocupa el 100% del botón sin huecos */
+.cal-redesign__toolbar-quick :deep(.p-togglebutton-content) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  width: 100%;
+  padding-block: 0;
+  padding-inline: 0.6rem 0.7rem;
+}
+.cal-redesign__add-btn.cal-redesign__add-btn {
+  gap: 0.3rem;
+  padding-block: 0.2rem;
+  padding-inline: 0.4rem 0.5rem;
+  font-size: 11px;
+  min-height: 28px;
+}
+.cal-redesign__add-btn :deep(.p-button-icon) {
+  font-size: 0.75rem;
+}
+.cal-redesign__add-btn :deep(.p-button-label) {
+  font-weight: 600;
+}
+.cal-redesign__toolbar-actions {
+  display: grid;
+  grid-template-columns: minmax(140px, min(22rem, 360px)) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 6px 12px 8px;
+  background: var(--surface-raised);
+  overflow: visible;
+}
+.cal-redesign__toolbar-add {
+  justify-self: end;
+  width: max-content;
+}
+.cal-redesign__toolbar-filters-inline {
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+.cal-redesign__search-field {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+}
+.cal-redesign__search-field :deep(.p-inputtext) {
+  line-height: 1.25;
+}
+.cal-redesign__search {
+  width: 100%;
+  min-width: 0;
+}
+.cal-redesign__views {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.cal-redesign__view-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+.cal-redesign__view-dayball {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  border-radius: 9999;
+  font-size: 8.5px;
+  font-weight: 700;
+  font-feature-settings: 'tnum' 1;
+  line-height: 1;
+  box-sizing: border-box;
+  border: 1.5px solid color-mix(in srgb, currentColor 55%, transparent);
+  color: inherit;
+  opacity: 0.92;
+}
+.cal-redesign__views :deep(.p-togglebutton-checked) .cal-redesign__view-dayball {
+  background: color-mix(in srgb, var(--brand-zafiro, var(--accent)) 14%, var(--surface-raised));
+  color: var(--brand-zafiro, var(--accent));
+  border-color: color-mix(in srgb, var(--brand-zafiro, var(--accent)) 40%, var(--surface-border));
+  opacity: 1;
 }
 
-/* Vista agenda (lista) */
-.global-calendar-fc :deep(.fc-list-day-cushion),
-.global-calendar-fc :deep(.fc-list-event-time) {
-  font-size: 0.95em;
-}
-.global-calendar-fc :deep(.fc-list-event-title) {
-  line-height: 1.3;
-  font-size: 0.95em;
-}
-
-/* Pantallas estrejas o poco altas: un escalón más compacto */
-@media (max-width: 1400px) {
-  .global-calendar-fc :deep(.fc) {
-    font-size: clamp(0.65rem, 0.18vw + 0.58rem, 0.8rem);
+@container cal-redesign-product (max-width: 720px) {
+  .cal-redesign__toolbar-primary {
+    flex-direction: column;
+    min-height: 0;
   }
-}
-@media (max-height: 850px) {
-  .global-calendar-fc :deep(.fc) {
-    font-size: clamp(0.65rem, 0.1vw + 0.6rem, 0.8rem);
+  .cal-redesign__toolbar-primary-lead {
+    padding-block: 6px;
+    width: 100%;
   }
-  .global-calendar-fc :deep(.fc-col-header-cell) {
-    padding: 0.3rem 0.1rem;
+  .cal-redesign__toolbar-primary-tail {
+    width: 100%;
   }
+  .cal-redesign__toolbar-track {
+    flex-wrap: wrap;
+    max-width: none;
+  }
+  .cal-redesign__toolbar-quick {
+    flex-wrap: wrap;
+    align-items: stretch;
+    min-height: 0;
+  }
+  .cal-redesign__toolbar-quick-end {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+  }
+  .cal-redesign__toolbar-quick-sep {
+    flex-basis: 100%;
+    width: 100%;
+    height: 1px;
+    min-height: 1px;
+    min-width: 0;
+    margin: 0;
+    align-self: stretch;
+  }
+  .cal-redesign__toolbar-quick-start {
+    flex: 1 1 100%;
+    width: 100%;
+    min-height: 2.75rem;
+    justify-content: flex-start;
+  }
+  .cal-redesign__toolbar-quick :deep(.p-togglebutton),
+  .cal-redesign__toolbar-quick-start :deep(.p-togglebutton) {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 2.5rem;
+  }
+  .cal-redesign__scope :deep(.p-selectbutton),
+  .cal-redesign__views :deep(.p-selectbutton) {
+    width: 100%;
+    min-height: 2.75rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    row-gap: 2px;
+  }
+  /* toolbar-actions sigue en grid (búsqueda | filtros | agregar) para no separar
+   * filtros y botón cuando el panel producto es estrecho pero el viewport no. */
 }
 </style>

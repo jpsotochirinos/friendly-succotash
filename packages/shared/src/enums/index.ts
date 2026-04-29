@@ -22,6 +22,14 @@ export enum TrackablePartyRole {
   OTHER = 'other',
 }
 
+/** Persona natural vs jurídica en directorio de clientes (DNI / RUC, etc.). */
+export enum ClientKind {
+  /** No clasificado o datos legados. */
+  UNKNOWN = 'unknown',
+  NATURAL = 'natural',
+  LEGAL = 'legal',
+}
+
 export enum MatterType {
   LITIGATION = 'litigation',
   CORPORATE = 'corporate',
@@ -33,6 +41,16 @@ export enum MatterType {
   ADVISORY = 'advisory',
   REAL_ESTATE = 'real_estate',
   OTHER = 'other',
+}
+
+/** Denormalized bucket for expedientes list / KPI chips (persisted on `trackables`). */
+export enum TrackableListingUrgency {
+  OVERDUE = 'overdue',
+  DUE_TODAY = 'due_today',
+  DUE_WEEK = 'due_week',
+  DUE_MONTH = 'due_month',
+  NORMAL = 'normal',
+  NO_DEADLINE = 'no_deadline',
 }
 
 export enum WorkflowItemStatus {

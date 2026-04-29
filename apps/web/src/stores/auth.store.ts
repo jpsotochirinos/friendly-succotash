@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { apiClient } from '../api/client';
@@ -116,9 +117,27 @@ export const useAuthStore = defineStore('auth', () => {
       const { data } = await apiClient.get<AuthUser & { permissions?: string[] }>('/auth/me');
       user.value = data as AuthUser;
       await fetchMyOrganization();
-    } catch {
-      logout();
+    } catch (e) {
+      const status = axios.isAxiosError(e) ? e.response?.status : undefined;
+      if (status === 401 || status === 403) {
+        logout();
+      } else if (import.meta.env.DEV) {
+        console.warn('[auth] fetchMe failed (non-auth); not logging out', e);
+      }
     }
+  }
+
+  /** Keeps Pinia in sync when the axios interceptor refreshes the access token via cookie. */
+  function applyRefreshedAccessToken(newToken: string) {
+    accessToken.value = newToken;
+  }
+
+  /** Clears session without calling POST /auth/logout (refresh already failed). */
+  function clearSessionAfterRefreshFailure() {
+    accessToken.value = null;
+    user.value = null;
+    organization.value = null;
+    localStorage.removeItem('accessToken');
   }
 
   async function refreshTokens() {
@@ -127,8 +146,13 @@ export const useAuthStore = defineStore('auth', () => {
       accessToken.value = data.accessToken;
       localStorage.setItem('accessToken', data.accessToken);
       await fetchMe();
-    } catch {
-      logout();
+    } catch (e) {
+      const status = axios.isAxiosError(e) ? e.response?.status : undefined;
+      if (status === 401 || status === 403) {
+        logout();
+      } else if (import.meta.env.DEV) {
+        console.warn('[auth] refreshTokens failed (non-auth); not logging out', e);
+      }
     }
   }
 
@@ -161,6 +185,8 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     logout,
     fetchMe,
+    applyRefreshedAccessToken,
+    clearSessionAfterRefreshFailure,
     refreshTokens,
     fetchMyOrganization,
     ensureOrganizationLoaded,

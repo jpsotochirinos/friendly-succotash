@@ -1,10 +1,14 @@
-import { Entity, Property, OneToMany, Collection, OptionalProps } from '@mikro-orm/core';
+import { Entity, Property, OneToMany, Collection, OptionalProps, Enum } from '@mikro-orm/core';
+import { ClientKind } from '@tracker/shared';
 import { TenantBaseEntity } from './tenant-base.entity';
 import type { Trackable } from './trackable.entity';
 
 @Entity({ tableName: 'clients' })
 export class Client extends TenantBaseEntity {
   [OptionalProps]?: 'createdAt' | 'updatedAt';
+
+  @Enum({ items: () => ClientKind, default: ClientKind.UNKNOWN })
+  clientKind!: ClientKind;
 
   @Property({ length: 500 })
   name!: string;

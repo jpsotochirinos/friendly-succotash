@@ -1,105 +1,130 @@
 <template>
-  <Dialog
-    v-model:visible="visible"
-    :header="dialogHeader"
-    modal
-    :style="{ width: '720px' }"
-    :breakpoints="{ '768px': '95vw' }"
+  <InformationalDialogBase
+    v-model:visible="open"
+    :variant="dialogVariant"
+    :eyebrow="t('reviewProcessLog.eyebrow')"
+    :title="t('reviewProcessLog.title')"
+    :subject="documentSubject"
+    :message="bodyMessage"
+    :facts="logFacts"
+    icon="pi pi-history"
+    :loading="loading"
+    :close-label="t('common.gotIt')"
+    :close-aria-label="t('common.close')"
   >
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <i class="pi pi-spin pi-spinner text-3xl text-gray-400" />
-    </div>
-
-    <div v-else-if="noData" class="text-center py-12 text-gray-400">
-      <i class="pi pi-info-circle text-4xl mb-3 block" />
-      <span>No hay evaluaciones disponibles para este documento.</span>
-    </div>
-
-    <div v-else-if="log" class="space-y-6">
-      <!-- Overall verdict -->
-      <div class="flex items-center justify-between p-4 rounded-lg" :class="verdictBg">
-        <div class="flex items-center gap-3">
+    <div v-if="log && !loading && !noData" class="review-log-body flex flex-col gap-5">
+      <div
+        class="review-log-verdict flex flex-wrap items-start justify-between gap-4 rounded-xl border px-4 py-3"
+        :class="log.passed ? 'review-log-verdict--ok' : 'review-log-verdict--fail'"
+      >
+        <div class="flex min-w-0 items-start gap-3">
           <i
-            class="text-3xl"
-            :class="log.passed ? 'pi pi-check-circle text-green-600' : 'pi pi-times-circle text-red-500'"
+            class="pi shrink-0 text-2xl"
+            :class="
+              log.passed
+                ? 'pi-check-circle text-emerald-600 dark:text-emerald-400'
+                : 'pi-times-circle text-red-600 dark:text-red-300'
+            "
+            aria-hidden="true"
           />
-          <div>
-            <div class="text-lg font-bold" :class="log.passed ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'">
+          <div class="min-w-0">
+            <p
+              class="m-0 text-base font-semibold leading-snug"
+              :class="
+                log.passed ? 'text-emerald-800 dark:text-emerald-200' : 'text-red-800 dark:text-red-200'
+              "
+            >
               {{ log.verdict }}
-            </div>
-            <div class="text-sm text-gray-600 dark:text-gray-300">
-              Evaluado el {{ formatDate(log.evaluatedAt) }}
-            </div>
+            </p>
+            <p class="m-0 mt-1 text-sm leading-snug text-[var(--fg-muted)]">
+              {{ formatDateIso(log.evaluatedAt) }}
+            </p>
           </div>
         </div>
-        <div class="text-right">
-          <div class="text-3xl font-bold" :class="scoreColor">
+        <div class="shrink-0 text-right">
+          <p
+            class="m-0 max-w-[8rem] text-2xl font-semibold tabular-nums tracking-tight leading-none"
+            :class="scoreStrengthClass(log.overallScore)"
+            style="font-feature-settings: 'tnum' 1, 'lnum' 1"
+          >
             {{ Math.round(log.overallScore * 100) }}%
-          </div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">
-            Umbral: {{ Math.round(log.threshold * 100) }}%
-          </div>
+          </p>
+          <p class="m-0 mt-1 max-w-[10rem] text-xs tabular-nums text-[var(--fg-subtle)]">
+            {{
+              t('reviewProcessLog.thresholdLine', {
+                pct: Math.round(log.threshold * 100),
+              })
+            }}
+          </p>
         </div>
       </div>
 
-      <!-- Narrative summary -->
-      <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div class="flex items-center gap-2 mb-2">
-          <i class="pi pi-book text-gray-500" />
-          <span class="font-semibold text-gray-700 dark:text-gray-200">Resumen</span>
+      <section
+        class="rounded-xl border px-4 py-3"
+        style="border-color: var(--surface-border); background: var(--surface-sunken)"
+      >
+        <div class="mb-2 flex items-center gap-2">
+          <i class="pi pi-book text-sm text-[var(--fg-muted)]" aria-hidden="true" />
+          <span class="rpc-caption-label">{{ t('reviewProcessLog.summaryTitle') }}</span>
         </div>
-        <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+        <p class="m-0 text-sm leading-relaxed text-[var(--fg-muted)]">
           {{ log.narrativeSummary }}
         </p>
-      </div>
+      </section>
 
-      <!-- Process timeline -->
-      <div>
-        <div class="flex items-center gap-2 mb-4">
-          <i class="pi pi-list text-gray-500" />
-          <span class="font-semibold text-gray-700 dark:text-gray-200">Proceso de evaluación</span>
+      <div class="review-log-timeline-section">
+        <div class="mb-3 flex items-center gap-2">
+          <i class="pi pi-list text-sm text-[var(--fg-muted)]" aria-hidden="true" />
+          <span class="rpc-caption-label">{{ t('reviewProcessLog.timelineTitle') }}</span>
         </div>
 
-        <Timeline :value="log.steps" class="pl-2">
+        <Timeline :value="log.steps" class="rpc-timeline-wrapper pl-0">
           <template #marker="{ item }">
-            <span
-              class="flex items-center justify-center w-8 h-8 rounded-full"
-              :class="stepMarkerClass(item.status)"
-            >
-              <i :class="stepIcon(item.status)" class="text-sm" />
+            <span class="rpc-step-marker flex h-8 w-8 items-center justify-center rounded-full" :class="markerTone(item.status)">
+              <i :class="[stepIcon(item.status), 'text-sm']" aria-hidden="true" />
             </span>
           </template>
           <template #content="{ item }">
-            <div class="mb-4 -mt-1">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="font-semibold text-gray-800 dark:text-gray-100">{{ item.label }}</span>
+            <div class="rpc-step-content pb-8 last:!pb-0">
+              <div class="mb-1 flex flex-wrap items-center gap-2 gap-y-1">
+                <span class="text-sm font-semibold leading-snug text-[var(--fg-default)]">{{ item.label }}</span>
                 <Tag
                   v-if="item.score != null"
-                  :value="`${Math.round(item.score * 100)}%`"
-                  :severity="item.status === 'passed' ? 'success' : item.status === 'failed' ? 'danger' : 'secondary'"
-                  class="text-xs"
+                  class="text-[10px] font-semibold uppercase"
+                  :value="`${Math.round(item.score * 100)} %`"
+                  :severity="
+                    item.status === 'passed' ? 'success' : item.status === 'failed' ? 'danger' : 'secondary'
+                  "
                 />
                 <Tag
-                  :value="stepStatusLabel(item.status)"
-                  :severity="item.status === 'passed' ? 'success' : item.status === 'failed' ? 'danger' : 'secondary'"
-                  class="text-xs"
+                  class="text-[10px] font-semibold uppercase"
+                  :value="stepStatusLabelUi(item.status)"
+                  :severity="
+                    item.status === 'passed' ? 'success' : item.status === 'failed' ? 'danger' : 'secondary'
+                  "
                 />
               </div>
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ item.summary }}</p>
+              <p class="mb-2 text-sm leading-snug text-[var(--fg-muted)]">{{ item.summary }}</p>
 
-              <!-- Expandable details -->
               <div v-if="hasExpandableDetails(item)" class="mt-1">
                 <button
-                  class="text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1"
+                  type="button"
+                  class="rpc-expand-btn inline-flex items-center gap-1 rounded-md px-0 py-1 text-[0.8125rem] font-medium text-[var(--accent)] transition-colors hover:underline"
                   @click="toggleExpand(item.name)"
                 >
-                  <i :class="expanded[item.name] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-xs" />
-                  {{ expanded[item.name] ? 'Ocultar detalles' : 'Ver detalles' }}
+                  <i :class="expanded[item.name] ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="text-[10px]" aria-hidden="true" />
+                  {{ expanded[item.name] ? t('reviewProcessLog.expandHide') : t('reviewProcessLog.expandShow') }}
                 </button>
-                <div v-if="expanded[item.name]" class="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded text-sm">
-                  <!-- Spelling details -->
+                <div
+                  v-if="expanded[item.name]"
+                  class="mt-2 rounded-lg border px-3 py-2 text-sm leading-snug"
+                  style="
+                    border-color: var(--surface-border);
+                    background: color-mix(in srgb, var(--surface-app-soft) 88%, var(--surface-sunken));
+                  "
+                >
                   <template v-if="item.name === 'spelling' && item.details.misspelledWords?.length">
-                    <p class="text-gray-500 dark:text-gray-400 mb-1">Palabras con errores:</p>
+                    <p class="mb-1 text-xs text-[var(--fg-muted)]">{{ t('reviewProcessLog.misspelledWords') }}</p>
                     <div class="flex flex-wrap gap-1">
                       <Tag
                         v-for="word in item.details.misspelledWords.slice(0, 20)"
@@ -107,22 +132,27 @@
                         :value="word"
                         severity="warn"
                       />
-                      <span v-if="item.details.misspelledWords.length > 20" class="text-xs text-gray-400 self-center">
-                        y {{ item.details.misspelledWords.length - 20 }} más...
+                      <span v-if="item.details.misspelledWords.length > 20" class="self-center text-xs text-[var(--fg-subtle)]">
+                        {{
+                          t('reviewProcessLog.moreTail', {
+                            n: item.details.misspelledWords.length - 20,
+                          })
+                        }}
                       </span>
                     </div>
                   </template>
 
-                  <!-- Citations details -->
                   <template v-if="item.name === 'citations'">
                     <div v-if="item.details.invalidCitations?.length">
-                      <p class="text-red-600 dark:text-red-400 mb-1">Citas inválidas:</p>
-                      <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
+                      <p class="mb-1 text-xs font-semibold text-red-600 dark:text-red-300">
+                        {{ t('reviewProcessLog.invalidCitations') }}
+                      </p>
+                      <ul class="m-0 list-inside list-disc text-[var(--fg-muted)]">
                         <li v-for="c in item.details.invalidCitations" :key="c">{{ c }}</li>
                       </ul>
                     </div>
-                    <div v-if="item.details.citationsFound?.length">
-                      <p class="text-gray-500 dark:text-gray-400 mb-1 mt-2">Citas encontradas:</p>
+                    <div v-if="item.details.citationsFound?.length" class="mt-3">
+                      <p class="mb-1 text-xs text-[var(--fg-muted)]">{{ t('reviewProcessLog.citationsFound') }}</p>
                       <div class="flex flex-wrap gap-1">
                         <Tag
                           v-for="c in item.details.citationsFound.slice(0, 15)"
@@ -134,34 +164,37 @@
                     </div>
                   </template>
 
-                  <!-- Coherence details -->
                   <template v-if="item.name === 'coherence'">
                     <div v-if="item.details.issues?.length" class="mb-2">
-                      <p class="text-amber-600 dark:text-amber-400 mb-1">Problemas detectados:</p>
-                      <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
+                      <p class="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                        {{ t('reviewProcessLog.issuesDetected') }}
+                      </p>
+                      <ul class="m-0 list-inside list-disc text-[var(--fg-muted)]">
                         <li v-for="issue in item.details.issues" :key="issue">{{ issue }}</li>
                       </ul>
                     </div>
                     <div v-if="item.details.suggestions?.length">
-                      <p class="text-blue-600 dark:text-blue-400 mb-1">Sugerencias:</p>
-                      <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
+                      <p class="mb-1 text-xs font-semibold text-[var(--accent)]">{{ t('reviewProcessLog.suggestions') }}</p>
+                      <ul class="m-0 list-inside list-disc text-[var(--fg-muted)]">
                         <li v-for="sug in item.details.suggestions" :key="sug">{{ sug }}</li>
                       </ul>
                     </div>
                   </template>
 
-                  <!-- References details -->
                   <template v-if="item.name === 'references' && item.details.outdatedReferences?.length">
-                    <p class="text-amber-600 dark:text-amber-400 mb-1">Referencias desactualizadas:</p>
-                    <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
+                    <p class="mb-1 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                      {{ t('reviewProcessLog.outdatedRefs') }}
+                    </p>
+                    <ul class="m-0 list-inside list-disc text-[var(--fg-muted)]">
                       <li v-for="r in item.details.outdatedReferences" :key="r">{{ r }}</li>
                     </ul>
                   </template>
 
-                  <!-- Structure details -->
                   <template v-if="item.name === 'structure' && item.details.missingSections?.length">
-                    <p class="text-red-600 dark:text-red-400 mb-1">Secciones faltantes:</p>
-                    <ul class="list-disc list-inside text-gray-600 dark:text-gray-400">
+                    <p class="mb-1 text-xs font-semibold text-red-600 dark:text-red-300">
+                      {{ t('reviewProcessLog.missingSections') }}
+                    </p>
+                    <ul class="m-0 list-inside list-disc text-[var(--fg-muted)]">
                       <li v-for="s in item.details.missingSections" :key="s">{{ s }}</li>
                     </ul>
                   </template>
@@ -172,20 +205,17 @@
         </Timeline>
       </div>
     </div>
-
-    <template #footer>
-      <Button label="Cerrar" icon="pi pi-times" text @click="visible = false" />
-    </template>
-  </Dialog>
+  </InformationalDialogBase>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, computed, reactive } from 'vue';
-import Dialog from 'primevue/dialog';
+import { useI18n } from 'vue-i18n';
 import Timeline from 'primevue/timeline';
 import Tag from 'primevue/tag';
-import Button from 'primevue/button';
 import { useToast } from 'primevue/usetoast';
+import InformationalDialogBase from '@/components/common/InformationalDialogBase.vue';
+import type { InformationalDialogFact } from '@/components/common/InformationalDialogBase.vue';
 import { apiClient } from '@/api/client';
 
 interface LogStep {
@@ -214,37 +244,59 @@ const props = defineProps<{
   documentTitle?: string;
 }>();
 
-const visible = defineModel<boolean>('visible');
+const open = defineModel<boolean>('visible', { required: true });
 const toast = useToast();
+const { t, locale } = useI18n();
 
 const log = ref<EvaluationLog | null>(null);
 const loading = ref(false);
 const noData = ref(false);
 const expanded = reactive<Record<string, boolean>>({});
 
-const dialogHeader = computed(() =>
-  props.documentTitle
-    ? `Log de revisión — ${props.documentTitle}`
-    : 'Log de revisión',
+const documentSubject = computed(() =>
+  props.documentTitle?.trim() ? props.documentTitle.trim() : undefined,
 );
 
-const verdictBg = computed(() =>
-  log.value?.passed
-    ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-    : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800',
-);
-
-const scoreColor = computed(() => {
-  if (!log.value) return 'text-gray-400';
-  if (log.value.overallScore >= 0.8) return 'text-green-600 dark:text-green-400';
-  if (log.value.overallScore >= 0.5) return 'text-amber-600 dark:text-amber-400';
-  return 'text-red-600 dark:text-red-400';
+const dialogVariant = computed(() => {
+  if (!log.value) return 'neutral';
+  return log.value.passed ? 'success' : 'warning';
 });
 
-function stepMarkerClass(status: string) {
-  if (status === 'passed') return 'bg-green-100 dark:bg-green-900/40 text-green-600';
-  if (status === 'failed') return 'bg-red-100 dark:bg-red-900/40 text-red-500';
-  return 'bg-gray-100 dark:bg-gray-700 text-gray-400';
+const bodyMessage = computed(() => {
+  if (loading.value) return undefined;
+  if (noData.value) return t('reviewProcessLog.noData');
+  return undefined;
+});
+
+const logFacts = computed<InformationalDialogFact[]>(() => {
+  const l = log.value;
+  if (!l || loading.value || noData.value) return [];
+  return [
+    {
+      label: t('reviewProcessLog.factScore'),
+      value: `${Math.round(l.overallScore * 100)} %`,
+    },
+    {
+      label: t('reviewProcessLog.factThreshold'),
+      value: `${Math.round(l.threshold * 100)} %`,
+    },
+    {
+      label: t('reviewProcessLog.factEvaluatedAt'),
+      value: formatDateIso(l.evaluatedAt),
+    },
+  ];
+});
+
+function scoreStrengthClass(score: number) {
+  if (score >= 0.8) return 'text-emerald-600 dark:text-emerald-400';
+  if (score >= 0.5) return 'text-amber-600 dark:text-amber-400';
+  return 'text-red-600 dark:text-red-300';
+}
+
+function markerTone(status: string) {
+  if (status === 'passed') return 'rpc-step-marker--ok';
+  if (status === 'failed') return 'rpc-step-marker--fail';
+  return 'rpc-step-marker--skip';
 }
 
 function stepIcon(status: string) {
@@ -253,19 +305,23 @@ function stepIcon(status: string) {
   return 'pi pi-minus';
 }
 
-function stepStatusLabel(status: string) {
-  if (status === 'passed') return 'Aprobado';
-  if (status === 'failed') return 'No aprobado';
-  return 'Omitido';
+function stepStatusLabelUi(status: string): string {
+  if (status === 'passed') return t('reviewProcessLog.stepPassed');
+  if (status === 'failed') return t('reviewProcessLog.stepFailed');
+  return t('reviewProcessLog.stepSkipped');
 }
 
 function hasExpandableDetails(item: LogStep): boolean {
   const d = item.details;
-  if (item.name === 'spelling') return (d.misspelledWords as string[])?.length > 0;
-  if (item.name === 'citations') return (d.citationsFound as string[])?.length > 0 || (d.invalidCitations as string[])?.length > 0;
-  if (item.name === 'coherence') return (d.issues as string[])?.length > 0 || (d.suggestions as string[])?.length > 0;
-  if (item.name === 'references') return (d.outdatedReferences as string[])?.length > 0;
-  if (item.name === 'structure') return (d.missingSections as string[])?.length > 0;
+  if (item.name === 'spelling') return ((d.misspelledWords as string[])?.length ?? 0) > 0;
+  if (item.name === 'citations')
+    return (
+      ((d.citationsFound as string[])?.length ?? 0) > 0 || ((d.invalidCitations as string[])?.length ?? 0) > 0
+    );
+  if (item.name === 'coherence')
+    return ((d.issues as string[])?.length ?? 0) > 0 || ((d.suggestions as string[])?.length ?? 0) > 0;
+  if (item.name === 'references') return ((d.outdatedReferences as string[])?.length ?? 0) > 0;
+  if (item.name === 'structure') return ((d.missingSections as string[])?.length ?? 0) > 0;
   return false;
 }
 
@@ -273,11 +329,12 @@ function toggleExpand(name: string) {
   expanded[name] = !expanded[name];
 }
 
-function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('es-PE', {
+function formatDateIso(dateStr: string) {
+  const loc = locale.value === 'en' ? 'en-GB' : 'es-PE';
+  return new Date(dateStr).toLocaleString(loc, {
     year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+    month: 'short',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
   });
@@ -288,24 +345,89 @@ async function fetchLog() {
   loading.value = true;
   noData.value = false;
   log.value = null;
-  Object.keys(expanded).forEach(k => delete expanded[k]);
+  Object.keys(expanded).forEach((k) => delete expanded[k]);
 
   try {
     const { data } = await apiClient.get(`/documents/${props.documentId}/evaluation-log`);
     if (data.message && !data.steps) {
       noData.value = true;
     } else {
-      log.value = data;
+      log.value = data as EvaluationLog;
     }
   } catch {
-    toast.add({ severity: 'error', summary: 'Error', detail: 'No se pudo cargar el log de evaluación.', life: 4000 });
+    toast.add({
+      severity: 'error',
+      summary: t('reviewQueue.toastErrorSummary'),
+      detail: t('reviewProcessLog.toastLoadFail'),
+      life: 4000,
+    });
     noData.value = true;
   } finally {
     loading.value = false;
   }
 }
 
-watch(visible, (val) => {
-  if (val && props.documentId) fetchLog();
+watch(open, (val) => {
+  if (val && props.documentId) void fetchLog();
 });
 </script>
+
+<style scoped>
+.review-log-verdict {
+  transition: border-color 0.15s ease;
+}
+
+.review-log-verdict--ok {
+  border-color: color-mix(in srgb, #10b981 35%, var(--surface-border));
+  background: color-mix(in srgb, #10b981 10%, var(--surface-sunken));
+}
+
+.review-log-verdict--fail {
+  border-color: color-mix(in srgb, #dc2626 35%, var(--surface-border));
+  background: color-mix(in srgb, #dc2626 8%, var(--surface-sunken));
+}
+
+.rpc-step-marker--ok {
+  border: 1px solid color-mix(in srgb, #10b981 40%, var(--surface-border));
+  background: color-mix(in srgb, #10b981 12%, var(--surface-sunken));
+  color: #047857;
+}
+
+html.dark .rpc-step-marker--ok {
+  border-color: color-mix(in srgb, #34d399 42%, transparent);
+  color: #6ee7b7;
+}
+
+.rpc-step-marker--fail {
+  border: 1px solid color-mix(in srgb, #dc2626 40%, var(--surface-border));
+  background: color-mix(in srgb, #dc2626 10%, var(--surface-sunken));
+  color: #b91c1c;
+}
+
+html.dark .rpc-step-marker--fail {
+  border-color: color-mix(in srgb, #f87171 35%, transparent);
+  color: #fca5a5;
+}
+
+.rpc-step-marker--skip {
+  border: 1px solid var(--surface-border);
+  background: var(--surface-sunken);
+  color: var(--fg-subtle);
+}
+
+.rpc-caption-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+:deep(.rpc-timeline-wrapper .p-timeline-event-connector) {
+  background: var(--surface-border-strong);
+}
+
+.rpc-step-content :deep(.p-timeline-event-marker) {
+  margin-top: 0.125rem;
+}
+</style>

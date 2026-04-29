@@ -42,6 +42,7 @@ import { BlueprintResolverService } from '../blueprints/blueprint-resolver.servi
 import { allocateWorkflowItemNumbers } from '../workflow-items/workflow-item-number.util';
 import { randomUUID } from 'node:crypto';
 import { DeadlineEngineService } from './deadline-engine.service';
+import { refreshTrackableListingSnapshot } from '../trackables/trackable-listing-snapshot.util';
 
 /** Not reverted, not done, not cancelled — must inherit or close before advancing the stage. */
 function isActivityOpenForStageAdvance(a: ActivityInstance): boolean {
@@ -345,6 +346,11 @@ export class ProcessTracksService {
       organization: organizationId,
     } as any);
     await this.em.flush();
+    await this.em.populate(act, ['trackable'] as any);
+    const tid = (act as any).trackable?.id;
+    if (tid) {
+      await refreshTrackableListingSnapshot(this.em, organizationId, String(tid));
+    }
     await this.em.populate(comment, ['user'] as any);
     const u = comment.user as { id: string; email?: string; firstName?: string; lastName?: string };
     return {
@@ -1233,7 +1239,7 @@ export class ProcessTracksService {
         organization: organizationId,
         stageInstance: { processTrack: { id: processTrackId, organization: organizationId } },
       },
-      { populate: ['stageInstance', 'secondaryAssignees'] },
+      { populate: ['stageInstance', 'secondaryAssignees', 'trackable'] },
     );
     if (!a) throw new NotFoundException();
     const fromCat = a.workflowStateCategory;
@@ -1393,6 +1399,10 @@ export class ProcessTracksService {
       }
     }
     await this.em.flush();
+    const trackableId = (a as any).trackable?.id ?? (a as any).trackable;
+    if (trackableId) {
+      await refreshTrackableListingSnapshot(this.em, organizationId, String(trackableId));
+    }
     if (
       userId
       && body.stageInstanceId !== undefined

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import { Client } from '@tracker/db';
+import { ClientKind } from '@tracker/shared';
 import { BaseCrudService, PaginationQuery } from '../../common/services/base-crud.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -14,6 +15,7 @@ export class ClientsService extends BaseCrudService<Client> {
   async createForOrg(dto: CreateClientDto, organizationId: string): Promise<Client> {
     const client = this.em.create(Client, {
       ...dto,
+      clientKind: dto.clientKind ?? ClientKind.UNKNOWN,
       organization: organizationId,
     } as any);
     await this.em.flush();

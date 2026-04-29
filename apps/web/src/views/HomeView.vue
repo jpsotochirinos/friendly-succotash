@@ -2,13 +2,13 @@
   <section class="flex flex-col gap-6 sm:gap-8">
     <!-- Cabecera (hero alineado con landing: gradiente Zafiro → Real) -->
     <div
-      class="bg-brand-gradient flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 p-5 sm:p-6 rounded-2xl border border-white/15 shadow-brand-lg text-brand-papel"
+      class="bg-brand-gradient flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 p-5 sm:p-6 rounded-2xl border border-white/15 shadow-brand-lg text-[var(--fg-on-brand)]"
     >
       <div class="min-w-0">
-        <h1 class="text-2xl sm:text-3xl font-semibold tracking-tight leading-tight text-brand-papel">
+        <h1 class="text-xl sm:text-2xl font-semibold tracking-tight leading-tight text-[var(--fg-on-brand)]">
           {{ headline }}
         </h1>
-        <p class="mt-2 text-sm text-brand-papel/85">
+        <p class="mt-2 text-sm" style="color: color-mix(in srgb, var(--fg-on-brand) 85%, transparent)">
           {{ formattedDate }}
         </p>
       </div>
@@ -40,19 +40,42 @@
       </button>
     </div>
 
-    <!-- Métricas -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <!-- Métricas (patrón kpi-card: --kpi-accent, icon wrap, números tabular) -->
+    <div class="home-kpi-wrap grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" role="region" :aria-label="$t('home.kpiSectionAria')">
       <div
-        v-for="stat in statsDisplay"
+        v-for="(stat, idx) in statsDisplay"
         :key="stat.labelKey"
-        class="app-card p-4 sm:p-5 flex flex-col gap-1 min-h-[5.5rem] justify-center"
+        class="home-kpi-card relative overflow-hidden rounded-2xl border p-4 sm:p-5 text-left shadow-sm"
+        :style="{ '--stagger-delay': `${idx * 75}ms`, '--kpi-accent': stat.accent }"
       >
-        <span class="text-2xl sm:text-3xl font-semibold tabular-nums tracking-tight text-fg">
-          {{ stat.value }}
-        </span>
-        <span class="text-xs sm:text-sm leading-snug text-fg-muted">
-          {{ $t(stat.labelKey) }}
-        </span>
+        <span
+          v-if="stat.pulse"
+          class="pointer-events-none absolute right-3 top-3 h-2 w-2 rounded-full bg-amber-500"
+          aria-hidden="true"
+        />
+        <div class="relative flex min-h-[4.75rem] items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <p class="home-kpi-label m-0 text-[10px] font-semibold uppercase tracking-[0.08em]" style="color: var(--fg-muted)">
+              {{ $t(stat.labelKey) }}
+            </p>
+            <p
+              class="home-kpi-number m-0 mt-2 text-3xl font-semibold tracking-tight sm:text-[2.125rem]"
+              :style="{
+                fontFeatureSettings: '\'tnum\' 1, \'lnum\' 1',
+                fontVariantNumeric: 'tabular-nums lining-nums',
+                color: stat.isPlaceholder ? 'var(--fg-subtle)' : 'var(--kpi-accent)',
+              }"
+            >
+              {{ stat.value }}
+            </p>
+          </div>
+          <span
+            class="home-kpi-icon-wrap inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm"
+            aria-hidden="true"
+          >
+            <i :class="`${stat.icon} text-sm`" />
+          </span>
+        </div>
       </div>
     </div>
 
@@ -77,12 +100,13 @@
           <ul v-if="loading" class="px-4 py-6 sm:px-5">
             <li class="text-sm text-fg-subtle">{{ $t('app.loading') }}</li>
           </ul>
-          <ul
+          <div
             v-else-if="priorityTasks.length === 0"
-            class="px-4 py-6 sm:px-5 text-sm text-fg-subtle"
+            class="flex flex-col items-center gap-3 px-4 py-12 text-center sm:px-5"
           >
-            {{ $t('home.emptyPriority') }}
-          </ul>
+            <i class="pi pi-inbox text-4xl opacity-40" style="color: var(--fg-subtle);" aria-hidden="true" />
+            <p class="m-0 max-w-md text-sm leading-relaxed text-fg-muted">{{ $t('home.emptyPriority') }}</p>
+          </div>
           <ul v-else class="divide-y divide-surface-border">
             <li
               v-for="item in priorityTasks"
@@ -99,7 +123,7 @@
                 </p>
                 <p
                   class="text-xs mt-0.5"
-                  :class="isDueOverdue(item.due_date) ? 'text-accent-hover' : 'text-fg-subtle'"
+                  :class="isDueOverdue(item.due_date) ? 'text-red-600 dark:text-red-300' : 'text-fg-subtle'"
                 >
                   {{ taskSubtitle(item) }}
                 </p>
@@ -113,7 +137,7 @@
                 </p>
                 <p
                   class="text-xs mt-0.5"
-                  :class="isDueOverdue(item.due_date) ? 'text-accent-hover' : 'text-fg-subtle'"
+                  :class="isDueOverdue(item.due_date) ? 'text-red-600 dark:text-red-300' : 'text-fg-subtle'"
                 >
                   {{ taskSubtitle(item) }}
                 </p>
@@ -140,12 +164,13 @@
           <ul v-if="loading" class="px-4 py-6 sm:px-5">
             <li class="text-sm text-fg-subtle">{{ $t('app.loading') }}</li>
           </ul>
-          <ul
+          <div
             v-else-if="recentTasks.length === 0"
-            class="px-4 py-6 sm:px-5 text-sm text-fg-subtle"
+            class="flex flex-col items-center gap-3 px-4 py-12 text-center sm:px-5"
           >
-            {{ $t('home.emptyRecent') }}
-          </ul>
+            <i class="pi pi-inbox text-4xl opacity-40" style="color: var(--fg-subtle);" aria-hidden="true" />
+            <p class="m-0 max-w-md text-sm leading-relaxed text-fg-muted">{{ $t('home.emptyRecent') }}</p>
+          </div>
           <ul v-else class="divide-y divide-surface-border">
             <li v-for="item in recentTasks" :key="item.id" class="px-0 sm:px-0">
               <RouterLink
@@ -158,7 +183,7 @@
                 </p>
                 <p
                   class="text-xs mt-0.5"
-                  :class="isDueOverdue(item.due_date) ? 'text-accent-hover' : 'text-fg-subtle'"
+                  :class="isDueOverdue(item.due_date) ? 'text-red-600 dark:text-red-300' : 'text-fg-subtle'"
                 >
                   {{ taskSubtitle(item) }}
                 </p>
@@ -172,7 +197,7 @@
                 </p>
                 <p
                   class="text-xs mt-0.5"
-                  :class="isDueOverdue(item.due_date) ? 'text-accent-hover' : 'text-fg-subtle'"
+                  :class="isDueOverdue(item.due_date) ? 'text-red-600 dark:text-red-300' : 'text-fg-subtle'"
                 >
                   {{ taskSubtitle(item) }}
                 </p>
@@ -193,9 +218,10 @@
         </div>
         <div
           v-else-if="recentActivity.length === 0"
-          class="p-4 sm:p-5 text-sm text-fg-subtle"
+          class="flex flex-col items-center gap-3 p-8 text-center sm:p-10"
         >
-          {{ $t('home.emptyActivity') }}
+          <i class="pi pi-inbox text-4xl opacity-40" style="color: var(--fg-subtle);" aria-hidden="true" />
+          <p class="m-0 max-w-md text-sm leading-relaxed text-fg-muted">{{ $t('home.emptyActivity') }}</p>
         </div>
         <div v-else class="p-4 sm:p-5">
           <ul class="relative pl-2">
@@ -317,26 +343,68 @@ const formattedDate = computed(() => {
   }).format(new Date());
 });
 
-const statsDisplay = computed(() => {
+/** Alineado con KPI / urgency accents (skills: bespoke kpi-card) */
+const HOME_STAT_ACCENTS = {
+  active: '#0ca678',
+  urgent: '#d97706',
+  today: '#2d3fbf',
+  overdue: '#dc2626',
+} as const;
+
+type HomeStatLabelKey =
+  | 'home.statActiveMatters'
+  | 'home.statUrgentTasks'
+  | 'home.statTodayTasks'
+  | 'home.statOverdueTasks';
+
+interface HomeStatRow {
+  labelKey: HomeStatLabelKey;
+  value: string | number;
+  accent: string;
+  icon: string;
+  /** Requiere atención inmediata (count > 0) */
+  pulse: boolean;
+  isPlaceholder: boolean;
+}
+
+const statsDisplay = computed((): HomeStatRow[] => {
   const p = payload.value;
   const dash = '—';
-  const placeholder = loading.value || (loadError.value && !p);
+  const placeholder = loading.value || !!(loadError.value && !p);
+  const urg = placeholder ? 0 : (p?.urgentTasks ?? 0);
+  const ovd = placeholder ? 0 : (p?.overdueTasks ?? 0);
   return [
     {
       value: placeholder ? dash : (p?.activeTrackables ?? 0),
-      labelKey: 'home.statActiveMatters' as const,
+      labelKey: 'home.statActiveMatters',
+      accent: HOME_STAT_ACCENTS.active,
+      icon: 'pi pi-briefcase',
+      pulse: false,
+      isPlaceholder: placeholder,
     },
     {
-      value: placeholder ? dash : (p?.urgentTasks ?? 0),
-      labelKey: 'home.statUrgentTasks' as const,
+      value: placeholder ? dash : urg,
+      labelKey: 'home.statUrgentTasks',
+      accent: HOME_STAT_ACCENTS.urgent,
+      icon: 'pi pi-bolt',
+      pulse: !placeholder && urg > 0,
+      isPlaceholder: placeholder,
     },
     {
       value: placeholder ? dash : (p?.dueTodayTasks ?? 0),
-      labelKey: 'home.statTodayTasks' as const,
+      labelKey: 'home.statTodayTasks',
+      accent: HOME_STAT_ACCENTS.today,
+      icon: 'pi pi-calendar',
+      pulse: false,
+      isPlaceholder: placeholder,
     },
     {
-      value: placeholder ? dash : (p?.overdueTasks ?? 0),
-      labelKey: 'home.statOverdueTasks' as const,
+      value: placeholder ? dash : ovd,
+      labelKey: 'home.statOverdueTasks',
+      accent: HOME_STAT_ACCENTS.overdue,
+      icon: 'pi pi-exclamation-circle',
+      pulse: !placeholder && ovd > 0,
+      isPlaceholder: placeholder,
     },
   ];
 });
@@ -425,3 +493,53 @@ onMounted(() => {
   void loadHome();
 });
 </script>
+
+<style scoped>
+.home-kpi-wrap .home-kpi-card {
+  cursor: default;
+  background: var(--surface-raised);
+  border-color: var(--surface-border);
+  animation: homeKpiFadeSlideUp 0.35s ease both;
+  animation-delay: var(--stagger-delay, 0ms);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .home-kpi-wrap .home-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+@keyframes homeKpiFadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.home-kpi-icon-wrap {
+  border: 1px solid color-mix(in srgb, var(--kpi-accent) 24%, var(--surface-border));
+  background: color-mix(in srgb, var(--kpi-accent) 10%, var(--surface-raised));
+  color: var(--kpi-accent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent);
+}
+
+:global(.dark) .home-kpi-icon-wrap {
+  background: color-mix(in srgb, var(--kpi-accent) 18%, var(--surface-raised));
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-kpi-wrap .home-kpi-card {
+    animation: none !important;
+  }
+
+  .home-kpi-wrap .home-kpi-card:hover {
+    transform: none !important;
+  }
+}
+</style>

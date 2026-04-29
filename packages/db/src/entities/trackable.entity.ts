@@ -9,7 +9,7 @@ import {
   OptionalProps,
 } from '@mikro-orm/core';
 import { TenantBaseEntity } from './tenant-base.entity';
-import { TrackableStatus, MatterType } from '@tracker/shared';
+import { TrackableStatus, MatterType, TrackableListingUrgency } from '@tracker/shared';
 import type { User } from './user.entity';
 import type { WorkflowItem } from './workflow-item.entity';
 import type { Folder } from './folder.entity';
@@ -20,7 +20,20 @@ import type { ProcessTrack } from './process-track.entity';
 
 @Entity({ tableName: 'trackables' })
 export class Trackable extends TenantBaseEntity {
-  [OptionalProps]?: 'status' | 'createdAt' | 'updatedAt' | 'matterType' | 'jurisdiction';
+  [OptionalProps]?:
+    | 'status'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'matterType'
+    | 'jurisdiction'
+    | 'listingUrgency'
+    | 'listingUrgencyRank'
+    | 'listingNextDueAt'
+    | 'listingLastActivityAt'
+    | 'listingActivityTotal'
+    | 'listingActivityDone'
+    | 'listingDocCount'
+    | 'listingCommentCount';
 
   @Property({ length: 500 })
   title!: string;
@@ -84,4 +97,29 @@ export class Trackable extends TenantBaseEntity {
 
   @OneToMany('ProcessTrack', 'trackable')
   processTracks = new Collection<ProcessTrack>(this);
+
+  /** Denormalized for scalable expedientes list (see Migration_45 + snapshot refresh). */
+  @Enum({ items: () => TrackableListingUrgency, default: TrackableListingUrgency.NO_DEADLINE })
+  listingUrgency: TrackableListingUrgency = TrackableListingUrgency.NO_DEADLINE;
+
+  @Property({ type: 'smallint', default: 5 })
+  listingUrgencyRank: number = 5;
+
+  @Property({ type: 'timestamptz', nullable: true })
+  listingNextDueAt?: Date;
+
+  @Property({ type: 'timestamptz', nullable: true })
+  listingLastActivityAt?: Date;
+
+  @Property({ default: 0 })
+  listingActivityTotal: number = 0;
+
+  @Property({ default: 0 })
+  listingActivityDone: number = 0;
+
+  @Property({ default: 0 })
+  listingDocCount: number = 0;
+
+  @Property({ default: 0 })
+  listingCommentCount: number = 0;
 }

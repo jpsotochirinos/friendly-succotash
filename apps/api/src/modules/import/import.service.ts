@@ -513,7 +513,8 @@ export class ImportService {
     try {
       const raw = Buffer.from(agentToken.trim(), 'base64url').toString('utf8');
       parsed = JSON.parse(raw) as { i: string; s: string };
-    } catch {
+    }
+    catch {
       throw new UnauthorizedException('Token inválido');
     }
     const agent = await this.em.findOne(

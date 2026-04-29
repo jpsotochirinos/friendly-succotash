@@ -67,8 +67,20 @@ export function matchesCalendarFilters(e: ApiCalendarEvent, f: CalendarFiltersSt
 
   if (f.assignees.length > 0) {
     if (e.source !== 'workflow') return false;
-    const aid = (e.extendedProps?.assignedToId as string) || '';
-    if (!aid || !f.assignees.includes(aid)) return false;
+    const aid = String((e.extendedProps?.assignedToId as string) || '').trim();
+    const isUn = !aid;
+    const sel = new Set(f.assignees);
+    const wantsUn = sel.has('__unassigned');
+    const idOnly = [...sel].filter((id) => id !== '__unassigned');
+    const matchUn = isUn && wantsUn;
+    const matchId = !isUn && idOnly.length > 0 && idOnly.includes(aid);
+    if (wantsUn && idOnly.length > 0) {
+      if (!matchUn && !matchId) return false;
+    } else if (wantsUn && idOnly.length === 0) {
+      if (!isUn) return false;
+    } else {
+      if (!aid || !idOnly.includes(aid)) return false;
+    }
   }
 
   if (f.trackables.length > 0) {

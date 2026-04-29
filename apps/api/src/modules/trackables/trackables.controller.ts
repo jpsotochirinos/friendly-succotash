@@ -8,7 +8,14 @@ import { UpdateTrackableDto } from './dto/update-trackable.dto';
 import { CreateTrackablePartyDto, UpdateTrackablePartyDto } from './dto/trackable-party.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
-import { TrackableStatus } from '@tracker/shared';
+import { TrackableListingUrgency, TrackableStatus } from '@tracker/shared';
+
+function splitMulti(v?: string | string[]): string[] | undefined {
+  if (v == null) return undefined;
+  const arr = Array.isArray(v) ? v : String(v).split(',');
+  const out = arr.map((s) => s.trim()).filter(Boolean);
+  return out.length ? out : undefined;
+}
 
 @Controller('trackables')
 export class TrackablesController {
@@ -26,6 +33,96 @@ export class TrackablesController {
     return this.trackablesService.createTrackable(
       dto, user.id, user.organizationId,
     );
+  }
+
+  @Get('list')
+  @RequirePermissions('trackable:read')
+  async listCursor(
+    @CurrentUser() user: any,
+    @Query('scope') scope?: 'active' | 'archived',
+    @Query('status') status?: TrackableStatus,
+    @Query('tipo') tipo?: string | string[],
+    @Query('materia') materia?: string | string[],
+    @Query('asignadoId') asignadoId?: string | string[],
+    @Query('clienteId') clienteId?: string | string[],
+    @Query('search') search?: string,
+    @Query('urgencia') urgencia?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('sortDir') sortDir?: 'asc' | 'desc',
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit?: number,
+  ) {
+    const urg = urgencia as TrackableListingUrgency | undefined;
+    const urgency =
+      urg && Object.values(TrackableListingUrgency).includes(urg) ? urg : undefined;
+    return this.trackablesService.findListingCursor(user.organizationId, {
+      scope,
+      status,
+      types: splitMulti(tipo),
+      matterTypes: splitMulti(materia),
+      assignedToIds: splitMulti(asignadoId),
+      clientIds: splitMulti(clienteId),
+      search,
+      urgency,
+      sortBy,
+      sortDir,
+      cursor,
+      limit,
+    });
+  }
+
+  @Get('filters/options')
+  @RequirePermissions('trackable:read')
+  async listingFilterOptions(@CurrentUser() user: any) {
+    return this.trackablesService.getListingFilterOptions(user.organizationId);
+  }
+
+  @Get('views')
+  @RequirePermissions('trackable:read')
+  async listViews(@CurrentUser() user: any) {
+    return this.trackablesService.listSavedViews(user.organizationId, user.id);
+  }
+
+  @Post('views')
+  @RequirePermissions('trackable:read')
+  async createView(
+    @CurrentUser() user: any,
+    @Body() body: { name: string; slug?: string; config: Record<string, unknown>; isShared?: boolean },
+  ) {
+    return this.trackablesService.createSavedView(
+      user.organizationId,
+      user.id,
+      body,
+      Array.isArray(user.permissions) ? user.permissions : [],
+    );
+  }
+
+  @Patch('views/:viewId')
+  @RequirePermissions('trackable:read')
+  async patchView(
+    @CurrentUser() user: any,
+    @Param('viewId') viewId: string,
+    @Body() body: Partial<{ name: string; slug: string; config: Record<string, unknown>; isShared: boolean; isFavorite: boolean }>,
+  ) {
+    return this.trackablesService.updateSavedView(
+      user.organizationId,
+      user.id,
+      viewId,
+      body,
+      Array.isArray(user.permissions) ? user.permissions : [],
+    );
+  }
+
+  @Delete('views/:viewId')
+  @RequirePermissions('trackable:read')
+  async deleteView(@CurrentUser() user: any, @Param('viewId') viewId: string) {
+    return this.trackablesService.deleteSavedView(user.organizationId, user.id, viewId);
+  }
+
+  @Post('bulk')
+  @RequirePermissions('trackable:update')
+  async bulkStub() {
+    return this.trackablesService.stubBulkOperations();
   }
 
   @Get()

@@ -56,6 +56,133 @@
       @confirm="confirmPermanentDeleteDocument"
     />
 
+    <ConfirmDialogBase
+      v-model:visible="showAssignConfirm"
+      variant="info"
+      :title="t('trackables.assignInlineConfirmTitle')"
+      :subject="assignConfirmSubjectLine"
+      :message="assignConfirmMessageLine"
+      :confirm-label="t('trackables.assignInlineConfirmLabel')"
+      :loading="assigningInline"
+      @hide="onAssignConfirmHide"
+      @confirm="confirmAssignInline"
+    />
+
+    <ConfirmDialogBase
+      v-model:visible="showClientConfirm"
+      variant="info"
+      :title="t('trackables.assignClientConfirmTitle')"
+      :subject="clientConfirmSubjectLine"
+      :message="clientConfirmMessageLine"
+      :confirm-label="t('trackables.assignClientConfirmLabel')"
+      :loading="assigningClientInline"
+      @hide="onClientConfirmHide"
+      @confirm="confirmAssignClientInline"
+    />
+
+    <Popover ref="assignInlinePopoverRef" class="assign-inline-popover w-[min(100vw-2rem,18rem)]">
+      <div
+        class="flex max-h-[min(280px,46vh)] flex-col gap-1 overflow-hidden rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-md"
+      >
+        <div class="shrink-0 border-b border-[var(--surface-border)] px-3 py-2">
+          <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
+            {{ t('trackables.assignInlinePopoverTitle') }}
+          </p>
+          <p class="m-0 mt-0.5 text-xs leading-snug text-[var(--fg-subtle)]">
+            {{ t('trackables.assignInlinePopoverHint') }}
+          </p>
+        </div>
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 py-1">
+          <template v-if="users.length === 0">
+            <p class="m-0 px-2 py-4 text-center text-xs text-[var(--fg-muted)]">
+              {{ t('trackables.assignInlinePopoverEmpty') }}
+            </p>
+          </template>
+          <ul v-else class="m-0 list-none space-y-0.5 p-0">
+            <li v-for="u in sortedAssignableUsers" :key="u.id">
+              <button
+                type="button"
+                class="assign-inline-user-btn flex w-full min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-[color-mix(in_srgb,var(--accent-soft)_55%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-raised)]"
+                @click="requestAssignConfirm(u)"
+              >
+                <img
+                  v-if="u.avatarUrl"
+                  :src="u.avatarUrl"
+                  alt=""
+                  class="h-8 w-8 shrink-0 rounded-full object-cover"
+                />
+                <span
+                  v-else
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-[var(--fg-on-brand)]"
+                  :style="{ background: assigneeAvatarBg(u.id) }"
+                >
+                  {{ initialsFromLabel(assignListPrimaryName(u) || u.email) }}
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-sm font-medium text-[var(--fg-default)]">{{
+                    assignListPrimaryName(u)
+                  }}</span>
+                  <span
+                    v-if="assignListSecondaryLine(u)"
+                    class="block truncate text-[11px] text-[var(--fg-muted)]"
+                    >{{ assignListSecondaryLine(u) }}</span
+                  >
+                </span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </Popover>
+
+    <Popover ref="clientInlinePopoverRef" class="client-inline-popover w-[min(100vw-2rem,18rem)]">
+      <div
+        class="flex max-h-[min(280px,46vh)] flex-col gap-1 overflow-hidden rounded-xl border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-md"
+      >
+        <div class="shrink-0 border-b border-[var(--surface-border)] px-3 py-2">
+          <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">
+            {{ t('trackables.assignClientPopoverTitle') }}
+          </p>
+          <p class="m-0 mt-0.5 text-xs leading-snug text-[var(--fg-subtle)]">
+            {{ t('trackables.assignClientPopoverHint') }}
+          </p>
+        </div>
+        <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1 py-1">
+          <template v-if="clientsOptions.length === 0">
+            <p class="m-0 px-2 py-4 text-center text-xs text-[var(--fg-muted)]">
+              {{ t('trackables.assignClientPopoverEmpty') }}
+            </p>
+          </template>
+          <ul v-else class="m-0 list-none space-y-0.5 p-0">
+            <li v-for="c in sortedAssignableClients" :key="c.id">
+              <button
+                type="button"
+                class="assign-inline-user-btn flex w-full min-w-0 items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors hover:bg-[color-mix(in_srgb,var(--accent-soft)_55%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface-raised)]"
+                @click="requestClientConfirm(c)"
+              >
+                <img
+                  v-if="c.avatarUrl"
+                  :src="c.avatarUrl"
+                  alt=""
+                  class="h-8 w-8 shrink-0 rounded-full object-cover"
+                />
+                <span
+                  v-else
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--surface-border)] bg-[color-mix(in_srgb,var(--surface-sunken)_75%,transparent)] text-[var(--accent)]"
+                  aria-hidden="true"
+                >
+                  <i class="pi pi-plus text-[11px] leading-none" />
+                </span>
+                <span class="min-w-0 flex-1 truncate text-sm font-medium text-[var(--fg-default)]">{{
+                  c.name
+                }}</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </Popover>
+
     <PageHeader :title="t('trackables.title')" :subtitle="t('trackables.pageSubtitle')">
       <template #actions>
         <Button
@@ -194,64 +321,19 @@
 
     <template v-else>
     <!-- KPI: solo en expedientes en curso -->
-    <div
+    <UrgencyKpiChipsBar
       v-if="listScope === 'active'"
-      class="grid grid-cols-2 gap-3 lg:grid-cols-4"
-      role="toolbar"
-      :aria-label="t('trackables.activityKpiToolbarAria')"
-    >
-      <button
-        v-for="(card, cardIdx) in activityKpiCards"
-        :key="card.id"
-        type="button"
-        class="exp-kpi-card group relative min-h-[5.75rem] overflow-hidden rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-4 text-left shadow-sm transition-[box-shadow,border-color,transform] duration-200 outline-offset-4"
-        :class="[
-          card.urgencyBarClass,
-          isActivityKpiActive(card.id)
-            ? `exp-kpi-card--active z-10 ring-2 ${card.activeRingClass}`
-            : 'exp-kpi-card--idle hover:border-[color-mix(in_srgb,var(--kpi-accent)_22%,var(--surface-border))] hover:outline hover:outline-1 hover:outline-[color-mix(in_srgb,var(--kpi-accent)_35%,transparent)]',
-        ]"
-        :style="{
-          '--stagger-delay': `${cardIdx * 60}ms`,
-          '--kpi-accent': card.accentColor,
-          '--kpi-mesh-2': card.mesh2,
-        }"
-        :aria-pressed="isActivityKpiActive(card.id) ? 'true' : 'false'"
-        :aria-label="card.aria"
-        @click="toggleActivityFilter(card.id)"
-      >
-        <div class="exp-kpi-mesh pointer-events-none absolute inset-0 opacity-100" />
-        <div
-          class="exp-kpi-grain pointer-events-none absolute inset-0"
-          aria-hidden="true"
-        />
-        <span
-          v-if="card.pulse"
-          class="exp-kpi-pulse pointer-events-none absolute right-3 top-3 h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_0_3px_color-mix(in_srgb,var(--surface-raised)_70%,transparent)]"
-          aria-hidden="true"
-        />
-        <div class="relative flex min-h-[4.75rem] items-start justify-between gap-3">
-          <div class="min-w-0 flex-1">
-            <p class="exp-kpi-label m-0 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-muted)]">
-              {{ card.label }}
-            </p>
-            <p
-              class="exp-kpi-number m-0 mt-2 text-3xl font-semibold tabular-nums tracking-tight sm:text-[2.125rem]"
-              :class="card.numberClass"
-              style="font-feature-settings: 'tnum' 1, 'lnum' 1"
-            >
-              {{ card.count }}
-            </p>
-          </div>
-          <span class="exp-kpi-icon-wrap inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm" aria-hidden="true">
-            <i :class="[card.icon, 'text-sm']" />
-          </span>
-        </div>
-      </button>
-    </div>
+      :facets="listingFacets"
+      :model-value="filters.urgency"
+      :assigned-to-me-active="isAssignedToMeFilter"
+      :mine-count="isAssignedToMeFilter ? totalRecords : null"
+      :show-mine-chip="Boolean(user?.id)"
+      @update:model-value="onListingUrgencyChange"
+      @toggle-assigned-to-me="toggleAssignedToMeFilter"
+    />
 
     <div
-      class="app-card matters-cockpit-card flex max-h-[min(82vh,calc(100dvh-11rem))] min-h-0 flex-col overflow-hidden shadow-sm"
+      class="app-card matters-cockpit-card flex h-[min(82vh,calc(100dvh-11rem))] min-h-[520px] flex-col overflow-hidden shadow-sm"
     >
       <!-- Command toolbar -->
       <div
@@ -268,7 +350,6 @@
               class="toolbar-search w-full min-w-0 rounded-xl"
               :aria-label="t('common.search')"
               autocomplete="off"
-              @input="resetAndLoad"
             />
           </IconField>
           <div
@@ -277,7 +358,7 @@
             :aria-label="t('trackables.toolbarResultsGroupAria')"
           >
             <div
-              class="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-sm tabular-nums text-[var(--fg-default)]"
+              class="toolbar-results-line flex flex-wrap items-center gap-x-2 gap-y-1 text-sm tabular-nums text-[var(--fg-default)]"
               aria-live="polite"
               aria-atomic="true"
             >
@@ -286,7 +367,7 @@
                 <span class="text-[var(--fg-subtle)]" aria-hidden="true">·</span>
                 <Button
                   type="button"
-                  class="matters-active-filters-btn !p-0 font-mono text-sm font-medium normal-case text-accent underline-offset-2 hover:underline"
+                  class="matters-active-filters-btn !p-0 text-sm font-medium normal-case tabular-nums text-accent underline-offset-2 hover:underline"
                   :label="t('trackables.toolbarFiltersActive', { n: activeFilterCount })"
                   text
                   @click="(e) => filtersPopoverRef?.toggle(e)"
@@ -380,52 +461,15 @@
               {{ opt.label }}
             </button>
           </div>
-          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 lg:shrink-0">
-            <Dropdown
-              v-if="listScope === 'active'"
-              v-model="filters.status"
-              :options="statusFilterOptions"
-              option-label="label"
-              option-value="value"
-              :placeholder="t('trackables.statusFilterPlaceholder')"
-              show-clear
-              class="toolbar-dropdown w-full min-w-0 sm:w-auto sm:min-w-[11rem] sm:max-w-[14rem]"
-              :aria-label="t('trackables.statusFilterPlaceholder')"
-              @change="resetAndLoad"
+          <div class="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 lg:shrink-0">
+            <MattersToolbarScopeFilters
+              v-model:status="filters.status"
+              v-model:assigned-to-id="filters.assignedToId"
+              :show-status="listScope === 'active'"
+              :status-options="statusFilterOptions"
+              :assignee-options="assigneeFilterOptions"
+              @applied="resetAndLoad"
             />
-            <Dropdown
-              v-model="filters.assignedToId"
-              :options="assigneeFilterOptions"
-              option-label="label"
-              option-value="value"
-              :placeholder="t('trackables.assigneeFilterPlaceholder')"
-              show-clear
-              class="toolbar-dropdown toolbar-dropdown-assignee w-full min-w-0 sm:min-w-[12rem] sm:max-w-[20rem]"
-              :aria-label="t('trackables.assigneeFilterPlaceholder')"
-              @change="resetAndLoad"
-            >
-              <template #value="slotProps">
-                <div v-if="slotProps.value" class="flex min-w-0 items-center gap-2">
-                  <i class="pi pi-user shrink-0 text-sm text-[var(--fg-subtle)]" aria-hidden="true" />
-                  <span class="min-w-0 truncate text-sm">{{ assigneeDisplayLabel(slotProps.value) }}</span>
-                </div>
-                <div v-else class="flex items-center gap-2 text-[var(--fg-subtle)]">
-                  <i class="pi pi-user text-sm" aria-hidden="true" />
-                  <span class="text-sm">{{ t('trackables.assigneeFilterPlaceholder') }}</span>
-                </div>
-              </template>
-              <template #option="{ option }">
-                <div class="flex min-w-0 items-center gap-2">
-                  <span
-                    class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-[var(--fg-on-brand)]"
-                    :style="{ background: assigneeAvatarBg(option.value) }"
-                  >
-                    {{ initialsFromLabel(option.label) }}
-                  </span>
-                  <span class="min-w-0 truncate">{{ option.label }}</span>
-                </div>
-              </template>
-            </Dropdown>
           </div>
         </div>
       </div>
@@ -435,31 +479,40 @@
         class="matters-skeleton-shell flex-1 min-h-[420px] overflow-x-auto overscroll-x-contain"
         :aria-label="t('trackables.loadingTable')"
       >
-        <div class="min-w-[760px]">
-          <div
-            class="grid grid-cols-[minmax(280px,1.8fr)_140px_220px_220px_140px] gap-4 border-b border-[var(--surface-border)] px-4 py-3"
-          >
-            <Skeleton v-for="col in 5" :key="`matter-head-${col}`" height="0.75rem" />
-          </div>
+        <div class="min-w-[560px]">
           <div
             v-for="row in tableSkeletonRows"
             :key="`matter-skeleton-${row}`"
-            class="grid grid-cols-[minmax(280px,1.8fr)_140px_220px_220px_140px] items-center gap-4 border-b border-[var(--surface-border)] px-4 py-4 last:border-0"
+            class="matter-skeleton-row grid items-start gap-3 border-b border-[var(--surface-border)] px-4 py-4 last:border-0"
+            style="grid-template-columns: 1fr 3rem 7.5rem;"
           >
-            <div class="flex min-w-0 items-center gap-3">
-              <Skeleton shape="circle" size="2.25rem" />
-              <div class="flex min-w-0 flex-1 flex-col gap-2">
-                <Skeleton height="0.9rem" width="80%" />
-                <Skeleton height="0.7rem" width="55%" />
+            <!-- Info cell skeleton (aligned with matter-info-layout) -->
+            <div class="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-2">
+              <div class="matter-info-text flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+                <div class="flex min-w-0 items-start gap-3">
+                  <Skeleton shape="circle" size="2.25rem" />
+                  <div class="flex min-w-0 flex-1 flex-col gap-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <Skeleton height="1rem" width="4.5rem" border-radius="0.375rem" />
+                      <Skeleton height="1.25rem" width="4rem" border-radius="999px" />
+                    </div>
+                    <Skeleton height="0.9rem" width="78%" />
+                    <Skeleton height="0.7rem" width="55%" />
+                  </div>
+                </div>
+              </div>
+              <div
+                class="flex w-full min-w-0 items-start justify-start pl-[calc(2.25rem+0.75rem)] lg:w-auto lg:max-w-none lg:shrink-0 lg:pl-0"
+              >
+                <Skeleton height="1.75rem" width="11rem" border-radius="0.625rem" />
               </div>
             </div>
-            <Skeleton height="1.4rem" width="5.5rem" border-radius="999px" />
-            <div class="flex items-center gap-2">
+            <!-- Assignee avatar only -->
+            <div class="flex justify-center pt-1">
               <Skeleton shape="circle" size="2rem" />
-              <Skeleton height="0.8rem" width="7rem" />
             </div>
-            <Skeleton height="1.8rem" width="11rem" border-radius="999px" />
-            <div class="flex justify-end gap-2">
+            <!-- Actions -->
+            <div class="flex justify-end gap-2 pt-1">
               <Skeleton shape="circle" size="2rem" />
               <Skeleton shape="circle" size="2rem" />
             </div>
@@ -471,9 +524,41 @@
         class="matters-dt-region relative flex min-h-0 flex-1 flex-col"
         :class="{ 'matters-dt-region--scrolled': mattersDtScrolled }"
       >
+        <div
+          v-if="mattersShowEmptyState"
+          class="flex min-h-[320px] flex-1 flex-col items-center justify-center gap-3 px-6 py-14 text-center"
+        >
+          <span
+            class="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--surface-border)] bg-[color-mix(in_srgb,var(--accent-soft)_55%,var(--surface-raised))] text-[var(--accent)]"
+            aria-hidden="true"
+          >
+            <i class="pi pi-folder-open text-2xl" />
+          </span>
+          <div class="flex max-w-md flex-col gap-1">
+            <p class="m-0 text-base font-medium text-[var(--fg-default)]">
+              {{ t('trackables.tableEmptyTitle') }}
+            </p>
+            <p class="m-0 text-sm text-[var(--fg-muted)]">
+              {{
+                listScope === 'archived'
+                  ? t('trackables.tableEmptyArchived')
+                  : t('trackables.tableEmptyActive')
+              }}
+            </p>
+          </div>
+          <Button
+            v-if="hasActiveFilters"
+            :label="t('trackables.clearFilters')"
+            icon="pi pi-filter-slash"
+            size="small"
+            outlined
+            @click="clearFilters"
+          />
+        </div>
         <DataTable
+          v-else
           ref="mattersDtRef"
-          class="matters-data-table min-h-0 flex-1"
+          class="matters-data-table matters-data-table--cockpit min-h-0 flex-1"
           :class="{ 'matters-dt--comfortable': tableDensity === 'comfortable' }"
           :value="trackables"
           :loading="loading"
@@ -483,6 +568,8 @@
           scroll-height="flex"
           row-hover
           responsive-layout="scroll"
+          :show-headers="false"
+          :virtual-scroller-options="mattersUseVirtualScroller ? mattersVirtualScrollerOptions : undefined"
           :row-class="matterRowClass"
           export-filename="expedientes"
           :table-props="{ 'aria-label': t('trackables.tableAriaLabel') }"
@@ -504,146 +591,248 @@
             </p>
           </div>
         </template>
-        <Column field="title" :header="t('trackables.tableColTitle')">
+        <Column
+          field="title"
+          :header="t('trackables.tableColTitle')"
+          body-class="matter-col-info align-top"
+        >
           <template #body="{ data }">
-            <div class="matter-title-cell flex min-w-0 items-start gap-3 py-1">
-              <span
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--surface-border)] bg-[var(--accent-soft)] text-lg"
-                :aria-label="t('trackables.matterEmojiLabel')"
+            <div class="matter-info-cell flex min-w-0 flex-col gap-2 py-1">
+              <span class="sr-only">{{ t('trackables.matterRowInfoSr') }}</span>
+              <div
+                class="matter-info-layout flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:justify-start lg:gap-x-2 lg:gap-y-2"
+                :style="matterPrimaryColumnCssVars"
               >
-                {{ matterEmoji(data) }}
-              </span>
-              <div class="flex min-w-0 flex-col gap-1">
+              <div
+                class="matter-info-text flex min-h-0 min-w-0 flex-1 items-start gap-3 lg:min-w-0 lg:flex-none lg:overflow-hidden lg:w-[min(var(--matter-primary-col,280px),calc(100%-13rem))]"
+              >
                 <span
-                  v-if="matterCaseKey(data)"
-                  class="matter-case-key inline-flex w-fit max-w-full truncate rounded-md border border-[var(--surface-border)] bg-[color-mix(in_srgb,var(--surface-raised)_88%,var(--accent-soft))] px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.04em] text-[var(--fg-muted)]"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--surface-border)] bg-[var(--accent-soft)] text-lg"
+                  :aria-label="t('trackables.matterEmojiLabel')"
                 >
-                  {{ matterCaseKey(data) }}
+                  {{ matterEmoji(data) }}
                 </span>
-                <router-link
-                  :to="`/trackables/${data.id}`"
-                  class="font-semibold leading-snug text-accent hover:underline"
+                <div class="flex min-w-0 flex-1 flex-col gap-1">
+                  <div class="matter-info-cell__topline flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span
+                      v-if="matterCaseKey(data)"
+                      class="matter-case-key font-mono-num inline-flex w-fit max-w-full truncate rounded-md border border-[var(--surface-border)] bg-[color-mix(in_srgb,var(--surface-raised)_88%,var(--accent-soft))] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-[var(--fg-muted)]"
+                    >
+                      {{ matterCaseKey(data) }}
+                    </span>
+                    <button
+                      v-else-if="canTrackableUpdate"
+                      type="button"
+                      class="matter-expediente-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--fg-subtle)] text-[var(--fg-subtle)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                      :aria-label="t('trackables.assignExpedienteHint')"
+                      v-tooltip.top="t('trackables.assignExpedienteHint')"
+                      @click="openEditDialog(data)"
+                    >
+                      <i class="pi pi-hashtag text-[11px]" aria-hidden="true" />
+                    </button>
+                    <span
+                      v-else
+                      class="matter-expediente-ring matter-expediente-ring--readonly flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--surface-border)] text-[var(--fg-subtle)]"
+                      aria-hidden="true"
+                    >
+                      <i class="pi pi-hashtag text-[11px] opacity-70" aria-hidden="true" />
+                    </span>
+                    <Tag
+                      :value="typeLabel(data.type).toLocaleUpperCase(dateLocaleTag())"
+                      :severity="typeSeverity(data.type)"
+                      class="matter-type-tag shrink-0 tracking-wide"
+                    />
+                  </div>
+                  <router-link
+                    :to="`/trackables/${data.id}`"
+                    class="font-semibold leading-snug text-accent hover:underline"
+                  >
+                    <span class="line-clamp-2">{{ data.title }}</span>
+                  </router-link>
+                  <button
+                    v-if="matterMetaLooksIncomplete(data) && canTrackableUpdate"
+                    type="button"
+                    class="matter-meta-incomplete matter-meta-incomplete--cockpit matter-meta-incomplete--action m-0 inline-block max-w-full text-left text-[var(--fg-subtle)] line-clamp-1"
+                    :aria-label="t('trackables.assignClientPopoverTitle')"
+                    v-tooltip.top="t('trackables.assignClientPopoverHint')"
+                    @click="(e) => openClientInlinePopover(e, data)"
+                  >
+                    {{ t('trackables.matterMetaCockpitClientHint') }}
+                  </button>
+                  <p
+                    v-else
+                    class="m-0 max-w-full text-xs leading-snug text-[var(--fg-subtle)]"
+                    :class="
+                      matterMetaLooksIncomplete(data)
+                        ? 'matter-meta-incomplete matter-meta-incomplete--cockpit line-clamp-1'
+                        : 'line-clamp-1'
+                    "
+                  >
+                    {{
+                      matterMetaLooksIncomplete(data)
+                        ? t('trackables.matterMetaCockpitClientHint')
+                        : matterCaseKey(data)
+                          ? matterSubtitleLine(data)
+                          : matterMetaLine(data)
+                    }}
+                  </p>
+                </div>
+              </div>
+              <div
+                class="matter-info-cell__activity flex w-full min-w-0 flex-col pl-[calc(2.5rem+0.75rem)] lg:w-auto lg:max-w-none lg:shrink-0 lg:items-start lg:justify-start lg:pl-0"
+              >
+                <template v-if="activitySummary(data).total > 0">
+                  <div
+                    class="activity-stats min-w-0 justify-start lg:w-fit lg:max-w-full"
+                    :class="activitySummary(data).overdue ? 'activity-stats--has-danger' : ''"
+                  >
+                    <div class="activity-stat activity-stat--done">
+                      <span class="activity-stat__icon" aria-hidden="true">
+                        <i class="pi pi-check-square" />
+                      </span>
+                      <span class="activity-stat__body">
+                        <span class="activity-stat__label">
+                          {{ t('trackables.activityDone') }}
+                        </span>
+                        <span class="activity-stat__value tabular-nums">
+                          {{ activitySummary(data).done }}<span class="activity-stat__total">/{{ activitySummary(data).total }}</span>
+                        </span>
+                      </span>
+                    </div>
+                    <div
+                      v-if="activitySummary(data).inProgress"
+                      class="activity-stat activity-stat--progress"
+                    >
+                      <span class="activity-stat__icon" aria-hidden="true">
+                        <i class="pi pi-spin pi-cog" v-if="false" />
+                        <i class="pi pi-clock" />
+                      </span>
+                      <span class="activity-stat__body">
+                        <span class="activity-stat__label">
+                          {{ t('trackables.activityInProgress') }}
+                        </span>
+                        <span class="activity-stat__value tabular-nums">
+                          {{ activitySummary(data).inProgress }}
+                        </span>
+                      </span>
+                    </div>
+                    <div
+                      class="activity-stat"
+                      :class="
+                        activitySummary(data).overdue
+                          ? 'activity-stat--danger'
+                          : 'activity-stat--overdue-zero'
+                      "
+                    >
+                      <span class="activity-stat__icon" aria-hidden="true">
+                        <i class="pi pi-exclamation-triangle" />
+                      </span>
+                      <span class="activity-stat__body">
+                        <span class="activity-stat__label">
+                          {{ t('trackables.activityOverdue') }}
+                        </span>
+                        <span class="activity-stat__value tabular-nums">
+                          {{ activitySummary(data).overdue }}
+                        </span>
+                      </span>
+                    </div>
+                    <i
+                      v-if="activityDetailLoading(data)"
+                      class="pi pi-spin pi-spinner shrink-0 text-[10px] text-[var(--fg-muted)]"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div
+                    class="matter-activity-progress mt-2 w-full min-w-[12rem] max-w-[min(22rem,calc(100vw-12rem))]"
+                  >
+                    <div
+                      class="rounded-xl border border-[var(--surface-border)] bg-white/70 px-2 py-1.5 dark:bg-white/5"
+                    >
+                      <p class="m-0 text-[10px] font-medium uppercase tracking-wide text-[var(--fg-muted)]">
+                        {{
+                          t('trackables.expedienteSummary.completedPct', {
+                            n: activityDonePct(data),
+                          })
+                        }}
+                      </p>
+                      <div
+                        class="relative mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-200/90 dark:bg-slate-700/80"
+                      >
+                        <div
+                          class="absolute inset-y-0 left-0 h-full rounded-full bg-slate-400/45 transition-[width] dark:bg-slate-500/35"
+                          :style="{ width: `${activityActivePct(data)}%` }"
+                        />
+                        <div
+                          class="absolute inset-y-0 left-0 h-full rounded-full transition-[width]"
+                          role="progressbar"
+                          :aria-valuenow="activityDonePct(data)"
+                          aria-valuemin="0"
+                          aria-valuemax="100"
+                          :aria-label="t('trackables.expedienteSummary.avanceTitle')"
+                          :style="{
+                            width: `${activityDonePct(data)}%`,
+                            background:
+                              'linear-gradient(90deg, #0F6E7A 0%, #2D3FBF 50%, #3FB58C 100%)',
+                          }"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <span
+                  v-else
+                  class="text-left text-xs italic text-[var(--fg-subtle)] lg:max-w-[18rem]"
                 >
-                  <span class="line-clamp-2">{{ data.title }}</span>
-                </router-link>
-                <p class="m-0 line-clamp-1 text-xs text-[var(--fg-subtle)]">
-                  {{ matterCaseKey(data) ? matterSubtitleLine(data) : matterMetaLine(data) }}
-                </p>
+                  {{ t('trackables.activityEmpty') }}
+                </span>
+              </div>
               </div>
             </div>
           </template>
         </Column>
-        <Column field="type" :header="t('trackables.tableColType')">
+        <Column
+          field="assignedTo"
+          :header="t('trackables.tableColAssigned')"
+          body-class="matter-col-assignee align-middle"
+        >
           <template #body="{ data }">
-            <Tag
-              :value="typeLabel(data.type).toLocaleUpperCase(dateLocaleTag())"
-              :severity="typeSeverity(data.type)"
-              class="matter-type-tag tracking-wide"
-            />
-          </template>
-        </Column>
-        <Column field="assignedTo" :header="t('trackables.tableColAssigned')">
-          <template #body="{ data }">
-            <div v-if="data.assignedTo" class="flex min-w-0 items-center gap-2">
+            <!-- Avatar only + tooltip (cockpit pattern) -->
+            <template v-if="data.assignedTo">
               <img
                 v-if="data.assignedTo.avatarUrl"
                 :src="data.assignedTo.avatarUrl"
                 :alt="assignedToName(data.assignedTo)"
-                class="h-8 w-8 shrink-0 rounded-full object-cover"
+                class="mx-auto h-8 w-8 rounded-full object-cover"
+                v-tooltip.left="assignedToName(data.assignedTo)"
               />
               <span
                 v-else
-                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-[var(--fg-on-brand)]"
+                class="mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-[var(--fg-on-brand)]"
                 :style="{ background: assigneeAvatarBg(data.assignedTo.id) }"
+                v-tooltip.left="assignedToName(data.assignedTo)"
+                :aria-label="assignedToName(data.assignedTo)"
               >
                 {{ assigneeInitials(data.assignedTo) }}
               </span>
-              <span class="min-w-0 truncate text-sm text-[var(--fg-muted)]">
-                {{ assignedToName(data.assignedTo) }}
-              </span>
-            </div>
+            </template>
+            <!-- Sin asignar: icono fantasma clicable si tiene permiso -->
             <button
               v-else-if="canTrackableUpdate"
               type="button"
-              class="matter-assign-cta group flex min-w-0 items-center gap-2 rounded-lg border border-dashed border-[var(--surface-border)] bg-transparent py-1 pl-1 pr-2 text-left transition-colors hover:border-[color-mix(in_srgb,var(--accent)_40%,var(--surface-border))] hover:bg-[color-mix(in_srgb,var(--accent-soft)_40%,transparent)]"
-              @click="openEditDialog(data)"
+              class="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-[var(--fg-subtle)] text-[var(--fg-subtle)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              v-tooltip.left="t('trackables.assignInlineCta')"
+              :aria-label="t('trackables.assignInlineCta')"
+              @click="(e) => openAssignInlinePopover(e, data)"
             >
-              <span
-                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--fg-subtle)] text-xs text-[var(--fg-subtle)]"
-                aria-hidden="true"
-              >
-                <i class="pi pi-user-plus text-sm" />
-              </span>
-              <span class="text-sm text-accent underline-offset-2 group-hover:underline">
-                {{ t('trackables.assignInlineCta') }}
-              </span>
+              <i class="pi pi-user-plus text-sm" aria-hidden="true" />
             </button>
-            <span v-else class="text-sm text-[var(--fg-subtle)]">
-              {{ t('trackables.unassigned') }}
-            </span>
-          </template>
-        </Column>
-        <Column :header="t('trackables.tableColActivitySummary')">
-          <template #body="{ data }">
-            <div
-              v-if="activitySummary(data).total > 0"
-              class="activity-stats min-w-0"
-              :class="activitySummary(data).overdue ? 'activity-stats--has-danger' : ''"
+            <span
+              v-else
+              class="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-[var(--fg-subtle)]"
+              v-tooltip.left="t('trackables.unassigned')"
+              :aria-label="t('trackables.unassigned')"
             >
-              <div class="activity-stat activity-stat--done">
-                <span class="activity-stat__icon" aria-hidden="true">
-                  <i class="pi pi-check-square" />
-                </span>
-                <span class="activity-stat__body">
-                  <span class="activity-stat__label">
-                    {{ t('trackables.activityDone') }}
-                  </span>
-                  <span class="activity-stat__value tabular-nums">
-                    {{ activitySummary(data).done }}<span class="activity-stat__total">/{{ activitySummary(data).total }}</span>
-                  </span>
-                </span>
-              </div>
-              <div
-                v-if="activitySummary(data).inProgress"
-                class="activity-stat activity-stat--progress"
-              >
-                <span class="activity-stat__icon" aria-hidden="true">
-                  <i class="pi pi-spin pi-cog" v-if="false" />
-                  <i class="pi pi-clock" />
-                </span>
-                <span class="activity-stat__body">
-                  <span class="activity-stat__label">
-                    {{ t('trackables.activityInProgress') }}
-                  </span>
-                  <span class="activity-stat__value tabular-nums">
-                    {{ activitySummary(data).inProgress }}
-                  </span>
-                </span>
-              </div>
-              <div
-                v-if="activitySummary(data).overdue"
-                class="activity-stat activity-stat--danger"
-              >
-                <span class="activity-stat__icon" aria-hidden="true">
-                  <i class="pi pi-exclamation-triangle" />
-                </span>
-                <span class="activity-stat__body">
-                  <span class="activity-stat__label">
-                    {{ t('trackables.activityOverdue') }}
-                  </span>
-                  <span class="activity-stat__value tabular-nums">
-                    {{ activitySummary(data).overdue }}
-                  </span>
-                </span>
-              </div>
-              <i
-                v-if="activityDetailLoading(data)"
-                class="pi pi-spin pi-spinner shrink-0 text-[10px] text-[var(--fg-muted)]"
-                aria-hidden="true"
-              />
-            </div>
-            <span v-else class="text-xs italic text-[var(--fg-subtle)]">
-              {{ t('trackables.activityEmpty') }}
+              <i class="pi pi-user text-xs text-[var(--fg-subtle)]" aria-hidden="true" />
             </span>
           </template>
         </Column>
@@ -651,8 +840,8 @@
           v-if="rowHasTrackableActions"
           :header="t('common.actions')"
           header-class="matter-actions-header"
-          body-class="matter-actions-cell"
-          class="w-0 min-w-[7.5rem] whitespace-nowrap"
+          body-class="matter-actions-cell align-middle"
+          class="min-w-[7.5rem] whitespace-nowrap"
         >
           <template #body="{ data }">
             <div class="matters-row-actions" role="group" :aria-label="t('common.actions')">
@@ -718,20 +907,25 @@
       </DataTable>
       </div>
 
-      <!-- Paginación fija -->
       <div
-        v-if="!mattersShowSkeleton && trackables.length > 0"
+        v-if="!mattersShowSkeleton && totalRecords > 0"
         class="flex-shrink-0 border-t border-[var(--surface-border)] bg-[var(--surface-raised)] px-4 py-3 sm:px-5"
       >
         <Paginator
-          :first="first"
-          :rows="rows"
+          :first="listingFirst"
+          :rows="listingRowsPerPage"
           :total-records="totalRecords"
-          :rows-per-page-options="[10, 20, 50]"
+          :rows-per-page-options="[25, 50, 100]"
           :current-page-report-template="t('trackables.tablePageReport')"
           template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-          @page="onPage"
+          @page="onListingPaginatorPage"
         />
+        <p
+          v-if="activeFilterCount > 0"
+          class="m-0 mt-2 text-xs tabular-nums text-[var(--fg-muted)]"
+        >
+          {{ t('trackables.toolbarFiltersActive', { n: activeFilterCount }) }}
+        </p>
       </div>
     </div>
     </template>
@@ -743,7 +937,7 @@
       :dismissable-mask="!creating"
       :closable="false"
       :close-on-escape="createCloseOnEscape"
-      :style="{ width: 'min(880px, 96vw)' }"
+      :style="{ width: 'min(640px, 96vw)' }"
       :pt="{
         mask: { class: 'alega-confirm-mask' },
         root: {
@@ -755,324 +949,294 @@
       @hide="onCreateDialogHide"
     >
       <template #container>
-        <div class="matter-dialog-shell matter-dialog-shell--wizard">
-          <div class="matter-wizard-root">
-        <div class="matter-wizard">
-          <aside class="matter-wizard__sidebar" :aria-label="t('trackables.matterDialog.eyebrowCreate')">
-            <div class="matter-wizard__brand">
-              <div class="matter-wizard__brand-icon" aria-hidden="true">
+        <div class="matter-dialog-shell">
+          <header class="matter-dialog-header">
+            <div class="flex items-start gap-3">
+              <div class="matter-dialog-icon" aria-hidden="true">
                 <span class="text-xl leading-none">{{ newTrackable.emoji || '⚖️' }}</span>
               </div>
-              <div class="matter-wizard__brand-text">
-                <span class="matter-wizard__eyebrow">{{ t('trackables.matterDialog.eyebrowCreate') }}</span>
-                <p class="matter-wizard__brand-title">{{ t('trackables.matterDialog.createTitle') }}</p>
+              <div class="flex flex-col gap-0.5 min-w-0">
+                <span class="matter-dialog-eyebrow">{{ t('trackables.matterDialog.eyebrowCreate') }}</span>
+                <h2 class="matter-dialog-title">{{ t('trackables.matterDialog.createTitle') }}</h2>
+                <p class="matter-dialog-stephint">{{ t(`trackables.matterDialog.steps.${currentCreateStepId}`) }}</p>
               </div>
             </div>
-            <div class="matter-wizard__progress-wrap">
-              <p class="matter-wizard__progress-label">
-                {{ t('trackables.matterDialog.progressLabel', { n: createProgressPct }) }}
-              </p>
-              <div class="matter-wizard__progress-bar" role="progressbar" :aria-valuenow="createProgressPct" aria-valuemin="0" aria-valuemax="100">
-                <div class="matter-wizard__progress-fill" :style="{ width: `${createProgressPct}%` }" />
-              </div>
-            </div>
-            <ol
-              class="matter-wizard__steps"
-              :aria-label="t('trackables.matterDialog.stepIndicator', { current: createWizardStep + 1, total: 3 })"
+            <button
+              v-if="!creating"
+              type="button"
+              class="dialog-close-btn"
+              :aria-label="t('trackables.matterDialog.closeAriaLabel')"
+              @click="attemptCloseCreate"
             >
-              <li
-                v-for="(stepId, idx) in createStepIds"
-                :key="stepId"
-                class="matter-wizard__step"
-                :class="{
-                  'matter-wizard__step--current': idx === createWizardStep,
-                  'matter-wizard__step--done': idx < createWizardStep,
-                }"
-              >
-                <button
-                  type="button"
-                  class="matter-wizard__step-btn"
+              <i class="pi pi-times text-sm" aria-hidden="true" />
+            </button>
+          </header>
+
+          <div
+            class="matter-dialog-steps"
+            role="group"
+            :aria-label="t('trackables.matterDialog.stepIndicator', { current: createWizardStep + 1, total: createStepIds.length })"
+          >
+            <template v-for="(stepId, idx) in createStepIds" :key="stepId">
+              <div class="flex items-center gap-2">
+                <div
+                  class="matter-dialog-step__circle"
+                  :class="{
+                    'matter-dialog-step__circle--done': idx < createWizardStep,
+                    'matter-dialog-step__circle--active': idx === createWizardStep,
+                  }"
                   :aria-current="idx === createWizardStep ? 'step' : undefined"
-                  :disabled="idx > createWizardStep"
-                  @click="goToCreateStep(idx)"
                 >
-                  <span class="matter-wizard__step-dot" aria-hidden="true">
-                    <i v-if="idx < createWizardStep" class="pi pi-check text-[11px] text-white" />
-                    <span v-else-if="idx === createWizardStep" class="matter-wizard__step-dot-inner" />
-                  </span>
-                  <span class="matter-wizard__step-copy">
-                    <span class="matter-wizard__step-label">{{ t(`trackables.matterDialog.steps.${stepId}`) }}</span>
-                    <span class="matter-wizard__step-hint">{{ t(`trackables.matterDialog.stepHints.${stepId}`) }}</span>
-                  </span>
-                </button>
-              </li>
-            </ol>
-            <div class="matter-wizard__support">
-              <i class="pi pi-headphones matter-wizard__support-icon" aria-hidden="true" />
-              <button
-                type="button"
-                class="matter-wizard__support-link"
-                :aria-label="`${t('trackables.matterDialog.support')}: ${t('trackables.matterDialog.supportLink')}`"
-                @click.prevent
-              >
-                {{ t('trackables.matterDialog.supportLink') }}
-              </button>
-            </div>
-          </aside>
-
-          <div class="matter-wizard__content">
-            <header class="matter-wizard__header">
-              <div class="matter-wizard__header-text">
-                <h3 class="matter-wizard__step-title">{{ t(`trackables.matterDialog.steps.${currentCreateStepId}`) }}</h3>
-                <p class="matter-wizard__step-sub">{{ t(`trackables.matterDialog.stepHints.${currentCreateStepId}`) }}</p>
+                  <i v-if="idx < createWizardStep" class="pi pi-check text-[10px]" aria-hidden="true" />
+                  <span v-else>{{ idx + 1 }}</span>
+                </div>
+                <span
+                  class="text-xs font-medium"
+                  :style="idx === createWizardStep ? { color: 'var(--fg-default)' } : { color: 'var(--fg-subtle)' }"
+                >
+                  {{ t(`trackables.matterDialog.steps.${stepId}`) }}
+                </span>
               </div>
-              <button
+              <div
+                v-if="idx < createStepIds.length - 1"
+                class="matter-dialog-step__line"
+                :class="{ 'matter-dialog-step__line--done': idx < createWizardStep }"
+              />
+            </template>
+          </div>
+
+          <div class="matter-dialog-body">
+            <form novalidate @submit.prevent="onCreateSubmit" @keydown="onCreateKeydown">
+              <Transition :name="createStepTransitionName" mode="out-in">
+                <div v-if="createWizardStep === 0" key="c-step-0" class="flex flex-col gap-5">
+                  <section class="matter-form-section">
+                    <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionIdentity') }}</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_140px]">
+                      <div class="flex flex-col gap-1">
+                        <label for="md-title" class="matter-field-label">
+                          {{ t('trackables.matterDialog.fieldTitle') }}
+                          <span class="matter-field-required">*</span>
+                        </label>
+                        <InputText
+                          id="md-title"
+                          ref="createTitleRef"
+                          v-model="newTrackable.title"
+                          :placeholder="t('trackables.matterDialog.placeholderTitle')"
+                          :invalid="!!createErrors.title"
+                          autocomplete="off"
+                          @blur="validateCreateField('title')"
+                          @input="createErrors.title = ''"
+                        />
+                        <small v-if="createErrors.title" class="matter-field-error">{{ createErrors.title }}</small>
+                      </div>
+                      <div class="flex flex-col gap-1">
+                        <label for="md-emoji" class="matter-field-label">{{ t('trackables.matterDialog.fieldEmoji') }}</label>
+                        <Dropdown
+                          id="md-emoji"
+                          v-model="newTrackable.emoji"
+                          :options="emojiOptions"
+                          option-label="label"
+                          option-value="value"
+                          :placeholder="t('trackables.emojiPlaceholder')"
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="matter-form-section">
+                    <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionMatter') }}</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div class="flex flex-col gap-1">
+                        <label for="md-matter" class="matter-field-label">{{ t('trackables.matterDialog.fieldMatter') }}</label>
+                        <Dropdown
+                          id="md-matter"
+                          v-model="newTrackable.matterType"
+                          :options="matterTypeOptions"
+                          option-label="label"
+                          option-value="value"
+                        />
+                      </div>
+                      <div class="flex flex-col gap-1">
+                        <label for="md-type" class="matter-field-label">
+                          {{ t('trackables.matterDialog.fieldType') }}
+                          <span class="matter-field-required">*</span>
+                        </label>
+                        <Dropdown
+                          id="md-type"
+                          v-model="newTrackable.type"
+                          :options="typeSelectOptions"
+                          option-label="label"
+                          option-value="value"
+                          :placeholder="t('trackables.typePlaceholder')"
+                          :invalid="!!createErrors.type"
+                          @change="createErrors.type = ''"
+                        />
+                        <small v-if="createErrors.type" class="matter-field-error">{{ createErrors.type }}</small>
+                      </div>
+                      <div class="flex flex-col gap-1">
+                        <label for="md-expedient" class="matter-field-label">{{ t('trackables.matterDialog.fieldExpedient') }}</label>
+                        <InputText
+                          id="md-expedient"
+                          v-model="newTrackable.expedientNumber"
+                          :placeholder="t('trackables.matterDialog.placeholderExpedient')"
+                          class="font-mono-num"
+                        />
+                      </div>
+                      <div class="flex flex-col gap-1">
+                        <label for="md-court" class="matter-field-label">{{ t('trackables.matterDialog.fieldCourt') }}</label>
+                        <InputText
+                          id="md-court"
+                          v-model="newTrackable.court"
+                          :placeholder="t('trackables.matterDialog.placeholderCourt')"
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="matter-form-section">
+                    <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionTimeline') }}</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-[180px_1fr]">
+                      <div class="flex flex-col gap-1">
+                        <label for="md-due" class="matter-field-label">{{ t('trackables.matterDialog.fieldDueDate') }}</label>
+                        <Calendar
+                          id="md-due"
+                          v-model="newTrackable.dueDate"
+                          date-format="dd/mm/yy"
+                          :placeholder="t('trackables.matterDialog.placeholderDate')"
+                          show-icon
+                        />
+                      </div>
+                      <div class="flex flex-col gap-1">
+                        <label for="md-desc" class="matter-field-label">{{ t('trackables.matterDialog.fieldDescription') }}</label>
+                        <Textarea
+                          id="md-desc"
+                          v-model="newTrackable.description"
+                          rows="2"
+                          :placeholder="t('trackables.matterDialog.placeholderDescription')"
+                          auto-resize
+                        />
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <div v-else-if="createWizardStep === 1" key="c-step-1" class="flex flex-col gap-5">
+                  <section class="matter-form-section">
+                    <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionParties') }}</h3>
+                    <div class="grid grid-cols-1 gap-4">
+                      <div class="flex flex-col gap-1">
+                        <label for="md-client" class="matter-field-label">{{ t('trackables.matterDialog.fieldClient') }}</label>
+                        <Dropdown
+                          id="md-client"
+                          v-model="newTrackable.clientId"
+                          :options="clientsOptions"
+                          option-label="name"
+                          option-value="id"
+                          :placeholder="t('trackables.matterDialog.placeholderClient')"
+                          filter
+                          show-clear
+                        />
+                        <small class="matter-field-help">{{ t('trackables.matterDialog.helperClient') }}</small>
+                      </div>
+                      <div class="flex flex-col gap-1">
+                        <label for="md-counterparty" class="matter-field-label">{{ t('trackables.matterDialog.fieldCounterparty') }}</label>
+                        <InputText
+                          id="md-counterparty"
+                          v-model="newTrackable.counterpartyName"
+                          :placeholder="t('trackables.matterDialog.placeholderCounterparty')"
+                        />
+                        <small class="matter-field-help">{{ t('trackables.matterDialog.helperCounterparty') }}</small>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <div v-else key="c-step-2" class="flex flex-col gap-5">
+                  <section class="matter-form-section">
+                    <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionTemplate') }}</h3>
+                    <p class="matter-field-help m-0">{{ t('trackables.matterDialog.modeHint') }}</p>
+                    <div class="flex flex-col gap-2 mt-3">
+                      <span class="matter-field-label">{{ t('trackables.matterDialog.modeLabel') }}</span>
+                      <SelectButton
+                        v-model="createWizardMode"
+                        :options="createWizardModeOptionsI18n"
+                        option-label="label"
+                        option-value="value"
+                        :allow-empty="false"
+                        class="matter-mode-toggle"
+                      />
+                    </div>
+                    <div v-if="createWizardMode === 'template'" class="mt-4">
+                      <div v-if="wizardTemplatesLoading" class="flex items-center gap-2 py-3 text-sm text-[var(--fg-muted)]">
+                        <ProgressSpinner style="width: 22px; height: 22px" stroke-width="4" />
+                        <span>{{ t('app.loading') }}</span>
+                      </div>
+                      <div v-else class="flex flex-col gap-1">
+                        <label for="md-template" class="matter-field-label">
+                          {{ t('trackables.matterDialog.templateLabel') }}
+                          <span class="matter-field-required">*</span>
+                        </label>
+                        <Dropdown
+                          id="md-template"
+                          v-model="createWizardSystemBlueprintId"
+                          :options="wizardTemplateOptions"
+                          option-label="label"
+                          option-value="value"
+                          :placeholder="wizardTemplateOptions.length ? t('trackables.matterDialog.templatePlaceholder') : t('trackables.matterDialog.templateEmpty')"
+                          :disabled="!wizardTemplateOptions.length"
+                          filter
+                          show-clear
+                        />
+                        <small v-if="!wizardTemplateOptions.length" class="matter-field-error">
+                          {{ t('trackables.matterDialog.templateNoneHint') }}
+                        </small>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </Transition>
+            </form>
+          </div>
+
+          <footer class="matter-dialog-footer">
+            <Button
+              type="button"
+              :label="t('common.cancel')"
+              text
+              :disabled="creating"
+              @click="attemptCloseCreate"
+            />
+            <div class="flex items-center gap-2">
+              <Button
+                v-if="createWizardStep > 0"
                 type="button"
-                class="matter-wizard__close"
+                :label="t('trackables.matterDialog.actionBack')"
+                icon="pi pi-arrow-left"
+                severity="secondary"
+                outlined
                 :disabled="creating"
-                :aria-label="t('trackables.matterDialog.closeAriaLabel')"
-                @click="attemptCloseCreate"
-              >
-                <i class="pi pi-times" aria-hidden="true" />
-              </button>
-            </header>
-
-            <form class="matter-wizard__body" novalidate @submit.prevent="onCreateSubmit" @keydown="onCreateKeydown">
-        <div v-show="createWizardStep === 0" class="flex flex-col gap-5">
-          <section class="matter-form-section">
-            <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionIdentity') }}</h3>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_140px]">
-              <div class="flex flex-col gap-1">
-                <label for="md-title" class="matter-field-label">
-                  {{ t('trackables.matterDialog.fieldTitle') }}
-                  <span class="matter-field-required">*</span>
-                </label>
-                <InputText
-                  id="md-title"
-                  ref="createTitleRef"
-                  v-model="newTrackable.title"
-                  :placeholder="t('trackables.matterDialog.placeholderTitle')"
-                  :invalid="!!createErrors.title"
-                  autocomplete="off"
-                  @blur="validateCreateField('title')"
-                  @input="createErrors.title = ''"
-                />
-                <small v-if="createErrors.title" class="matter-field-error">{{ createErrors.title }}</small>
-              </div>
-              <div class="flex flex-col gap-1">
-                <label for="md-emoji" class="matter-field-label">{{ t('trackables.matterDialog.fieldEmoji') }}</label>
-                <Dropdown
-                  id="md-emoji"
-                  v-model="newTrackable.emoji"
-                  :options="emojiOptions"
-                  option-label="label"
-                  option-value="value"
-                  :placeholder="t('trackables.emojiPlaceholder')"
-                />
-              </div>
-            </div>
-          </section>
-
-          <section class="matter-form-section">
-            <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionMatter') }}</h3>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div class="flex flex-col gap-1">
-                <label for="md-matter" class="matter-field-label">{{ t('trackables.matterDialog.fieldMatter') }}</label>
-                <Dropdown
-                  id="md-matter"
-                  v-model="newTrackable.matterType"
-                  :options="matterTypeOptions"
-                  option-label="label"
-                  option-value="value"
-                />
-              </div>
-              <div class="flex flex-col gap-1">
-                <label for="md-type" class="matter-field-label">
-                  {{ t('trackables.matterDialog.fieldType') }}
-                  <span class="matter-field-required">*</span>
-                </label>
-                <Dropdown
-                  id="md-type"
-                  v-model="newTrackable.type"
-                  :options="typeSelectOptions"
-                  option-label="label"
-                  option-value="value"
-                  :placeholder="t('trackables.typePlaceholder')"
-                  :invalid="!!createErrors.type"
-                  @change="createErrors.type = ''"
-                />
-                <small v-if="createErrors.type" class="matter-field-error">{{ createErrors.type }}</small>
-              </div>
-              <div class="flex flex-col gap-1">
-                <label for="md-expedient" class="matter-field-label">{{ t('trackables.matterDialog.fieldExpedient') }}</label>
-                <InputText
-                  id="md-expedient"
-                  v-model="newTrackable.expedientNumber"
-                  :placeholder="t('trackables.matterDialog.placeholderExpedient')"
-                  class="font-mono-num"
-                />
-              </div>
-              <div class="flex flex-col gap-1">
-                <label for="md-court" class="matter-field-label">{{ t('trackables.matterDialog.fieldCourt') }}</label>
-                <InputText
-                  id="md-court"
-                  v-model="newTrackable.court"
-                  :placeholder="t('trackables.matterDialog.placeholderCourt')"
-                />
-              </div>
-            </div>
-          </section>
-
-          <section class="matter-form-section">
-            <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionTimeline') }}</h3>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-[180px_1fr]">
-              <div class="flex flex-col gap-1">
-                <label for="md-due" class="matter-field-label">{{ t('trackables.matterDialog.fieldDueDate') }}</label>
-                <Calendar
-                  id="md-due"
-                  v-model="newTrackable.dueDate"
-                  date-format="dd/mm/yy"
-                  :placeholder="t('trackables.matterDialog.placeholderDate')"
-                  show-icon
-                />
-              </div>
-              <div class="flex flex-col gap-1">
-                <label for="md-desc" class="matter-field-label">{{ t('trackables.matterDialog.fieldDescription') }}</label>
-                <Textarea
-                  id="md-desc"
-                  v-model="newTrackable.description"
-                  rows="2"
-                  :placeholder="t('trackables.matterDialog.placeholderDescription')"
-                  auto-resize
-                />
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div v-show="createWizardStep === 1" class="flex flex-col gap-5">
-          <section class="matter-form-section">
-            <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionParties') }}</h3>
-            <div class="grid grid-cols-1 gap-4">
-              <div class="flex flex-col gap-1">
-                <label for="md-client" class="matter-field-label">{{ t('trackables.matterDialog.fieldClient') }}</label>
-                <Dropdown
-                  id="md-client"
-                  v-model="newTrackable.clientId"
-                  :options="clientsOptions"
-                  option-label="name"
-                  option-value="id"
-                  :placeholder="t('trackables.matterDialog.placeholderClient')"
-                  filter
-                  show-clear
-                />
-                <small class="matter-field-help">{{ t('trackables.matterDialog.helperClient') }}</small>
-              </div>
-              <div class="flex flex-col gap-1">
-                <label for="md-counterparty" class="matter-field-label">{{ t('trackables.matterDialog.fieldCounterparty') }}</label>
-                <InputText
-                  id="md-counterparty"
-                  v-model="newTrackable.counterpartyName"
-                  :placeholder="t('trackables.matterDialog.placeholderCounterparty')"
-                />
-                <small class="matter-field-help">{{ t('trackables.matterDialog.helperCounterparty') }}</small>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div v-show="createWizardStep === 2" class="flex flex-col gap-5">
-          <section class="matter-form-section">
-            <h3 class="matter-form-section__title">{{ t('trackables.matterDialog.sectionTemplate') }}</h3>
-            <p class="matter-field-help m-0">{{ t('trackables.matterDialog.modeHint') }}</p>
-            <div class="flex flex-col gap-2 mt-3">
-              <span class="matter-field-label">{{ t('trackables.matterDialog.modeLabel') }}</span>
-              <SelectButton
-                v-model="createWizardMode"
-                :options="createWizardModeOptionsI18n"
-                option-label="label"
-                option-value="value"
-                :allow-empty="false"
-                class="matter-mode-toggle"
+                @click="prevCreateStep"
+              />
+              <Button
+                v-if="createWizardStep < 2"
+                type="button"
+                :label="t('trackables.matterDialog.actionNext')"
+                icon="pi pi-arrow-right"
+                icon-pos="right"
+                :disabled="!canAdvanceCreateStep"
+                @click="advanceCreateStep"
+              />
+              <Button
+                v-else
+                type="button"
+                :label="t('trackables.matterDialog.actionCreate')"
+                icon="pi pi-check"
+                :disabled="!canSubmitCreate"
+                :loading="creating"
+                @click="onCreateSubmit"
               />
             </div>
-            <div v-if="createWizardMode === 'template'" class="mt-4">
-              <div v-if="wizardTemplatesLoading" class="flex items-center gap-2 py-3 text-sm text-[var(--fg-muted)]">
-                <ProgressSpinner style="width: 22px; height: 22px" stroke-width="4" />
-                <span>{{ t('app.loading') }}</span>
-              </div>
-              <div v-else class="flex flex-col gap-1">
-                <label for="md-template" class="matter-field-label">
-                  {{ t('trackables.matterDialog.templateLabel') }}
-                  <span class="matter-field-required">*</span>
-                </label>
-                <Dropdown
-                  id="md-template"
-                  v-model="createWizardSystemBlueprintId"
-                  :options="wizardTemplateOptions"
-                  option-label="label"
-                  option-value="value"
-                  :placeholder="wizardTemplateOptions.length ? t('trackables.matterDialog.templatePlaceholder') : t('trackables.matterDialog.templateEmpty')"
-                  :disabled="!wizardTemplateOptions.length"
-                  filter
-                  show-clear
-                />
-                <small
-                  v-if="!wizardTemplateOptions.length"
-                  class="matter-field-error"
-                >
-                  {{ t('trackables.matterDialog.templateNoneHint') }}
-                </small>
-              </div>
-            </div>
-          </section>
-        </div>
-            </form>
-
-            <footer class="matter-wizard__footer">
-              <div class="matter-wizard__footer-inner">
-                <Button
-                  type="button"
-                  :label="t('common.cancel')"
-                  text
-                  :disabled="creating"
-                  @click="attemptCloseCreate"
-                />
-                <div class="matter-wizard__footer-actions">
-                  <Button
-                    v-if="createWizardStep > 0"
-                    type="button"
-                    :label="t('trackables.matterDialog.actionBack')"
-                    icon="pi pi-arrow-left"
-                    severity="secondary"
-                    outlined
-                    :disabled="creating"
-                    @click="createWizardStep -= 1"
-                  />
-                  <Button
-                    v-if="createWizardStep < 2"
-                    type="button"
-                    :label="t('trackables.matterDialog.actionNext')"
-                    icon="pi pi-arrow-right"
-                    icon-pos="right"
-                    :disabled="!canAdvanceCreateStep"
-                    @click="advanceCreateStep"
-                  />
-                  <Button
-                    v-else
-                    type="button"
-                    :label="t('trackables.matterDialog.actionCreate')"
-                    icon="pi pi-check"
-                    :disabled="!canSubmitCreate"
-                    :loading="creating"
-                    @click="onCreateSubmit"
-                  />
-                </div>
-              </div>
-            </footer>
-          </div>
-        </div>
-      </div>
+          </footer>
         </div>
       </template>
     </Dialog>
@@ -1116,7 +1280,7 @@
           </div>
           <div class="matter-edit__header-actions">
             <router-link
-              v-if="editingId"
+              v-if="editingId && !editLoading"
               :to="`/trackables/${editingId}`"
               class="matter-open-link"
               @click="showEditDialog = false"
@@ -1136,8 +1300,42 @@
           </div>
         </header>
 
-        <div v-if="editLoading" class="matter-edit__loading">
-          <ProgressSpinner />
+        <div
+          v-if="editLoading"
+          class="matter-edit__loading matter-edit__loading--skeleton"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          <span class="sr-only">{{ t('trackables.matterDialog.loadingSkeletonSr') }}</span>
+          <div class="matter-edit-skeleton flex min-h-[min(420px,52vh)] flex-col gap-5 px-[1.35rem] pb-4 pt-2">
+            <section class="flex flex-col gap-3">
+              <Skeleton height="0.65rem" width="38%" border-radius="4px" class="matter-edit-skel-section-label" />
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_140px]">
+                <Skeleton height="2.75rem" width="100%" border-radius="0.75rem" />
+                <Skeleton height="2.75rem" width="100%" border-radius="0.75rem" />
+              </div>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Skeleton height="2.75rem" width="100%" border-radius="0.75rem" />
+                <Skeleton height="2.75rem" width="100%" border-radius="0.75rem" />
+              </div>
+            </section>
+            <section class="flex flex-col gap-3">
+              <Skeleton height="0.65rem" width="32%" border-radius="4px" class="matter-edit-skel-section-label" />
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <Skeleton height="2.75rem" width="100%" border-radius="0.75rem" />
+                <Skeleton height="2.75rem" width="100%" border-radius="0.75rem" />
+              </div>
+              <Skeleton height="2.75rem" width="100%" border-radius="0.75rem" />
+            </section>
+            <section class="flex flex-col gap-3">
+              <Skeleton height="0.65rem" width="36%" border-radius="4px" class="matter-edit-skel-section-label" />
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_180px]">
+                <Skeleton height="2.75rem" width="100%" border-radius="0.75rem" />
+                <Skeleton height="2.75rem" width="100%" border-radius="0.75rem" />
+              </div>
+              <Skeleton height="4.5rem" width="100%" border-radius="0.75rem" />
+            </section>
+          </div>
         </div>
         <form v-else class="matter-edit__body" novalidate @submit.prevent="saveEdit" @keydown="onEditKeydown">
         <section class="matter-form-section">
@@ -1284,7 +1482,7 @@
               type="button"
               :label="t('trackables.matterDialog.actionSaveChanges')"
               icon="pi pi-check"
-              :disabled="!canSubmitEdit"
+              :disabled="!canSubmitEdit || editLoading"
               :loading="savingEdit"
               @click="saveEdit"
             />
@@ -1312,7 +1510,6 @@ import { storeToRefs } from 'pinia';
 import ProgressSpinner from 'primevue/progressspinner';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import Paginator from 'primevue/paginator';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
@@ -1326,10 +1523,22 @@ import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Popover from 'primevue/popover';
 import Menu from 'primevue/menu';
+import Paginator from 'primevue/paginator';
 import ConfirmDialogBase from '@/components/common/ConfirmDialogBase.vue';
 import DeleteTrackableDialog from '@/components/common/DeleteTrackableDialog.vue';
+import UrgencyKpiChipsBar from '@/views/trackables/components/UrgencyKpiChipsBar.vue';
+import MattersToolbarScopeFilters from '@/views/trackables/components/MattersToolbarScopeFilters.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
+import axios from 'axios';
 import { apiClient } from '@/api/client';
+import {
+  fetchTrackablesList,
+  type TrackableListingUrgency,
+  type TrackableListFacets,
+  type TrackableListItemDto,
+  type TrackableListParams,
+  type TrackableListResponse,
+} from '@/api/trackables';
 import { createProcessTrack } from '@/api/process-tracks';
 import { usePermissions } from '@/composables/usePermissions';
 import { useAuthStore } from '@/stores/auth.store';
@@ -1344,7 +1553,6 @@ const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
 
 type ListScope = 'active' | 'archived' | 'trash';
-type ActivityFilterId = 'total' | 'urgentToday' | 'overdue' | 'next14Days';
 type ActivitySummary = {
   done: number;
   inProgress: number;
@@ -1397,30 +1605,57 @@ const trashLoading = ref(false);
 const trackables = ref<any[]>([]);
 const loading = ref(false);
 const totalRecords = ref(0);
-const first = ref(0);
-const rows = ref(20);
 const trackableActivityDetails = ref<Record<string, TrackableActivityDetailState>>({});
 
-const activityFilterFacets = ref({
+const listingFacets = ref<TrackableListFacets>({
   total: 0,
-  urgentToday: 0,
   overdue: 0,
-  next14Days: 0,
+  dueToday: 0,
+  dueWeek: 0,
+  dueMonth: 0,
+  normal: 0,
+  noDeadline: 0,
 });
+const listingFirst = ref(0);
+const listingRowsPerPage = ref(50);
+let listingAbort: AbortController | null = null;
 
 const filters = ref({
   search: '',
   status: null as string | null,
   type: null as string | null,
   assignedToId: null as string | null,
-  activityFilter: null as ActivityFilterId | null,
+  urgency: null as TrackableListingUrgency | null,
 });
+
+/** Toolbar chip «A mí»: mismo criterio que filtrar asignado = usuario actual */
+const isAssignedToMeFilter = computed(
+  () => Boolean(user.value?.id && filters.value.assignedToId === user.value.id),
+);
 
 const tableSkeletonRows = Array.from({ length: 8 }, (_, i) => i);
 
 const mattersDtRef = ref<InstanceType<typeof DataTable> | null>(null);
 const mattersSearchFieldRef = ref<InstanceType<typeof IconField> | null>(null);
 const filtersPopoverRef = ref<InstanceType<typeof Popover> | null>(null);
+const assignInlinePopoverRef = ref<InstanceType<typeof Popover> | null>(null);
+const assignInlineTrackable = ref<any | null>(null);
+const showAssignConfirm = ref(false);
+const assignConfirmPayload = ref<{
+  trackable: any;
+  userId: string;
+  displayName: string;
+} | null>(null);
+const assigningInline = ref(false);
+const clientInlinePopoverRef = ref<InstanceType<typeof Popover> | null>(null);
+const clientInlineTrackable = ref<any | null>(null);
+const showClientConfirm = ref(false);
+const clientConfirmPayload = ref<{
+  trackable: any;
+  clientId: string;
+  clientName: string;
+} | null>(null);
+const assigningClientInline = ref(false);
 const savedViewsMenuRef = ref<InstanceType<typeof Menu> | null>(null);
 const moreActionsMenuRef = ref<InstanceType<typeof Menu> | null>(null);
 const tableDensity = ref<'compact' | 'comfortable'>('compact');
@@ -1500,8 +1735,10 @@ const emojiOptions = computed(() => [
   { label: `🔎 ${t('trackables.emojiOptions.audit')}`, value: '🔎' },
 ]);
 
-const clientsOptions = ref<Array<{ id: string; name: string }>>([]);
-const users = ref<Array<{ id: string; firstName?: string; lastName?: string; email: string }>>([]);
+const clientsOptions = ref<Array<{ id: string; name: string; avatarUrl?: string | null }>>([]);
+const users = ref<
+  Array<{ id: string; firstName?: string; lastName?: string; email: string; avatarUrl?: string | null }>
+>([]);
 const userOptions = computed(() =>
   users.value.map((u) => {
     const fullName = [u.firstName, u.lastName].filter(Boolean).join(' ');
@@ -1522,13 +1759,70 @@ function assigneeDisplayLabel(value: string | null | undefined) {
   return opt?.label ?? String(value);
 }
 
+function assignListPrimaryName(u: { firstName?: string; lastName?: string; email: string }) {
+  const full = [u.firstName, u.lastName].filter(Boolean).join(' ').trim();
+  return full || u.email || '';
+}
+
+function assignListSecondaryLine(u: { firstName?: string; lastName?: string; email: string }) {
+  const primary = assignListPrimaryName(u);
+  if (!primary || primary === u.email) return '';
+  return u.email;
+}
+
+const sortedAssignableUsers = computed(() => {
+  const list = [...users.value];
+  list.sort((a, b) =>
+    assignListPrimaryName(a).localeCompare(assignListPrimaryName(b), locale.value, {
+      sensitivity: 'base',
+    }),
+  );
+  return list;
+});
+
+const assignConfirmSubjectLine = computed(() => {
+  const p = assignConfirmPayload.value;
+  const title = p?.trackable?.title;
+  if (title == null || String(title).trim() === '') return undefined;
+  return `«${String(title)}»`;
+});
+
+const assignConfirmMessageLine = computed(() => {
+  const p = assignConfirmPayload.value;
+  if (!p) return '';
+  return t('trackables.assignInlineConfirmMessage', { name: p.displayName });
+});
+
+const clientConfirmSubjectLine = computed(() => {
+  const p = clientConfirmPayload.value;
+  const title = p?.trackable?.title;
+  if (title == null || String(title).trim() === '') return undefined;
+  return `«${String(title)}»`;
+});
+
+const clientConfirmMessageLine = computed(() => {
+  const p = clientConfirmPayload.value;
+  if (!p) return '';
+  return t('trackables.assignClientConfirmMessage', { name: p.clientName });
+});
+
+const sortedAssignableClients = computed(() => {
+  const list = [...clientsOptions.value];
+  list.sort((a, b) =>
+    String(a.name || '').localeCompare(String(b.name || ''), locale.value, {
+      sensitivity: 'base',
+    }),
+  );
+  return list;
+});
+
 const hasActiveFilters = computed(
   () =>
     Boolean(filters.value.search.trim()) ||
     Boolean(filters.value.status) ||
     Boolean(filters.value.type) ||
     Boolean(filters.value.assignedToId) ||
-    Boolean(filters.value.activityFilter),
+    Boolean(filters.value.urgency),
 );
 
 const activeFilterCount = computed(() => {
@@ -1537,7 +1831,7 @@ const activeFilterCount = computed(() => {
   if (filters.value.status) n += 1;
   if (filters.value.type) n += 1;
   if (filters.value.assignedToId) n += 1;
-  if (filters.value.activityFilter) n += 1;
+  if (filters.value.urgency) n += 1;
   return n;
 });
 
@@ -1587,18 +1881,20 @@ const activeFilterRows = computed((): ActiveFilterRow[] => {
       },
     });
   }
-  if (f.activityFilter) {
-    const map: Record<ActivityFilterId, string> = {
-      total: t('trackables.activityKpiTotal'),
-      urgentToday: t('trackables.activityKpiUrgentToday'),
-      overdue: t('trackables.activityKpiOverdue'),
-      next14Days: t('trackables.activityKpiNext14'),
+  if (f.urgency) {
+    const map: Record<TrackableListingUrgency, string> = {
+      overdue: t('trackables.listingChipOverdue'),
+      due_today: t('trackables.listingChipDueToday'),
+      due_week: t('trackables.listingChipDueWeek'),
+      due_month: t('trackables.listingChipDueMonth'),
+      normal: t('trackables.listingChipNormal'),
+      no_deadline: t('trackables.listingChipNoDeadline'),
     };
     rows.push({
-      id: 'activity',
-      label: t('trackables.activeFilterActivity', { label: map[f.activityFilter] ?? f.activityFilter }),
+      id: 'urgency',
+      label: t('trackables.activeFilterUrgency', { label: map[f.urgency] ?? f.urgency }),
       clear: () => {
-        filters.value.activityFilter = null;
+        filters.value.urgency = null;
         resetAndLoad();
       },
     });
@@ -1615,7 +1911,7 @@ const savedViewsMenuItems = computed(() => [
         status: null,
         type: null,
         assignedToId: user.value?.id ?? null,
-        activityFilter: null,
+        urgency: null,
       };
       resetAndLoad();
     },
@@ -1628,7 +1924,7 @@ const savedViewsMenuItems = computed(() => [
         status: null,
         type: null,
         assignedToId: null,
-        activityFilter: 'overdue',
+        urgency: 'overdue',
       };
       resetAndLoad();
     },
@@ -1641,7 +1937,7 @@ const savedViewsMenuItems = computed(() => [
         status: null,
         type: null,
         assignedToId: '__unassigned__',
-        activityFilter: null,
+        urgency: null,
       };
       resetAndLoad();
     },
@@ -1707,85 +2003,82 @@ function bindMattersDataTableScroll() {
   if (!scrollHost) return;
   const onScroll = () => {
     mattersDtScrolled.value = scrollHost.scrollTop > 2;
+    const nearBottom =
+      scrollHost.scrollTop + scrollHost.clientHeight >= scrollHost.scrollHeight - 120;
+    // Paginación por cursor en footer (Paginator); sin infinite scroll append.
   };
   scrollHost.addEventListener('scroll', onScroll, { passive: true });
   mattersScrollCleanup = () => scrollHost.removeEventListener('scroll', onScroll);
 }
 
-function isActivityKpiActive(id: ActivityFilterId) {
-  if (id === 'total') return !filters.value.activityFilter;
-  return filters.value.activityFilter === id;
-}
+const mattersShowSkeleton = computed(() => loading.value && trackables.value.length === 0);
+const mattersShowEmptyState = computed(
+  () => !loading.value && trackables.value.length === 0,
+);
+const mattersUseVirtualScroller = computed(
+  () => totalRecords.value > 100 || trackables.value.length > 100,
+);
 
-const mattersShowSkeleton = computed(() => loading.value);
+const mattersVirtualScrollerOptions = computed(() => ({
+  itemSize: tableDensity.value === 'compact' ? 72 : 104,
+}));
 
-const activityKpiCards = computed(() => {
-  const f = activityFilterFacets.value;
-  return [
-    {
-      id: 'total' as const,
-      count: f.total,
-      label: t('trackables.activityKpiTotal'),
-      icon: 'pi pi-folder',
-      aria: t('trackables.activityKpiAriaTotal'),
-      accentColor: '#2D3FBF',
-      mesh2: 'color-mix(in srgb, #7C3AED 12%, transparent)',
-      numberClass: 'text-[var(--brand-medianoche)] dark:text-[var(--brand-hielo)]',
-      activeRingClass: 'ring-[var(--brand-zafiro)]',
-      urgencyBarClass: 'exp-kpi-card--total-bar',
-      pulse: false,
-    },
-    {
-      id: 'urgentToday' as const,
-      count: f.urgentToday,
-      label: t('trackables.activityKpiUrgentToday'),
-      icon: 'pi pi-bolt',
-      aria: t('trackables.activityKpiAriaUrgentToday'),
-      accentColor: '#B45309',
-      mesh2: 'color-mix(in srgb, #FB7185 10%, transparent)',
-      numberClass: 'text-amber-900 dark:text-amber-100',
-      activeRingClass: 'ring-amber-700 dark:ring-amber-300',
-      urgencyBarClass: 'exp-kpi-card--urgency-bar',
-      pulse: false,
-    },
-    {
-      id: 'overdue' as const,
-      count: f.overdue,
-      label: t('trackables.activityKpiOverdue'),
-      icon: 'pi pi-exclamation-triangle',
-      aria: t('trackables.activityKpiAriaOverdue'),
-      accentColor: '#B91C1C',
-      mesh2: 'color-mix(in srgb, #F97316 12%, transparent)',
-      numberClass: 'text-red-900 dark:text-red-100',
-      activeRingClass: 'ring-red-700 dark:ring-red-300',
-      urgencyBarClass: 'exp-kpi-card--overdue-bar',
-      pulse: f.urgentToday > 0,
-    },
-    {
-      id: 'next14Days' as const,
-      count: f.next14Days,
-      label: t('trackables.activityKpiNext14'),
-      icon: 'pi pi-calendar-clock',
-      aria: t('trackables.activityKpiAriaNext14'),
-      accentColor: '#0F766E',
-      mesh2: 'color-mix(in srgb, #06B6D4 14%, transparent)',
-      numberClass: 'text-teal-900 dark:text-teal-100',
-      activeRingClass: 'ring-teal-700 dark:ring-teal-300',
-      urgencyBarClass: 'exp-kpi-card--next14-bar',
-      pulse: false,
-    },
-  ];
-});
-
-function toggleActivityFilter(id: ActivityFilterId) {
-  if (id === 'total') {
-    filters.value.activityFilter = null;
-    resetAndLoad();
-    return;
+/** Cockpit: anchura unificada de la columna principal = máximo entre filas cargadas (chips alineados). */
+let matterMeasureCanvasCtx: CanvasRenderingContext2D | null = null;
+function measureMatterCanvasTextWidth(text: string, font: string): number {
+  if (typeof document === 'undefined') return text.length * 8;
+  if (!matterMeasureCanvasCtx) {
+    matterMeasureCanvasCtx = document.createElement('canvas').getContext('2d');
   }
-  filters.value.activityFilter = filters.value.activityFilter === id ? null : id;
-  resetAndLoad();
+  if (!matterMeasureCanvasCtx) return text.length * 8;
+  matterMeasureCanvasCtx.font = font;
+  return matterMeasureCanvasCtx.measureText(text).width;
 }
+
+function estimatePrimaryColumnWidthPx(row: any): number {
+  const emojiCol = 40;
+  const gap = 12;
+  const left = emojiCol + gap;
+
+  const key = matterCaseKey(row);
+  const keySegment = key
+    ? measureMatterCanvasTextWidth(key, '600 10px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace') +
+      14
+    : 36;
+
+  const tagLabel = typeLabel(row.type).toLocaleUpperCase(dateLocaleTag());
+  const tagSegment =
+    measureMatterCanvasTextWidth(tagLabel, '600 11px Inter, system-ui, sans-serif') + 44;
+
+  const topLine = keySegment + 8 + tagSegment;
+
+  const title = String(row.title ?? '');
+  const titleW =
+    title.length > 0
+      ? measureMatterCanvasTextWidth(title, '600 15px Inter, system-ui, sans-serif')
+      : 0;
+
+  const meta = matterMetaLooksIncomplete(row)
+    ? t('trackables.matterMetaCockpitClientHint')
+    : matterCaseKey(row)
+      ? matterSubtitleLine(row)
+      : matterMetaLine(row);
+  const metaW = measureMatterCanvasTextWidth(meta, '400 12px Inter, system-ui, sans-serif');
+
+  const inner = Math.max(topLine, titleW, metaW);
+  return Math.ceil(left + inner + 6);
+}
+
+const matterPrimaryColumnCssVars = computed(() => {
+  const rows = trackables.value;
+  if (!rows.length) return undefined;
+  let max = 0;
+  for (const row of rows) {
+    max = Math.max(max, estimatePrimaryColumnWidthPx(row));
+  }
+  const w = Math.min(Math.max(240, max), 920);
+  return { '--matter-primary-col': `${w}px` };
+});
 
 function setTypeChip(value: string | null) {
   filters.value.type = value;
@@ -1796,9 +2089,10 @@ async function loadClientsForCase() {
   try {
     const { data } = await apiClient.get('/clients', { params: { limit: 500 } });
     const list = Array.isArray(data?.data) ? data.data : [];
-    clientsOptions.value = list.map((cl: { id: string; name: string }) => ({
+    clientsOptions.value = list.map((cl: { id: string; name: string; avatarUrl?: string | null }) => ({
       id: cl.id,
       name: cl.name,
+      avatarUrl: cl.avatarUrl ?? null,
     }));
   } catch {
     clientsOptions.value = [];
@@ -1817,6 +2111,10 @@ async function loadUsers() {
 const showCreateDialog = ref(false);
 const creating = ref(false);
 const createWizardStep = ref(0);
+const createStepDirection = ref<'forward' | 'backward'>('forward');
+const createStepTransitionName = computed(() =>
+  createStepDirection.value === 'forward' ? 'step-fwd' : 'step-back',
+);
 const createWizardMode = ref<'template' | 'free'>('template');
 const createWizardModeOptionsI18n = computed(() => [
   { label: t('trackables.matterDialog.modeTemplate'), value: 'template' as const },
@@ -1900,12 +2198,16 @@ const canSubmitCreate = computed(() => {
 
 function advanceCreateStep() {
   if (!validateCreateStep(createWizardStep.value)) return;
-  if (createWizardStep.value < 2) createWizardStep.value += 1;
+  if (createWizardStep.value < 2) {
+    createStepDirection.value = 'forward';
+    createWizardStep.value += 1;
+  }
 }
 
-function goToCreateStep(idx: number) {
-  if (idx < createWizardStep.value) {
-    createWizardStep.value = idx;
+function prevCreateStep() {
+  if (createWizardStep.value > 0) {
+    createStepDirection.value = 'backward';
+    createWizardStep.value -= 1;
   }
 }
 
@@ -1924,9 +2226,6 @@ function isCreateDirty(): boolean {
   );
 }
 
-const createProgressPct = computed(() =>
-  Math.round(((createWizardStep.value + 1) / createStepIds.length) * 100),
-);
 const currentCreateStepId = computed(() => createStepIds[createWizardStep.value]);
 const createCloseOnEscape = computed(() => !creating.value && !isCreateDirty());
 
@@ -1939,6 +2238,7 @@ function attemptCloseCreate() {
 function onCreateDialogHide() {
   if (creating.value) return;
   createWizardStep.value = 0;
+  createStepDirection.value = 'forward';
   createWizardMode.value = 'template';
   createWizardSystemBlueprintId.value = null;
   createErrors.value = { title: '', type: '', template: '' };
@@ -1980,6 +2280,7 @@ async function loadWizardSystemBlueprints() {
 
 async function onCreateDialogShow() {
   createWizardStep.value = 0;
+  createStepDirection.value = 'forward';
   createWizardMode.value = 'template';
   createWizardSystemBlueprintId.value = null;
   createErrors.value = { title: '', type: '', template: '' };
@@ -2015,16 +2316,23 @@ const canSubmitEdit = computed(() => {
   if (!editForm.value.title?.trim() || !editForm.value.type) return false;
   return editIsDirty.value;
 });
-const editCloseOnEscape = computed(() => !savingEdit.value && !editIsDirty.value);
+const editCloseOnEscape = computed(
+  () => !savingEdit.value && (!editIsDirty.value || editLoading.value),
+);
 
 function attemptCloseEdit() {
   if (savingEdit.value) return;
+  if (editLoading.value) {
+    showEditDialog.value = false;
+    return;
+  }
   if (editIsDirty.value && !window.confirm(t('trackables.matterDialog.actionDiscard'))) return;
   showEditDialog.value = false;
 }
 
 function onEditDialogHide() {
   if (savingEdit.value) return;
+  editLoading.value = false;
   resetEditForm();
 }
 
@@ -2111,13 +2419,34 @@ function syncScopeFromRoute() {
   }
 }
 
+const EXPEDIENTES_PREFS_KEY = 'alega:expedientes:prefs:v1';
+
 onMounted(() => {
   syncScopeFromRoute();
   window.addEventListener('keydown', onGlobalSearchHotkey);
+  try {
+    const raw = localStorage.getItem(EXPEDIENTES_PREFS_KEY);
+    if (raw) {
+      const p = JSON.parse(raw) as { density?: 'compact' | 'comfortable' };
+      if (p.density === 'compact' || p.density === 'comfortable') {
+        tableDensity.value = p.density;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
 });
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onGlobalSearchHotkey);
   mattersScrollCleanup?.();
+});
+
+watch(tableDensity, (d) => {
+  try {
+    localStorage.setItem(EXPEDIENTES_PREFS_KEY, JSON.stringify({ v: 1, density: d }));
+  } catch {
+    /* ignore */
+  }
 });
 
 watch(() => route.query.scope, syncScopeFromRoute);
@@ -2149,46 +2478,152 @@ watch(
   },
 );
 
-async function loadTrackables(page = 1) {
+function mapListingDtoToTrackableRow(d: TrackableListItemDto) {
+  const total = d.contadores.actividadesTotal;
+  const done = d.contadores.actividadesHechas;
+  const inProgress = Math.max(0, total - done);
+  const parts = (d.asignado?.nombre ?? '').trim().split(/\s+/).filter(Boolean);
+  const firstName = parts[0] ?? '';
+  const lastName = parts.slice(1).join(' ');
+  return {
+    id: d.id,
+    title: d.caratula,
+    description: undefined,
+    expedientNumber: d.codigo || undefined,
+    type: d.tipo,
+    matterType: d.materia,
+    status: d.estado,
+    assignedTo: d.asignado
+      ? {
+          id: d.asignado.id,
+          firstName,
+          lastName,
+          email: '',
+          avatarUrl: d.asignado.avatarUrl,
+        }
+      : null,
+    client: d.cliente ? { id: d.cliente.id, name: d.cliente.nombre } : null,
+    activitySummary: {
+      total,
+      done,
+      inProgress,
+      overdue: d.urgencia === 'overdue' ? 1 : 0,
+      urgentToday: d.urgencia === 'due_today' ? 1 : 0,
+      next14Days: d.urgencia === 'due_week' || d.urgencia === 'due_month' ? 1 : 0,
+    },
+    listingUrgency: d.urgencia,
+    __listingMapped: true,
+    __proximoPlazo: d.proximoPlazo,
+    metadata: {},
+  };
+}
+
+function onListingUrgencyChange(v: TrackableListingUrgency | null) {
+  filters.value.urgency = v;
+  resetAndLoad();
+}
+
+function toggleAssignedToMeFilter() {
+  const uid = user.value?.id;
+  if (!uid) return;
+  if (filters.value.assignedToId === uid) filters.value.assignedToId = null;
+  else filters.value.assignedToId = uid;
+  resetAndLoad();
+}
+
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+watch(
+  () => filters.value.search,
+  (_q, prev) => {
+    if (prev === undefined) return;
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      resetAndLoad();
+    }, 300);
+  },
+);
+
+function listingParams(cursor?: string): TrackableListParams {
+  const scope = listScope.value === 'archived' ? 'archived' : 'active';
+  return {
+    scope,
+    search: filters.value.search.trim() || undefined,
+    status:
+      listScope.value === 'active' ? (filters.value.status as string | undefined) || undefined : undefined,
+    tipo: filters.value.type ? [filters.value.type] : undefined,
+    asignadoId: filters.value.assignedToId
+      ? filters.value.assignedToId === '__unassigned__'
+        ? ['__unassigned__']
+        : [filters.value.assignedToId]
+      : undefined,
+    urgencia: filters.value.urgency || undefined,
+    sortBy: 'urgency',
+    cursor,
+    limit: listingRowsPerPage.value,
+  };
+}
+
+/** Lista paginada vía cursor: prefetch secuencial hasta la página pedida. */
+async function fetchListingPage(desiredPageIndex: number) {
   if (listScope.value === 'trash') return;
+  listingAbort?.abort();
+  listingAbort = new AbortController();
+  const signal = listingAbort.signal;
   loading.value = true;
+  const rows = listingRowsPerPage.value;
   try {
-    const { data } = await apiClient.get('/trackables', {
-      params: {
-        page,
-        limit: rows.value,
-        scope: listScope.value,
-        search: filters.value.search || undefined,
-        status:
-          listScope.value === 'active' ? filters.value.status || undefined : undefined,
-        type: filters.value.type || undefined,
-        assignedTo:
-          filters.value.assignedToId === '__unassigned__'
-            ? '__unassigned__'
-            : filters.value.assignedToId || undefined,
-        activityFilter: filters.value.activityFilter || undefined,
-      },
-    });
-    trackables.value = data.data;
-    totalRecords.value = data.total;
-    void hydrateVisibleTrackableActivities(trackables.value);
-    const facets = data.activityFilterFacets;
-    if (facets && typeof facets === 'object') {
-      activityFilterFacets.value = {
-        total: Number(facets.total ?? 0),
-        urgentToday: Number(facets.urgentToday ?? 0),
-        overdue: Number(facets.overdue ?? 0),
-        next14Days: Number(facets.next14Days ?? 0),
-      };
+    let pi = Math.max(0, desiredPageIndex);
+    let cursor: string | undefined = undefined;
+    let reuseChunk: TrackableListResponse | null = null;
+
+    for (let i = 0; i < pi; i++) {
+      const chunk = await fetchTrackablesList(listingParams(cursor), signal);
+      totalRecords.value = chunk.totalCount ?? totalRecords.value;
+      const nc = chunk.nextCursor ?? undefined;
+      if (!nc) {
+        pi = i;
+        reuseChunk = chunk;
+        break;
+      }
+      cursor = nc;
+    }
+
+    let data: TrackableListResponse;
+    if (reuseChunk) {
+      data = reuseChunk;
+    } else {
+      data = await fetchTrackablesList(listingParams(pi === 0 ? undefined : cursor), signal);
+    }
+
+    totalRecords.value = data.totalCount ?? 0;
+    if (data.facets) listingFacets.value = data.facets;
+    const mapped = (data.items ?? []).map(mapListingDtoToTrackableRow);
+    trackables.value = mapped;
+    listingFirst.value = pi * rows;
+    void hydrateVisibleTrackableActivities(mapped);
+  } catch (e) {
+    if (!axios.isCancel(e)) {
+      toast.add({ severity: 'error', summary: t('trackables.listingLoadError'), life: 4000 });
     }
   } finally {
     loading.value = false;
   }
 }
 
-function resetAndLoad() {
-  first.value = 0;
-  loadTrackables(1);
+async function resetAndLoad() {
+  listingFirst.value = 0;
+  await fetchListingPage(0);
+}
+
+function onListingPaginatorPage(event: { first: number; rows: number }) {
+  if (event.rows !== listingRowsPerPage.value) {
+    listingRowsPerPage.value = event.rows;
+    listingFirst.value = 0;
+    void fetchListingPage(0);
+    return;
+  }
+  listingFirst.value = event.first;
+  void fetchListingPage(Math.floor(event.first / event.rows));
 }
 
 function clearFilters() {
@@ -2197,15 +2632,9 @@ function clearFilters() {
     status: null,
     type: null,
     assignedToId: null,
-    activityFilter: null,
+    urgency: null,
   };
   resetAndLoad();
-}
-
-function onPage(event: { first: number; page: number; rows: number }) {
-  first.value = event.first;
-  if (typeof event.rows === 'number') rows.value = event.rows;
-  loadTrackables(event.page + 1);
 }
 
 function dateLocaleTag() {
@@ -2355,6 +2784,34 @@ function trackableActivityDetailState(row: any): TrackableActivityDetailState | 
 async function loadTrackableActivityDetail(row: any) {
   const id = row?.id;
   if (!id) return;
+  if (row.__listingMapped && row.activitySummary) {
+    const pz = row.__proximoPlazo as { fecha: string; tipo?: string } | null | undefined;
+    trackableActivityDetails.value = {
+      ...trackableActivityDetails.value,
+      [id]: {
+        loading: false,
+        error: false,
+        data: {
+          summary: {
+            done: row.activitySummary.done ?? 0,
+            inProgress: row.activitySummary.inProgress ?? 0,
+            overdue: row.activitySummary.overdue ?? 0,
+            total: row.activitySummary.total ?? 0,
+            urgentToday: row.activitySummary.urgentToday ?? 0,
+            next14Days: row.activitySummary.next14Days ?? 0,
+          },
+          nextDue: pz?.fecha
+            ? {
+                id: `listing:${id}`,
+                title: pz.tipo || t('trackables.tableColDue'),
+                dueDate: pz.fecha,
+              }
+            : null,
+        },
+      },
+    };
+    return;
+  }
   const current = trackableActivityDetails.value[id];
   if (current?.loading || current?.data) return;
   trackableActivityDetails.value = {
@@ -2414,7 +2871,7 @@ function activitySummary(row: any): ActivitySummary {
 function activityDonePct(row: any) {
   const summary = activitySummary(row);
   if (!summary.total) return 0;
-  return Math.round((summary.done / summary.total) * 100);
+  return Math.min(100, Math.round((summary.done / summary.total) * 100));
 }
 
 function activityActivePct(row: any) {
@@ -2468,6 +2925,11 @@ function matterCaseKey(row: any) {
   return String(n).trim().toUpperCase();
 }
 
+function matterMetaLooksIncomplete(row: any): boolean {
+  const text = matterCaseKey(row) ? matterSubtitleLine(row) : matterMetaLine(row);
+  return text === t('trackables.matterMetaFallback');
+}
+
 function formatRelativeDay(d: Date) {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -2509,13 +2971,17 @@ function activityDetailLoading(row: any) {
   return Boolean(trackableActivityDetailState(row)?.loading);
 }
 
-function matterRowClass() {
-  return 'matter-datatable-row';
+function matterRowClass(data: any) {
+  const u = data?.listingUrgency as TrackableListingUrgency | undefined;
+  const parts = ['matter-datatable-row'];
+  if (u) parts.push(`matter-row--urg-${u}`);
+  return parts.join(' ');
 }
 
 function closeCreateDialog() {
   showCreateDialog.value = false;
   createWizardStep.value = 0;
+  createStepDirection.value = 'forward';
   createWizardMode.value = 'template';
   createWizardSystemBlueprintId.value = null;
   newTrackable.value = {
@@ -2569,8 +3035,7 @@ async function createTrackable() {
       summary: t('trackables.matterDialog.toastCreateSuccess'),
       life: 3000,
     });
-    await loadTrackables(1);
-    first.value = 0;
+    await resetAndLoad();
     if (id) {
       router.push(`/trackables/${id}`);
     }
@@ -2635,8 +3100,7 @@ async function confirmArchiveTrackable() {
     toast.add({ severity: 'success', summary: t('trackables.deleteWizard.toastArchived'), life: 3000 });
     showArchiveConfirm.value = false;
     archiveConfirmTarget.value = null;
-    first.value = 0;
-    await loadTrackables(1);
+    await resetAndLoad();
   } catch {
     toast.add({ severity: 'error', summary: t('trackables.deleteWizard.toastArchiveError'), life: 3000 });
   } finally {
@@ -2658,12 +3122,115 @@ async function confirmReactivateTrackable() {
     toast.add({ severity: 'success', summary: t('trackables.reactivateToastSuccess'), life: 3000 });
     showReactivateConfirm.value = false;
     reactivateConfirmTarget.value = null;
-    first.value = 0;
-    await loadTrackables(1);
+    await resetAndLoad();
   } catch {
     toast.add({ severity: 'error', summary: t('trackables.reactivateToastError'), life: 3000 });
   } finally {
     reactivatingConfirm.value = false;
+  }
+}
+
+function openAssignInlinePopover(e: Event, row: any) {
+  if (!canTrackableUpdate.value) return;
+  assignInlineTrackable.value = row;
+  void loadUsers();
+  assignInlinePopoverRef.value?.toggle(e);
+}
+
+function requestAssignConfirm(u: {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  avatarUrl?: string | null;
+}) {
+  assignInlinePopoverRef.value?.hide?.();
+  const row = assignInlineTrackable.value;
+  assignInlineTrackable.value = null;
+  if (!row?.id) return;
+  assignConfirmPayload.value = {
+    trackable: row,
+    userId: u.id,
+    displayName: assignListPrimaryName(u) || u.email,
+  };
+  showAssignConfirm.value = true;
+}
+
+function onAssignConfirmHide() {
+  if (!assigningInline.value) assignConfirmPayload.value = null;
+}
+
+async function confirmAssignInline() {
+  const p = assignConfirmPayload.value;
+  if (!p?.trackable?.id) return;
+  assigningInline.value = true;
+  try {
+    await apiClient.patch(`/trackables/${p.trackable.id}`, { assignedToId: p.userId });
+    toast.add({
+      severity: 'success',
+      summary: t('trackables.assignInlineToastSuccess'),
+      life: 3000,
+    });
+    showAssignConfirm.value = false;
+    assignConfirmPayload.value = null;
+    await resetAndLoad();
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: t('trackables.assignInlineToastError'),
+      life: 4000,
+    });
+  } finally {
+    assigningInline.value = false;
+  }
+}
+
+function openClientInlinePopover(e: Event, row: any) {
+  if (!canTrackableUpdate.value) return;
+  clientInlineTrackable.value = row;
+  void loadClientsForCase();
+  clientInlinePopoverRef.value?.toggle(e);
+}
+
+function requestClientConfirm(c: { id: string; name: string; avatarUrl?: string | null }) {
+  clientInlinePopoverRef.value?.hide?.();
+  const row = clientInlineTrackable.value;
+  clientInlineTrackable.value = null;
+  if (!row?.id) return;
+  clientConfirmPayload.value = {
+    trackable: row,
+    clientId: c.id,
+    clientName: c.name,
+  };
+  showClientConfirm.value = true;
+}
+
+function onClientConfirmHide() {
+  if (!assigningClientInline.value) clientConfirmPayload.value = null;
+}
+
+async function confirmAssignClientInline() {
+  const p = clientConfirmPayload.value;
+  if (!p?.trackable?.id) return;
+  assigningClientInline.value = true;
+  try {
+    await apiClient.patch(`/trackables/${p.trackable.id}`, { clientId: p.clientId });
+    toast.add({
+      severity: 'success',
+      summary: t('trackables.assignClientToastSuccess'),
+      life: 3000,
+    });
+    showClientConfirm.value = false;
+    clientConfirmPayload.value = null;
+    await resetAndLoad();
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: t('trackables.assignClientToastError'),
+      life: 4000,
+    });
+  } finally {
+    assigningClientInline.value = false;
   }
 }
 
@@ -2674,6 +3241,7 @@ async function openEditDialog(row: any) {
   editLoading.value = true;
   try {
     const { data } = await apiClient.get(`/trackables/${row.id}`);
+    if (!showEditDialog.value || editingId.value !== row.id) return;
     const client = data.client as { id?: string } | undefined;
     const assignedTo = data.assignedTo as { id?: string } | undefined;
     editForm.value = {
@@ -2742,7 +3310,7 @@ async function saveEdit() {
     });
     editSnapshot.value = JSON.stringify(editForm.value);
     showEditDialog.value = false;
-    await loadTrackables(Math.floor(first.value / rows.value) + 1);
+    await resetAndLoad();
   } catch {
     toast.add({
       severity: 'error',
@@ -2762,7 +3330,7 @@ function openDeleteWizard(trackable: any) {
 
 function onDeleteWizardDone() {
   deleteTarget.value = null;
-  loadTrackables(Math.floor(first.value / rows.value) + 1);
+  void resetAndLoad();
 }
 
 watch(
@@ -2773,7 +3341,15 @@ watch(
     if (scope !== 'trash' && prevScope !== undefined && prevScope !== scope) {
       trackables.value = [];
       totalRecords.value = 0;
-      activityFilterFacets.value = { total: 0, urgentToday: 0, overdue: 0, next14Days: 0 };
+      listingFacets.value = {
+        total: 0,
+        overdue: 0,
+        dueToday: 0,
+        dueWeek: 0,
+        dueMonth: 0,
+        normal: 0,
+        noDeadline: 0,
+      };
     }
     if (scope === 'trash') {
       if (!canDocRead.value) {
@@ -2785,18 +3361,17 @@ watch(
     }
     void loadClientsForCase();
     void loadUsers();
-    loadTrackables(1);
+    void resetAndLoad();
   },
   { immediate: true },
 );
 
 watch(listScope, (scope) => {
-  first.value = 0;
   if (scope !== 'trash') {
     filters.value.status = null;
   }
   if (scope !== 'active') {
-    filters.value.activityFilter = null;
+    filters.value.urgency = null;
   }
   if (scope === 'trash' && canDocRead.value) {
     router.replace({ path: '/trackables', query: { scope: 'trash' } });
@@ -2828,9 +3403,19 @@ watch(canDocRead, (ok) => {
 }
 .activity-stats {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: stretch;
   gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+@media (min-width: 1024px) {
+  .activity-stats {
+    width: fit-content;
+    max-width: 100%;
+    justify-content: flex-start;
+  }
 }
 .activity-stat {
   display: inline-flex;
@@ -2906,6 +3491,31 @@ watch(canDocRead, (ok) => {
 }
 :global(.dark) .activity-stat--danger .activity-stat__label {
   color: #fca5a5;
+}
+/** VENCIDAS en 0: mismo chip, tono neutro (sin alerta). */
+.activity-stat--overdue-zero {
+  --stat-accent: rgb(148 163 184);
+  border-color: color-mix(in srgb, var(--surface-border) 96%, transparent);
+  background: color-mix(in srgb, var(--surface-sunken) 65%, var(--surface-raised));
+  opacity: 0.95;
+}
+.activity-stat--overdue-zero .activity-stat__icon {
+  background: color-mix(in srgb, var(--fg-muted) 12%, var(--surface-raised));
+  color: var(--fg-muted);
+}
+.activity-stat--overdue-zero .activity-stat__value {
+  color: var(--fg-muted);
+  font-weight: 600;
+}
+.activity-stat--overdue-zero .activity-stat__label {
+  color: var(--fg-subtle);
+}
+:global(.dark) .activity-stat--overdue-zero {
+  border-color: color-mix(in srgb, var(--surface-border) 88%, transparent);
+  background: color-mix(in srgb, var(--surface-sunken) 55%, transparent);
+}
+:global(.dark) .activity-stat--overdue-zero .activity-stat__value {
+  color: var(--fg-muted);
 }
 .exp-kpi-mesh {
   position: absolute;
@@ -3086,12 +3696,6 @@ watch(canDocRead, (ok) => {
   width: 100%;
   border-radius: 0.75rem;
 }
-.toolbar-dropdown-assignee :deep(.p-select-label),
-.toolbar-dropdown-assignee :deep(.p-dropdown-label) {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
 @keyframes expKpiFadeSlideUp {
   from {
     opacity: 0;
@@ -3119,6 +3723,9 @@ watch(canDocRead, (ok) => {
 .matters-data-table {
   min-width: 760px;
 }
+.matters-data-table--cockpit {
+  min-width: 640px;
+}
 .matters-data-table :deep([data-pc-section='thead'] > tr > th) {
   background: var(--surface-raised);
   border-bottom: 1px solid var(--surface-border);
@@ -3128,6 +3735,62 @@ watch(canDocRead, (ok) => {
   text-transform: uppercase;
   font-feature-settings: 'tnum' 1;
 }
+/* Info cell: expand to fill remaining space */
+.matters-data-table--cockpit :deep(th.matter-col-info),
+.matters-data-table--cockpit :deep(td.matter-col-info) {
+  width: 100%;
+  min-width: 280px;
+}
+/* Assignee: slim — only avatar (no text) */
+.matters-data-table--cockpit :deep(th.matter-col-assignee),
+.matters-data-table--cockpit :deep(td.matter-col-assignee) {
+  width: 3rem;
+  min-width: 3rem;
+  max-width: 3rem;
+  text-align: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+/* Expediente ausente: mismo lenguaje que avatar sin asignar (borde punteado + acción en edición) */
+.matter-expediente-ring:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, var(--surface-border));
+  outline-offset: 2px;
+}
+.matter-meta-incomplete {
+  width: fit-content;
+  max-width: 100%;
+  padding: 0.28rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px dashed color-mix(in srgb, var(--fg-subtle) 42%, var(--surface-border));
+  background: color-mix(in srgb, var(--surface-sunken) 82%, transparent);
+}
+/** Lista cockpit: hint incompleto más liviano (una línea; detalle en tooltip / aria). */
+.matter-meta-incomplete--cockpit {
+  padding: 0.125rem 0.4rem;
+  border-radius: 0.375rem;
+  font-size: 0.6875rem;
+  line-height: 1.25;
+}
+.matter-meta-incomplete--action {
+  cursor: pointer;
+  appearance: none;
+  border-style: dashed;
+}
+.matter-meta-incomplete--action:not(.matter-meta-incomplete--cockpit) {
+  font: inherit;
+}
+@media (hover: hover) {
+  .matter-meta-incomplete--action:hover {
+    border-color: color-mix(in srgb, var(--accent) 38%, var(--surface-border));
+    background: color-mix(in srgb, var(--accent-soft) 42%, var(--surface-sunken));
+    color: var(--fg-muted);
+  }
+}
+.matter-meta-incomplete--action:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, var(--surface-border));
+  outline-offset: 2px;
+}
 @media (hover: hover) {
   .matters-data-table :deep(.p-datatable-tbody > tr:hover) {
     background: color-mix(in srgb, var(--accent-soft) 50%, var(--surface-raised));
@@ -3135,6 +3798,25 @@ watch(canDocRead, (ok) => {
   .trash-data-table :deep(.p-datatable-tbody > tr:hover) {
     background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface-raised));
   }
+}
+
+.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-overdue) {
+  border-left: 3px solid #dc2626;
+}
+.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-due_today) {
+  border-left: 3px solid #d97706;
+}
+.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-due_week) {
+  border-left: 3px solid #ca8a04;
+}
+.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-due_month) {
+  border-left: 3px solid #0f766e;
+}
+.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-normal) {
+  border-left: 3px solid color-mix(in srgb, var(--brand-zafiro) 55%, var(--surface-border));
+}
+.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-no_deadline) {
+  border-left: 3px solid var(--fg-subtle);
 }
 
 /* ------------------------------------------------------------------ */
@@ -3164,248 +3846,184 @@ watch(canDocRead, (ok) => {
   overflow: hidden;
 }
 
-/* —— Create wizard —— */
-.matter-wizard-root {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.matter-wizard {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  overflow: hidden;
-}
-.matter-wizard__sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.35rem 1.1rem 1rem;
-  border-right: 1px solid var(--surface-border);
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--brand-zafiro) 14%, var(--surface-raised)) 0%,
-    color-mix(in srgb, var(--brand-zafiro) 5%, var(--surface-raised)) 100%
-  );
-  min-height: 0;
-  overflow-y: auto;
-}
-.matter-wizard__brand {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-}
-.matter-wizard__brand-icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--brand-zafiro) 28%, var(--surface-border));
-  background: color-mix(in srgb, var(--brand-zafiro) 12%, var(--surface-raised));
-}
-.matter-wizard__brand-text {
-  min-width: 0;
-}
-.matter-wizard__eyebrow {
-  display: block;
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--brand-zafiro);
-}
-:global(.dark) .matter-wizard__eyebrow {
-  color: var(--accent);
-}
-.matter-wizard__brand-title {
-  margin: 0.15rem 0 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.25;
-  color: var(--fg-default);
-}
-.matter-wizard__progress-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.matter-wizard__progress-label {
-  margin: 0;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--fg-muted);
-}
-.matter-wizard__progress-bar {
-  height: 4px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--brand-zafiro) 16%, var(--surface-border));
-  overflow: hidden;
-}
-.matter-wizard__progress-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--brand-zafiro);
-  transition: width 0.25s ease;
-}
-.matter-wizard__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.matter-wizard__step {
+/* —— Create wizard (horizontal stepper) —— */
+.matter-dialog-header {
   position: relative;
-  padding-left: 0;
-}
-.matter-wizard__step:not(:last-child)::before {
-  content: '';
-  position: absolute;
-  left: 11px;
-  top: 28px;
-  bottom: -6px;
-  width: 0;
-  border-left: 1px dashed color-mix(in srgb, var(--brand-zafiro) 35%, var(--surface-border));
-  pointer-events: none;
-}
-.matter-wizard__step-btn {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  width: 100%;
-  padding: 0.35rem 0;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  color: var(--fg-default);
-  border-radius: 8px;
-  transition: background-color 0.15s ease;
-}
-.matter-wizard__step-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--brand-zafiro) 8%, transparent);
-}
-.matter-wizard__step-btn:disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-.matter-wizard__step-dot {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  margin-top: 1px;
-  border-radius: 999px;
-  border: 2px solid color-mix(in srgb, var(--brand-zafiro) 35%, var(--surface-border));
-  background: var(--surface-raised);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.matter-wizard__step--done .matter-wizard__step-dot {
-  border-color: #059669;
-  background: #059669;
-}
-.matter-wizard__step--current .matter-wizard__step-dot {
-  border-color: var(--brand-zafiro);
-  background: var(--brand-zafiro);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-zafiro) 22%, transparent);
-}
-.matter-wizard__step-dot-inner {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #fff;
-}
-.matter-wizard__step-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
-}
-.matter-wizard__step-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--fg-default);
-}
-.matter-wizard__step-hint {
-  font-size: 0.6875rem;
-  line-height: 1.35;
-  color: var(--fg-muted);
-}
-.matter-wizard__support {
-  margin-top: auto;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--surface-border);
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-.matter-wizard__support-icon {
-  font-size: 0.85rem;
-  color: var(--brand-zafiro);
-}
-.matter-wizard__support-link {
-  padding: 0;
-  border: 0;
-  background: none;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--accent);
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.matter-wizard__support-link:hover {
-  color: var(--accent-hover);
-}
-
-.matter-wizard__content {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
-  position: relative;
-  background: var(--surface-raised);
-}
-.matter-wizard__header {
-  flex: 0 0 auto;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.1rem 3rem 0.85rem 1.35rem;
+  padding: 1.25rem 1.5rem 1rem;
   border-bottom: 1px solid var(--surface-border);
+  flex-shrink: 0;
   background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--brand-zafiro) 5%, var(--surface-raised)) 0%,
-    var(--surface-raised) 100%
+    to bottom,
+    color-mix(in srgb, var(--brand-zafiro) 7%, transparent),
+    transparent 90%
   );
 }
-.matter-wizard__header-text {
-  min-width: 0;
+html.dark .matter-dialog-header {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--accent) 18%, transparent),
+    transparent 90%
+  );
 }
-.matter-wizard__step-title {
-  margin: 0;
-  font-size: 1.125rem;
+.matter-dialog-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--brand-zafiro) 22%, var(--surface-border));
+  background: color-mix(in srgb, var(--brand-zafiro) 8%, var(--surface-raised));
+}
+.matter-dialog-eyebrow {
+  display: block;
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--brand-zafiro);
+}
+html.dark .matter-dialog-eyebrow {
+  color: var(--accent);
+}
+.matter-dialog-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.3;
   color: var(--fg-default);
-  line-height: 1.25;
+  margin: 0;
 }
-.matter-wizard__step-sub {
-  margin: 0.35rem 0 0;
+.matter-dialog-stephint {
   font-size: 0.8125rem;
-  line-height: 1.45;
   color: var(--fg-muted);
+  margin: 0;
 }
-.matter-wizard__close,
+.dialog-close-btn {
+  flex-shrink: 0;
+  height: 2rem;
+  width: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  color: var(--fg-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.dialog-close-btn:hover {
+  background: var(--surface-sunken);
+}
+
+.matter-dialog-steps {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-bottom: 1px solid var(--surface-border);
+  background: var(--surface-sunken);
+  flex-shrink: 0;
+}
+.matter-dialog-step__circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--surface-border);
+  color: var(--fg-subtle);
+  transition: background-color 220ms ease, color 220ms ease;
+}
+.matter-dialog-step__circle--active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.matter-dialog-step__circle--done {
+  background: #10b981;
+  color: #fff;
+}
+.matter-dialog-step__line {
+  flex: 1;
+  min-width: 16px;
+  height: 1px;
+  background: var(--surface-border);
+  transition: background-color 220ms ease;
+}
+.matter-dialog-step__line--done {
+  background: #10b981;
+}
+
+.matter-dialog-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.matter-dialog-body > * {
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+}
+
+.matter-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--surface-border);
+  background: var(--surface-sunken);
+  flex-shrink: 0;
+}
+
+/* Directional step transitions */
+.step-fwd-enter-active,
+.step-fwd-leave-active,
+.step-back-enter-active,
+.step-back-leave-active {
+  transition: opacity 240ms ease-out, transform 240ms ease-out;
+  will-change: opacity, transform;
+}
+.step-fwd-enter-from {
+  opacity: 0;
+  transform: translateX(28px);
+}
+.step-fwd-leave-to {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+.step-back-enter-from {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+.step-back-leave-to {
+  opacity: 0;
+  transform: translateX(28px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-fwd-enter-active,
+  .step-fwd-leave-active,
+  .step-back-enter-active,
+  .step-back-leave-active {
+    transition: opacity 120ms ease-out;
+  }
+  .step-fwd-enter-from,
+  .step-fwd-leave-to,
+  .step-back-enter-from,
+  .step-back-leave-to {
+    transform: none;
+  }
+}
+
 .matter-edit__close {
   position: absolute;
   top: 0.75rem;
@@ -3426,46 +4044,14 @@ watch(canDocRead, (ok) => {
     border-color 0.15s ease,
     color 0.15s ease;
 }
-.matter-wizard__close:hover:not(:disabled),
 .matter-edit__close:hover:not(:disabled) {
   background: var(--accent-soft);
   border-color: color-mix(in srgb, var(--accent) 30%, var(--surface-border));
   color: var(--fg-default);
 }
-.matter-wizard__close:disabled,
 .matter-edit__close:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-.matter-wizard__body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 1rem 1.35rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  scrollbar-gutter: stable;
-}
-.matter-wizard__footer {
-  flex: 0 0 auto;
-  border-top: 1px solid var(--surface-border);
-  background: color-mix(in srgb, var(--surface-sunken) 58%, var(--surface-raised));
-  padding: 0.75rem 1.35rem 0.9rem;
-}
-.matter-wizard__footer-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-.matter-wizard__footer-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
 }
 
 /* —— Edit modal —— */
@@ -3571,10 +4157,17 @@ watch(canDocRead, (ok) => {
 }
 .matter-edit__loading {
   flex: 1 1 auto;
-  min-height: 8rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  min-height: min(420px, 52vh);
+}
+.matter-edit__loading--skeleton :deep(.p-skeleton) {
+  background: color-mix(in srgb, var(--surface-border) 55%, var(--surface-sunken));
+}
+.matter-edit-skel-section-label :deep(.p-skeleton) {
+  opacity: 0.85;
 }
 .matter-edit__body {
   flex: 1 1 auto;
@@ -3650,6 +4243,11 @@ watch(canDocRead, (ok) => {
 .matter-mode-toggle :deep(.p-button) {
   flex: 1 1 0;
 }
+.font-mono-num {
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0.01em;
+}
 .font-mono-num :deep(.p-inputtext) {
   font-feature-settings: 'tnum' 1, 'lnum' 1;
   font-variant-numeric: tabular-nums lining-nums;
@@ -3660,66 +4258,20 @@ watch(canDocRead, (ok) => {
 }
 
 @media (max-width: 699px) {
-  .matter-wizard {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
-  }
-  .matter-wizard__sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.85rem 1rem;
-    border-right: 0;
-    border-bottom: 1px solid var(--surface-border);
-    max-height: none;
-    overflow: visible;
-  }
-  .matter-wizard__brand {
-    flex: 1 1 auto;
-    min-width: 0;
-  }
-  .matter-wizard__progress-wrap {
-    flex: 1 1 140px;
-    min-width: 120px;
-  }
-  .matter-wizard__steps {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    width: 100%;
-    overflow-x: auto;
-    gap: 0.25rem;
-    padding-bottom: 0.15rem;
-  }
-  .matter-wizard__step:not(:last-child)::before {
-    display: none;
-  }
-  .matter-wizard__step-btn {
-    flex-direction: column;
-    align-items: center;
-    min-width: 4.5rem;
-    padding: 0.25rem;
-  }
-  .matter-wizard__step-hint {
-    display: none;
-  }
-  .matter-wizard__support {
-    display: none;
-  }
-  .matter-wizard__header {
-    padding-right: 3rem;
-    padding-left: 1rem;
-  }
-  .matter-wizard__body {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-  .matter-wizard__footer {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
   .matter-dialog-shell {
     max-height: 92vh;
+  }
+  .matter-dialog-header {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .matter-dialog-body > * {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .matter-dialog-footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   .matter-edit__header {
     padding-right: 3rem;

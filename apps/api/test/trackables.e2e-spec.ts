@@ -50,4 +50,25 @@ describe('TrackablesController (e2e)', () => {
     expect(res.body.data).toBeInstanceOf(Array);
     expect(res.body.total).toBeGreaterThan(0);
   });
+
+  it('GET /api/trackables/list - should return cursor listing shape', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/trackables/list')
+      .query({ scope: 'active', limit: 10 })
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.items)).toBe(true);
+    expect(typeof res.body.totalCount).toBe('number');
+    expect(res.body.facets).toMatchObject({
+      total: expect.any(Number),
+      overdue: expect.any(Number),
+      dueToday: expect.any(Number),
+      dueWeek: expect.any(Number),
+      dueMonth: expect.any(Number),
+      normal: expect.any(Number),
+      noDeadline: expect.any(Number),
+    });
+    expect(res.body.nextCursor === null || typeof res.body.nextCursor === 'string').toBe(true);
+  });
 });

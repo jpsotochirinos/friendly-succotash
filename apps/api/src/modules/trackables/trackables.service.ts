@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/postgresql';
 import {
   Trackable,
@@ -10,6 +10,9 @@ import {
   DocumentWorkflowParticipation,
   ProcessTrack,
   WorkflowItem,
+  SavedTrackableView,
+  User,
+  Organization,
 } from '@tracker/db';
 import {
   TrackablePartyRole,
@@ -17,12 +20,25 @@ import {
   WorkflowStateCategory,
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
+  MatterType,
+  TrackableListingUrgency,
 } from '@tracker/shared';
 import { CreateTrackablePartyDto, UpdateTrackablePartyDto } from './dto/trackable-party.dto';
 import { BaseCrudService, PaginationQuery } from '../../common/services/base-crud.service';
 import { CreateTrackableDto } from './dto/create-trackable.dto';
 import { UpdateTrackableDto } from './dto/update-trackable.dto';
 import { ProcessTracksService } from '../process-tracks/process-tracks.service';
+import { refreshTrackableListingSnapshot } from './trackable-listing-snapshot.util';
+import {
+  buildListingWhereClause,
+  buildListingOrderBy,
+  buildCursorWhereUrgency,
+  buildCursorWhereCreatedAt,
+  decodeListingCursor,
+  encodeListingCursor,
+  type ListingFilters,
+  type ListingSortBy,
+} from './trackables-listing.query';
 
 /** Post-order traversal: children (by parent id) before parents. Roots use parentKey=null. */
 function postOrderByParent<T extends { id: string }>(
@@ -97,6 +113,7 @@ export class TrackablesService extends BaseCrudService<Trackable> {
     if (!skipAutoProcessTrack) {
       await this.processTracks.createFreeStyle(trackable.id, organizationId);
     }
+    await refreshTrackableListingSnapshot(this.em, organizationId, trackable.id);
     return trackable;
   }
 
@@ -564,6 +581,8 @@ export class TrackablesService extends BaseCrudService<Trackable> {
         : undefined;
     }
     await this.em.flush();
+    const orgId = (entity as { organization: { id: string } }).organization.id;
+    await refreshTrackableListingSnapshot(this.em, orgId, id);
     return this.findOne(id, {
       populate: ['createdBy', 'assignedTo', 'folders', 'client'] as any,
     });
@@ -661,5 +680,353 @@ export class TrackablesService extends BaseCrudService<Trackable> {
       em.remove(trackable);
       await em.flush();
     });
+  }
+
+  // -------------------------------------------------------------------------
+  // Scalable listing (cursor + facets + saved views)
+  // -------------------------------------------------------------------------
+
+  async findListingCursor(
+    organizationId: string,
+    q: {
+      scope?: 'active' | 'archived';
+      status?: TrackableStatus;
+      types?: string[];
+      matterTypes?: string[];
+      assignedToIds?: string[];
+      clientIds?: string[];
+      search?: string;
+      urgency?: TrackableListingUrgency;
+      sortBy?: string;
+      sortDir?: 'asc' | 'desc';
+      cursor?: string;
+      limit?: number;
+    },
+  ) {
+    const limit = Math.min(200, Math.max(1, Number(q.limit) || 50));
+    const sortByList: ListingSortBy[] = [
+      'urgency',
+      'caratula',
+      'codigo',
+      'lastActivity',
+      'createdAt',
+      'nextDeadline',
+    ];
+    const sortBy = (sortByList.includes(q.sortBy as ListingSortBy)
+      ? q.sortBy
+      : 'urgency') as ListingSortBy;
+    const sortDir = q.sortDir === 'asc' ? 'asc' : 'desc';
+
+    const filters: ListingFilters = {
+      scope: q.scope ?? 'active',
+      status: q.status,
+      types: q.types,
+      matterTypes: q.matterTypes,
+      assignedToIds: q.assignedToIds,
+      clientIds: q.clientIds,
+      search: q.search,
+      urgency: q.urgency,
+    };
+
+    const { clause, params } = buildListingWhereClause(organizationId, filters);
+    const facetWhere = buildListingWhereClause(organizationId, filters, { omitUrgency: true });
+
+    let cursorSql = '';
+    const cursorParams: unknown[] = [];
+    const cur = decodeListingCursor(q.cursor);
+    if (cur) {
+      if ((sortBy === 'urgency' || sortBy === 'nextDeadline') && cur.sortBy === sortBy) {
+        const c = buildCursorWhereUrgency(cur);
+        cursorSql += c.sql;
+        cursorParams.push(...c.params);
+      } else if (sortBy === 'createdAt' && cur.sortBy === 'createdAt') {
+        const c = buildCursorWhereCreatedAt(cur);
+        cursorSql += c.sql;
+        cursorParams.push(...c.params);
+      }
+    }
+
+    const orderBy = buildListingOrderBy(sortBy, sortDir);
+
+    const countSql = `SELECT COUNT(*)::int AS c FROM trackables t WHERE ${clause}`;
+    const countRows = await this.em.getConnection().execute<Array<{ c: number | string }>>(
+      countSql,
+      params,
+    );
+    const totalCount = Number((countRows as any[])[0]?.c ?? 0);
+
+    const facetSql = `
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE t.listing_urgency = 'overdue')::int AS overdue,
+        COUNT(*) FILTER (WHERE t.listing_urgency = 'due_today')::int AS due_today,
+        COUNT(*) FILTER (WHERE t.listing_urgency = 'due_week')::int AS due_week,
+        COUNT(*) FILTER (WHERE t.listing_urgency = 'due_month')::int AS due_month,
+        COUNT(*) FILTER (WHERE t.listing_urgency = 'normal')::int AS normal,
+        COUNT(*) FILTER (WHERE t.listing_urgency = 'no_deadline')::int AS no_deadline
+      FROM trackables t
+      WHERE ${facetWhere.clause}
+    `;
+    const facetRows = await this.em.getConnection().execute<Array<Record<string, number | string>>>(
+      facetSql,
+      facetWhere.params,
+    );
+    const fr = (facetRows as any[])[0] ?? {};
+
+    const listSql = `
+      SELECT
+        t.id,
+        t.title,
+        t.expedient_number,
+        t.type,
+        t.matter_type,
+        t.status,
+        t.listing_urgency,
+        t.listing_urgency_rank,
+        t.listing_next_due_at,
+        t.listing_last_activity_at,
+        t.listing_activity_total,
+        t.listing_activity_done,
+        t.listing_doc_count,
+        t.listing_comment_count,
+        t.created_at,
+        c.id AS client_id,
+        c.name AS client_name,
+        u.id AS assignee_id,
+        u.first_name AS assignee_first_name,
+        u.last_name AS assignee_last_name,
+        u.email AS assignee_email,
+        u.avatar_url AS assignee_avatar_url
+      FROM trackables t
+      LEFT JOIN clients c ON c.id = t.client_id
+      LEFT JOIN users u ON u.id = t.assigned_to_id
+      WHERE ${clause} ${cursorSql}
+      ${orderBy}
+      LIMIT ?
+    `;
+    const listParams = [...params, ...cursorParams, limit];
+    const rows = (await this.em.getConnection().execute(listSql, listParams)) as Record<
+      string,
+      unknown
+    >[];
+
+    const items = rows.map((row) => this.mapTrackableListingRow(row));
+    let nextCursor: string | null = null;
+    if (rows.length === limit) {
+      const last = rows[rows.length - 1]!;
+      if (sortBy === 'urgency' || sortBy === 'nextDeadline') {
+        nextCursor = encodeListingCursor({
+          sortBy,
+          r: Number(last.listing_urgency_rank ?? 5),
+          nd: last.listing_next_due_at
+            ? new Date(String(last.listing_next_due_at)).toISOString()
+            : null,
+          ca: new Date(String(last.created_at)).toISOString(),
+          id: String(last.id),
+        });
+      } else if (sortBy === 'createdAt') {
+        nextCursor = encodeListingCursor({
+          sortBy: 'createdAt',
+          cr: new Date(String(last.created_at)).toISOString(),
+          id: String(last.id),
+        });
+      }
+    }
+
+    return {
+      items,
+      nextCursor,
+      totalCount,
+      facets: {
+        total: Number(fr.total ?? 0),
+        overdue: Number(fr.overdue ?? 0),
+        dueToday: Number(fr.due_today ?? 0),
+        dueWeek: Number(fr.due_week ?? 0),
+        dueMonth: Number(fr.due_month ?? 0),
+        normal: Number(fr.normal ?? 0),
+        noDeadline: Number(fr.no_deadline ?? 0),
+      },
+    };
+  }
+
+  private mapTrackableListingRow(row: Record<string, unknown>) {
+    const total = Math.max(0, Number(row.listing_activity_total ?? 0));
+    const done = Math.max(0, Number(row.listing_activity_done ?? 0));
+    const progresoPct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const nextDue = row.listing_next_due_at
+      ? new Date(String(row.listing_next_due_at))
+      : null;
+    const dias = this.listingDaysRemaining(nextDue);
+    const assigneeId = row.assignee_id ? String(row.assignee_id) : null;
+    const fn = row.assignee_first_name ? String(row.assignee_first_name) : '';
+    const ln = row.assignee_last_name ? String(row.assignee_last_name) : '';
+    const em = row.assignee_email ? String(row.assignee_email) : '';
+    const assigneeName = [fn, ln].filter(Boolean).join(' ') || em || '';
+    return {
+      id: String(row.id),
+      codigo: row.expedient_number ? String(row.expedient_number) : '',
+      caratula: String(row.title ?? ''),
+      tipo: String(row.type ?? ''),
+      materia: String(row.matter_type ?? ''),
+      estado: String(row.status ?? ''),
+      urgencia: String(row.listing_urgency ?? 'no_deadline'),
+      cliente: row.client_id
+        ? { id: String(row.client_id), nombre: String(row.client_name ?? '') }
+        : null,
+      asignado: assigneeId
+        ? {
+            id: assigneeId,
+            nombre: assigneeName,
+            avatarUrl: row.assignee_avatar_url ? String(row.assignee_avatar_url) : undefined,
+          }
+        : null,
+      proximoPlazo: nextDue
+        ? {
+            fecha: nextDue.toISOString(),
+            tipo: 'activity',
+            diasRestantes: dias ?? 0,
+          }
+        : null,
+      ultimaActividad: row.listing_last_activity_at
+        ? new Date(String(row.listing_last_activity_at)).toISOString()
+        : new Date(String(row.created_at ?? new Date())).toISOString(),
+      contadores: {
+        documentos: Number(row.listing_doc_count ?? 0),
+        actividadesHechas: done,
+        actividadesTotal: total,
+        comentarios: Number(row.listing_comment_count ?? 0),
+      },
+      progresoPct,
+    };
+  }
+
+  private listingDaysRemaining(d: Date | null): number | null {
+    if (!d) return null;
+    const a = new Date();
+    a.setHours(0, 0, 0, 0);
+    const b = new Date(d);
+    b.setHours(0, 0, 0, 0);
+    return Math.floor((b.getTime() - a.getTime()) / 86400000);
+  }
+
+  async getListingFilterOptions(organizationId: string) {
+    const matterTypes = Object.values(MatterType);
+    const types = ['case', 'process', 'project', 'audit'];
+    const users = await this.em.find(
+      User,
+      { organization: organizationId, isActive: true },
+      { fields: ['id', 'firstName', 'lastName', 'email'] as any, orderBy: { email: 'ASC' } as any },
+    );
+    const clients = await this.em.find(
+      Client,
+      { organization: organizationId },
+      { fields: ['id', 'name'] as any, orderBy: { name: 'ASC' } as any, limit: 500 },
+    );
+    return {
+      matterTypes,
+      types,
+      users: users.map((u) => ({
+        id: u.id,
+        nombre: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email,
+        email: u.email,
+      })),
+      clients: clients.map((c) => ({ id: c.id, nombre: c.name })),
+    };
+  }
+
+  async listSavedViews(organizationId: string, userId: string) {
+    return this.em.find(
+      SavedTrackableView,
+      { organization: organizationId, user: userId },
+      { orderBy: { lastUsedAt: 'DESC', updatedAt: 'DESC' } as any },
+    );
+  }
+
+  async createSavedView(
+    organizationId: string,
+    userId: string,
+    body: { name: string; slug?: string; config: Record<string, unknown>; isShared?: boolean },
+    permissions: string[],
+  ) {
+    const baseSlug = (body.slug ?? body.name)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 60) || 'vista';
+    let slug = baseSlug;
+    let n = 0;
+    while (
+      await this.em.count(SavedTrackableView, {
+        organization: organizationId,
+        user: userId,
+        slug,
+      })
+    ) {
+      n += 1;
+      slug = `${baseSlug}-${n}`;
+    }
+    const isShared = Boolean(body.isShared) && permissions.includes('trackable_view:share');
+    const v = this.em.create(SavedTrackableView, {
+      organization: this.em.getReference(Organization, organizationId),
+      user: this.em.getReference(User, userId),
+      name: body.name.trim(),
+      slug,
+      config: body.config,
+      isShared,
+    } as any);
+    await this.em.flush();
+    return v;
+  }
+
+  async updateSavedView(
+    organizationId: string,
+    userId: string,
+    viewId: string,
+    body: Partial<{ name: string; slug: string; config: Record<string, unknown>; isShared: boolean; isFavorite: boolean }>,
+    permissions: string[],
+  ) {
+    const v = await this.em.findOne(SavedTrackableView, {
+      id: viewId,
+      organization: organizationId,
+      user: userId,
+    });
+    if (!v) throw new NotFoundException('Saved view not found');
+    if (body.name !== undefined) v.name = body.name.trim();
+    if (body.slug !== undefined) v.slug = body.slug.trim().slice(0, 80);
+    if (body.config !== undefined) v.config = body.config;
+    if (body.isFavorite !== undefined) v.isFavorite = body.isFavorite;
+    if (body.isShared !== undefined) {
+      v.isShared = Boolean(body.isShared) && permissions.includes('trackable_view:share');
+    }
+    await this.em.flush();
+    return v;
+  }
+
+  async deleteSavedView(organizationId: string, userId: string, viewId: string) {
+    const v = await this.em.findOne(SavedTrackableView, {
+      id: viewId,
+      organization: organizationId,
+      user: userId,
+    });
+    if (!v) return { ok: false };
+    this.em.remove(v);
+    await this.em.flush();
+    return { ok: true };
+  }
+
+  async touchSavedViewUsed(organizationId: string, userId: string, slug: string) {
+    const v = await this.em.findOne(SavedTrackableView, {
+      organization: organizationId,
+      user: userId,
+      slug,
+    });
+    if (!v) return null;
+    v.lastUsedAt = new Date();
+    await this.em.flush();
+    return v;
+  }
+
+  async stubBulkOperations() {
+    return { ok: true, stub: true, message: 'Próximamente' };
   }
 }

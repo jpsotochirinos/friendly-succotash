@@ -10,6 +10,7 @@ export { Invitation, InvitationStatus } from './invitation.entity';
 export { Permission } from './permission.entity';
 export { Client } from './client.entity';
 export { Trackable } from './trackable.entity';
+export { SavedTrackableView } from './saved-trackable-view.entity';
 export { TrackableParty } from './trackable-party.entity';
 export { WorkflowItem } from './workflow-item.entity';
 export { WorkflowItemComment } from './workflow-item-comment.entity';

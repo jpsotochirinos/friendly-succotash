@@ -32,6 +32,11 @@ description: >
 - **Patrón:** `title` + `subject` («expediente o documento») + `message` + lista opcional `consequences` / `consequencesTitle`; acciones irreversibles con `typedConfirmPhrase` y textos en i18n.
 - **Variantes:** `danger` | `warning` | `info` | `success` — ver [docs/frontend-confirm-patterns.md](../../../docs/frontend-confirm-patterns.md) §7 y showcase `/dev/confirm-dialog-base`.
 
+## Diálogos informativos (`InformationalDialogBase`)
+
+- **Componente:** `apps/web/src/components/common/InformationalDialogBase.vue` — modal de **solo lectura** (guías, resúmenes, contexto); sin confirmación destructiva ni formulario.
+- **Sandbox:** `/sandbox/components/informational-dialog`.
+
 ## Listados con `DataTable` (PrimeVue)
 
 - **Referencia:** [apps/web/src/views/trackables/TrackablesListView.vue](../../../apps/web/src/views/trackables/TrackablesListView.vue) — barra de filtros en panel con `border`, `bg-[var(--surface-raised)]` y bordes redondeados; tabla envuelta en `.app-card.overflow-hidden`.
@@ -47,6 +52,7 @@ description: >
 - **[alega-datatable](../alega-datatable/SKILL.md)** — listados cockpit (KPI mesh, command toolbar, type chips, acciones outlined).
 - **[alega-confirm-dialog](../alega-confirm-dialog/SKILL.md)** — `ConfirmDialogBase` (variantes danger/warning/info/success, typed phrase).
 - **[alega-form-dialog](../alega-form-dialog/SKILL.md)** — diálogos cortos crear/editar y wizards con Dialog headless edge-to-edge.
+- **[alega-informational-dialog](../alega-informational-dialog/SKILL.md)** — `InformationalDialogBase`; modal de solo lectura (guías, resúmenes, contexto legal); sandbox `/sandbox/components/informational-dialog`.
 - **[alega-onboarding-stepper](../alega-onboarding-stepper/SKILL.md)** — onboarding, asistentes y stepper vertical/sidebar.
 - **[alega-form-detail-dialog](../alega-form-detail-dialog/SKILL.md)** — detalle/edición tipo Jira con sidebar.
 

@@ -20,7 +20,7 @@ export const useCalendarStore = defineStore('calendar', () => {
     } catch {
       /* ignore */
     }
-    return 'team';
+    return 'mine';
   }
 
   const scope = ref<CalendarScope>(initialScope());

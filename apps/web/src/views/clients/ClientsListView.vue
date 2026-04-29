@@ -14,7 +14,7 @@
         v-model:visible="showDeleteConfirm"
         variant="danger"
         :title="t('clients.deleteTitle')"
-        :subject="deleteTarget?.name ?? ''"
+        :subject="deleteTarget ? `«${deleteTarget.name}»` : ''"
         :message="t('clients.deleteMessage')"
         :consequences-title="t('common.consequencesTitle')"
         :consequences="deleteConsequences"
@@ -39,46 +39,6 @@
           />
         </template>
       </PageHeader>
-
-      <!-- KPI informativo (total catálogo): misma animación / hover que expedientes -->
-      <div
-        class="clients-kpi-wrap grid grid-cols-1 gap-3 sm:max-w-md"
-        role="region"
-        :aria-label="t('clients.kpiTotalAria')"
-      >
-        <div
-          class="exp-kpi-card exp-kpi-card--idle group relative min-h-[5.75rem] overflow-hidden rounded-2xl border border-[var(--surface-border)] bg-[var(--surface-raised)] p-4 text-left shadow-sm transition-[box-shadow,border-color,transform] duration-200 outline-offset-4 exp-kpi-card--total-bar hover:border-[color-mix(in_srgb,var(--kpi-accent)_22%,var(--surface-border))] hover:outline hover:outline-1 hover:outline-[color-mix(in_srgb,var(--kpi-accent)_35%,transparent)]"
-          :style="{
-            '--stagger-delay': '0ms',
-            '--kpi-accent': '#2D3FBF',
-            '--kpi-mesh-1': 'color-mix(in srgb, #2D3FBF 22%, transparent)',
-          }"
-        >
-          <div class="exp-kpi-mesh pointer-events-none absolute inset-0 opacity-100" />
-          <div class="exp-kpi-grain pointer-events-none absolute inset-0" aria-hidden="true" />
-          <div class="relative flex min-h-[4.75rem] items-start justify-between gap-3">
-            <div class="min-w-0 flex-1">
-              <p
-                class="exp-kpi-label m-0 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-muted)]"
-              >
-                {{ t('clients.kpiTotalLabel') }}
-              </p>
-              <p
-                class="exp-kpi-number m-0 mt-2 text-3xl font-semibold tabular-nums tracking-tight text-[var(--brand-medianoche)] dark:text-[var(--brand-hielo)] sm:text-[2.125rem]"
-                style="font-feature-settings: 'tnum' 1, 'lnum' 1"
-              >
-                {{ totalRecords }}
-              </p>
-            </div>
-            <span
-              class="exp-kpi-icon-wrap inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm"
-              aria-hidden="true"
-            >
-              <i class="pi pi-users text-sm" />
-            </span>
-          </div>
-        </div>
-      </div>
 
       <div
         class="app-card clients-cockpit-card flex max-h-[min(82vh,calc(100dvh-11rem))] min-h-0 flex-col overflow-hidden shadow-sm"
@@ -185,14 +145,17 @@
                     class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--surface-border)] bg-[var(--accent-soft)] text-[var(--accent)]"
                     aria-hidden="true"
                   >
-                    <i class="pi pi-user text-lg" />
+                    <i
+                      :class="data.clientKind === 'legal' ? 'pi pi-building' : 'pi pi-user'"
+                      class="text-lg"
+                    />
                   </span>
                   <div class="flex min-w-0 flex-col gap-0.5">
                     <span class="line-clamp-2 font-semibold leading-snug text-[var(--fg-default)]">
                       {{ data.name }}
                     </span>
                     <p class="m-0 line-clamp-1 text-xs text-[var(--fg-subtle)]">
-                      {{ clientMetaLine(data) }}
+                      {{ clientKindLabelFromRow(data) }}
                     </p>
                   </div>
                 </div>
@@ -279,7 +242,7 @@
         :dismissable-mask="!saving && !formDialogBlockedByDirty"
         :closable="false"
         :close-on-escape="!saving && !formDialogBlockedByDirty"
-        :style="{ width: 'min(520px, 96vw)' }"
+        :style="{ width: dialogShellWidth }"
         :pt="{
           mask: { class: 'alega-confirm-mask' },
           root: {
@@ -290,146 +253,516 @@
         @hide="onFormDialogHide"
       >
         <template #container>
-          <div class="matter-dialog-shell matter-dialog-shell--client max-h-[min(88vh,720px)]">
-            <header class="matter-dialog-header flex flex-col gap-2 border-b border-[var(--surface-border)] px-5 py-4">
-              <div class="flex items-start justify-between gap-3">
-                <div class="flex min-w-0 items-start gap-3">
-                  <div class="matter-dialog-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-xl">
-                    <i class="pi pi-user text-xl text-[var(--brand-zafiro)] dark:text-[var(--accent)]" />
+          <div
+            class="matter-dialog-shell matter-dialog-shell--client flex max-h-[min(88vh,720px)] min-h-0 flex-col"
+          >
+            <template v-if="!editingId">
+              <header
+                class="matter-dialog-header flex flex-col gap-2 border-b border-[var(--surface-border)] px-5 py-4"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex min-w-0 items-start gap-3">
+                    <div
+                      class="matter-dialog-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                    >
+                      <i
+                        class="pi pi-user-plus text-xl text-[var(--brand-zafiro)] dark:text-[var(--accent)]"
+                      />
+                    </div>
+                    <div class="flex min-w-0 flex-col gap-0.5">
+                      <span class="matter-dialog-eyebrow text-brand-gradient">
+                        {{ t('clients.wizardEyebrow') }}
+                      </span>
+                      <h2
+                        class="matter-dialog-title text-lg font-semibold leading-tight text-[var(--fg-default)]"
+                      >
+                        {{ t('clients.formNewTitle') }}
+                      </h2>
+                      <p class="m-0 text-[0.8125rem] text-[var(--fg-muted)]">
+                        {{ t('clients.wizardNewHint') }}
+                      </p>
+                    </div>
                   </div>
-                  <div class="flex min-w-0 flex-col gap-0.5">
-                    <span class="matter-dialog-eyebrow text-brand-gradient">
-                      {{ t('clients.formEyebrow') }}
+                  <Button
+                    type="button"
+                    icon="pi pi-times"
+                    text
+                    rounded
+                    size="small"
+                    :disabled="saving"
+                    :aria-label="t('common.close')"
+                    class="shrink-0"
+                    @click="attemptCloseFormDialog"
+                  />
+                </div>
+              </header>
+              <div
+                class="client-wizard-steps flex min-h-0 items-center gap-2 border-b border-[var(--surface-border)] bg-[var(--surface-sunken)] px-5 py-2.5"
+                role="navigation"
+                :aria-label="t('clients.wizardStepsAria')"
+              >
+                <template v-for="(label, idx) in createStepLabels" :key="`cstep-${idx}`">
+                  <div class="flex min-w-0 items-center gap-2">
+                    <div
+                      class="client-wizard-step__circle"
+                      :class="{
+                        'client-wizard-step__circle--done': idx < wizardStep,
+                        'client-wizard-step__circle--active': idx === wizardStep,
+                      }"
+                    >
+                      <i v-if="idx < wizardStep" class="pi pi-check text-[10px]" />
+                      <span v-else>{{ idx + 1 }}</span>
+                    </div>
+                    <span
+                      class="min-w-0 truncate text-xs font-medium"
+                      :class="
+                        idx === wizardStep ? 'text-[var(--fg-default)]' : 'text-[var(--fg-subtle)]'
+                      "
+                    >
+                      {{ label }}
                     </span>
-                    <h2 class="matter-dialog-title text-lg font-semibold leading-tight text-[var(--fg-default)]">
-                      {{ editingId ? t('clients.formEditTitle') : t('clients.formNewTitle') }}
-                    </h2>
-                    <p class="m-0 text-[0.8125rem] text-[var(--fg-muted)]">
-                      {{ editingId ? t('clients.formEditHint') : t('clients.formNewHint') }}
-                    </p>
-                    <p v-if="editingId && editIsDirty" class="m-0 text-[0.8125rem] text-amber-700 dark:text-amber-300">
-                      · {{ t('clients.formDirtyHint') }}
-                    </p>
+                  </div>
+                  <div
+                    v-if="idx < createStepLabels.length - 1"
+                    class="client-wizard-step__line min-w-[1rem] flex-1"
+                    :class="{ 'client-wizard-step__line--done': idx < wizardStep }"
+                  />
+                </template>
+              </div>
+              <form
+                class="flex min-h-0 flex-1 flex-col"
+                novalidate
+                @submit.prevent="onFormSubmit"
+                @keydown="onFormKeydown"
+              >
+                <div
+                  class="client-wizard-body matter-dialog-body flex min-h-0 max-h-[min(52vh,480px)] flex-1 flex-col overflow-hidden"
+                >
+                  <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                    <Transition :name="stepTransitionName" mode="out-in">
+                      <section v-if="wizardStep === 0" key="w0" class="matter-form-section">
+                        <h3 class="matter-form-section__title">
+                          <span class="matter-form-section__title-text text-brand-gradient">{{
+                            t('clients.sectionIdentity')
+                          }}</span>
+                        </h3>
+                        <div class="flex flex-col gap-4">
+                          <div class="flex flex-col gap-1.5">
+                            <span
+                              class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                            >
+                              {{ t('clients.clientKind') }}
+                              <span class="text-red-600 dark:text-red-400">*</span>
+                            </span>
+                            <SelectButton
+                              v-model="form.clientKind"
+                              :options="naturalLegalKindOptions"
+                              option-label="label"
+                              option-value="value"
+                              :disabled="saving"
+                              :allow-empty="false"
+                              :aria-label="t('clients.clientKind')"
+                            />
+                            <small class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                              {{ t('clients.clientKindCreateHelp') }}
+                            </small>
+                          </div>
+                          <div class="flex flex-col gap-1">
+                            <label
+                              for="client-wizard-doc"
+                              class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                            >
+                              {{ form.clientKind === ClientKind.NATURAL ? t('clients.dni') : t('clients.ruc') }}
+                              <span class="text-red-600 dark:text-red-400">*</span>
+                            </label>
+                            <InputText
+                              id="client-wizard-doc"
+                              ref="firstFieldRef"
+                              v-model="form.documentId"
+                              :placeholder="
+                                form.clientKind === ClientKind.NATURAL
+                                  ? t('clients.dniPlaceholder')
+                                  : t('clients.rucPlaceholder')
+                              "
+                              :invalid="!!errors.documentId"
+                              :disabled="saving"
+                              inputmode="numeric"
+                              autocomplete="off"
+                              @input="onDocumentInput"
+                            />
+                            <small
+                              v-if="errors.documentId"
+                              class="matter-field-error text-xs text-red-600 dark:text-red-300"
+                            >
+                              {{ errors.documentId }}
+                            </small>
+                            <small
+                              v-else
+                              class="matter-field-help text-xs text-[var(--fg-subtle)]"
+                            >
+                              {{ t('clients.fieldDocumentCreateHelp') }}
+                            </small>
+                            <Button
+                              type="button"
+                              :label="t('clients.identityConsultButton')"
+                              :loading="identityLoading"
+                              :disabled="saving"
+                              class="w-full sm:w-auto"
+                              size="small"
+                              severity="secondary"
+                              variant="outlined"
+                              @click="onIdentityConsult"
+                            />
+                          </div>
+                        </div>
+                      </section>
+                      <section v-else key="w1" class="matter-form-section">
+                        <h3 class="matter-form-section__title">
+                          <span class="matter-form-section__title-text text-brand-gradient">
+                            {{ t('clients.sectionContact') }}
+                          </span>
+                        </h3>
+                        <div class="flex flex-col gap-4">
+                          <div class="flex flex-col gap-1">
+                            <label
+                              for="client-wizard-name"
+                              class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                            >
+                              {{ t('clients.name') }}
+                              <span class="text-red-600 dark:text-red-400">*</span>
+                            </label>
+                            <InputText
+                              id="client-wizard-name"
+                              v-model="form.name"
+                              :placeholder="t('clients.fieldNamePlaceholder')"
+                              :invalid="!!errors.name"
+                              :disabled="saving"
+                              autocomplete="organization"
+                              @blur="validateField('name')"
+                              @input="errors.name = ''"
+                            />
+                            <small
+                              v-if="errors.name"
+                              class="matter-field-error text-xs text-red-600 dark:text-red-300"
+                            >
+                              {{ errors.name }}
+                            </small>
+                            <small v-else class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                              {{ t('clients.fieldNameHelp') }}
+                            </small>
+                          </div>
+                          <div class="flex flex-col gap-1">
+                            <label
+                              for="client-wizard-email"
+                              class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                            >
+                              {{ t('clients.email') }}
+                            </label>
+                            <InputText
+                              id="client-wizard-email"
+                              v-model="form.email"
+                              type="email"
+                              :placeholder="t('clients.fieldEmailPlaceholder')"
+                              :disabled="saving"
+                              autocomplete="email"
+                            />
+                            <small class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                              {{ t('clients.fieldEmailHelp') }}
+                            </small>
+                          </div>
+                          <div class="flex flex-col gap-1">
+                            <label
+                              for="client-wizard-phone"
+                              class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                            >
+                              {{ t('clients.phone') }}
+                            </label>
+                            <InputText
+                              id="client-wizard-phone"
+                              v-model="form.phone"
+                              :placeholder="t('clients.fieldPhonePlaceholder')"
+                              :disabled="saving"
+                              autocomplete="tel"
+                            />
+                            <small class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                              {{ t('clients.fieldPhoneHelp') }}
+                            </small>
+                          </div>
+                          <div class="flex flex-col gap-1">
+                            <label
+                              for="client-wizard-notes"
+                              class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                            >
+                              {{ t('clients.notes') }}
+                            </label>
+                            <Textarea
+                              id="client-wizard-notes"
+                              v-model="form.notes"
+                              rows="3"
+                              class="w-full"
+                              :placeholder="t('clients.fieldNotesPlaceholder')"
+                              :disabled="saving"
+                            />
+                            <small class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                              {{ t('clients.fieldNotesHelp') }}
+                            </small>
+                          </div>
+                        </div>
+                      </section>
+                    </Transition>
                   </div>
                 </div>
+                <footer
+                  class="matter-dialog-footer flex flex-wrap items-center justify-between gap-2 border-t border-[var(--surface-border)] bg-[color-mix(in_srgb,var(--surface-raised)_92%,var(--surface-page))] px-5 py-3"
+                >
+                  <Button
+                    type="button"
+                    :label="t('common.cancel')"
+                    text
+                    :disabled="saving"
+                    @click="attemptCloseFormDialog"
+                  />
+                  <div class="flex flex-wrap items-center justify-end gap-2">
+                    <Button
+                      v-if="wizardStep > 0"
+                      type="button"
+                      :label="t('common.back')"
+                      severity="secondary"
+                      variant="outlined"
+                      icon="pi pi-arrow-left"
+                      :disabled="saving"
+                      @click="prevWizardStep"
+                    />
+                    <Button
+                      v-if="wizardStep < 1"
+                      type="button"
+                      :label="t('common.next')"
+                      icon="pi pi-arrow-right"
+                      icon-pos="right"
+                      :disabled="!canGoNextWizardStep"
+                      @click="nextWizardStep"
+                    />
+                    <Button
+                      v-else
+                      type="button"
+                      :label="t('common.create')"
+                      icon="pi pi-check"
+                      :loading="saving"
+                      :disabled="!canSubmitCreate"
+                      @click="onFormSubmit"
+                    />
+                  </div>
+                </footer>
+              </form>
+            </template>
+            <template v-else>
+              <header
+                class="matter-dialog-header flex flex-col gap-2 border-b border-[var(--surface-border)] px-5 py-4"
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="flex min-w-0 items-start gap-3">
+                    <div
+                      class="matter-dialog-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+                    >
+                      <i
+                        :class="form.clientKind === ClientKind.LEGAL ? 'pi pi-building' : 'pi pi-user'"
+                        class="text-xl text-[var(--brand-zafiro)] dark:text-[var(--accent)]"
+                      />
+                    </div>
+                    <div class="flex min-w-0 flex-col gap-0.5">
+                      <span class="matter-dialog-eyebrow text-brand-gradient">
+                        {{ t('clients.formEyebrow') }}
+                      </span>
+                      <h2
+                        class="matter-dialog-title text-lg font-semibold leading-tight text-[var(--fg-default)]"
+                      >
+                        {{ t('clients.formEditTitle') }}
+                      </h2>
+                      <p class="m-0 text-[0.8125rem] text-[var(--fg-muted)]">
+                        {{ t('clients.formEditHint') }}
+                      </p>
+                      <p
+                        v-if="editIsDirty"
+                        class="m-0 flex items-center gap-1.5 text-[0.8125rem] text-amber-700 dark:text-amber-300"
+                      >
+                        <span class="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        {{ t('clients.formDirtyHint') }}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    icon="pi pi-times"
+                    text
+                    rounded
+                    size="small"
+                    :disabled="saving"
+                    :aria-label="t('common.close')"
+                    class="shrink-0"
+                    @click="attemptCloseFormDialog"
+                  />
+                </div>
+              </header>
+              <form
+                class="matter-dialog-body flex max-h-[min(52vh,420px)] flex-col gap-0 overflow-y-auto px-5 py-4"
+                novalidate
+                @submit.prevent="onFormSubmit"
+                @keydown="onFormKeydown"
+              >
+                <section class="matter-form-section">
+                  <h3 class="matter-form-section__title">
+                    <span class="matter-form-section__title-text text-brand-gradient">
+                      {{ t('clients.sectionContact') }}
+                    </span>
+                  </h3>
+                  <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1.5">
+                      <label
+                        for="client-form-kind"
+                        class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                      >
+                        {{ t('clients.clientKind') }}
+                      </label>
+                      <Select
+                        id="client-form-kind"
+                        v-model="form.clientKind"
+                        :options="clientKindEditOptions"
+                        option-label="label"
+                        option-value="value"
+                        :disabled="saving"
+                        :placeholder="t('clients.clientKind')"
+                        :aria-label="t('clients.clientKind')"
+                        class="w-full"
+                      />
+                      <small class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                        {{ t('clients.clientKindEditHelp') }}
+                      </small>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <label
+                        for="client-form-name"
+                        class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                      >
+                        {{ t('clients.name') }}
+                        <span class="text-red-600 dark:text-red-400">*</span>
+                      </label>
+                      <InputText
+                        id="client-form-name"
+                        ref="firstFieldRef"
+                        v-model="form.name"
+                        :placeholder="t('clients.fieldNamePlaceholder')"
+                        :invalid="!!errors.name"
+                        :disabled="saving"
+                        autocomplete="organization"
+                        @blur="validateField('name')"
+                        @input="errors.name = ''"
+                      />
+                      <small
+                        v-if="errors.name"
+                        class="matter-field-error text-xs text-red-600 dark:text-red-300"
+                      >
+                        {{ errors.name }}
+                      </small>
+                      <small v-else class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                        {{ t('clients.fieldNameHelp') }}
+                      </small>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <label
+                        for="client-form-email"
+                        class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                      >
+                        {{ t('clients.email') }}
+                      </label>
+                      <InputText
+                        id="client-form-email"
+                        v-model="form.email"
+                        type="email"
+                        :placeholder="t('clients.fieldEmailPlaceholder')"
+                        :disabled="saving"
+                        autocomplete="email"
+                      />
+                      <small class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                        {{ t('clients.fieldEmailHelp') }}
+                      </small>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <label
+                        for="client-form-phone"
+                        class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                      >
+                        {{ t('clients.phone') }}
+                      </label>
+                      <InputText
+                        id="client-form-phone"
+                        v-model="form.phone"
+                        :placeholder="t('clients.fieldPhonePlaceholder')"
+                        :disabled="saving"
+                        autocomplete="tel"
+                      />
+                      <small class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                        {{ t('clients.fieldPhoneHelp') }}
+                      </small>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <label
+                        for="client-form-doc"
+                        class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                      >
+                        {{ t('clients.documentId') }}
+                      </label>
+                      <InputText
+                        id="client-form-doc"
+                        v-model="form.documentId"
+                        :placeholder="t('clients.fieldDocumentPlaceholder')"
+                        :disabled="saving"
+                      />
+                      <small class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                        {{ t('clients.fieldDocumentHelp') }}
+                      </small>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <label
+                        for="client-form-notes"
+                        class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]"
+                      >
+                        {{ t('clients.notes') }}
+                      </label>
+                      <Textarea
+                        id="client-form-notes"
+                        v-model="form.notes"
+                        rows="3"
+                        class="w-full"
+                        :placeholder="t('clients.fieldNotesPlaceholder')"
+                        :disabled="saving"
+                      />
+                      <small class="matter-field-help text-xs text-[var(--fg-subtle)]">
+                        {{ t('clients.fieldNotesHelp') }}
+                      </small>
+                    </div>
+                  </div>
+                </section>
+              </form>
+              <footer
+                class="matter-dialog-footer flex flex-wrap items-end justify-end gap-2 border-t border-[var(--surface-border)] bg-[color-mix(in_srgb,var(--surface-raised)_92%,var(--surface-page))] px-5 py-3"
+              >
                 <Button
                   type="button"
-                  icon="pi pi-times"
+                  :label="t('common.cancel')"
                   text
-                  rounded
-                  size="small"
                   :disabled="saving"
-                  :aria-label="t('common.cancel')"
-                  class="shrink-0"
                   @click="attemptCloseFormDialog"
                 />
-              </div>
-            </header>
-
-            <form
-              class="matter-dialog-body flex max-h-[min(52vh,420px)] flex-col gap-0 overflow-y-auto px-5 py-4"
-              novalidate
-              @submit.prevent="onFormSubmit"
-              @keydown="onFormKeydown"
-            >
-              <section class="matter-form-section">
-                <h3 class="matter-form-section__title">
-                  <span class="matter-form-section__title-text text-brand-gradient">{{ t('clients.sectionContact') }}</span>
-                </h3>
-                <div class="flex flex-col gap-4">
-                  <div class="flex flex-col gap-1">
-                    <label for="client-form-name" class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]">
-                      {{ t('clients.name') }}
-                      <span class="text-red-600 dark:text-red-400">*</span>
-                    </label>
-                    <InputText
-                      id="client-form-name"
-                      ref="firstFieldRef"
-                      v-model="form.name"
-                      :placeholder="t('clients.fieldNamePlaceholder')"
-                      :invalid="!!errors.name"
-                      :disabled="saving"
-                      autocomplete="organization"
-                      @blur="validateField('name')"
-                      @input="errors.name = ''"
-                    />
-                    <small v-if="errors.name" class="matter-field-error text-xs text-red-600 dark:text-red-300">{{
-                      errors.name
-                    }}</small>
-                    <small v-else class="matter-field-help text-xs text-[var(--fg-subtle)]">{{
-                      t('clients.fieldNameHelp')
-                    }}</small>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label for="client-form-email" class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]">{{
-                      t('clients.email')
-                    }}</label>
-                    <InputText
-                      id="client-form-email"
-                      v-model="form.email"
-                      type="email"
-                      :placeholder="t('clients.fieldEmailPlaceholder')"
-                      :disabled="saving"
-                      autocomplete="email"
-                    />
-                    <small class="matter-field-help text-xs text-[var(--fg-subtle)]">{{ t('clients.fieldEmailHelp') }}</small>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label for="client-form-phone" class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]">{{
-                      t('clients.phone')
-                    }}</label>
-                    <InputText
-                      id="client-form-phone"
-                      v-model="form.phone"
-                      :placeholder="t('clients.fieldPhonePlaceholder')"
-                      :disabled="saving"
-                      autocomplete="tel"
-                    />
-                    <small class="matter-field-help text-xs text-[var(--fg-subtle)]">{{ t('clients.fieldPhoneHelp') }}</small>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label for="client-form-doc" class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]">{{
-                      t('clients.documentId')
-                    }}</label>
-                    <InputText
-                      id="client-form-doc"
-                      v-model="form.documentId"
-                      :placeholder="t('clients.fieldDocumentPlaceholder')"
-                      :disabled="saving"
-                    />
-                    <small class="matter-field-help text-xs text-[var(--fg-subtle)]">{{ t('clients.fieldDocumentHelp') }}</small>
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label for="client-form-notes" class="matter-field-label text-[0.8125rem] font-medium text-[var(--fg-default)]">{{
-                      t('clients.notes')
-                    }}</label>
-                    <Textarea
-                      id="client-form-notes"
-                      v-model="form.notes"
-                      rows="3"
-                      class="w-full"
-                      :placeholder="t('clients.fieldNotesPlaceholder')"
-                      :disabled="saving"
-                    />
-                    <small class="matter-field-help text-xs text-[var(--fg-subtle)]">{{ t('clients.fieldNotesHelp') }}</small>
-                  </div>
-                </div>
-              </section>
-            </form>
-
-            <footer
-              class="matter-dialog-footer flex flex-wrap items-center justify-end gap-2 border-t border-[var(--surface-border)] bg-[color-mix(in_srgb,var(--surface-raised)_92%,var(--surface-page))] px-5 py-3"
-            >
-              <Button type="button" :label="t('common.cancel')" text :disabled="saving" @click="attemptCloseFormDialog" />
-              <Button
-                type="button"
-                :label="primaryFormLabel"
-                icon="pi pi-check"
-                :loading="saving"
-                :disabled="!canSubmitForm"
-                @click="onFormSubmit"
-              />
-            </footer>
+                <Button
+                  type="button"
+                  :label="t('common.save')"
+                  icon="pi pi-check"
+                  :loading="saving"
+                  :disabled="!canSubmitForm"
+                  @click="onFormSubmit"
+                />
+              </footer>
+            </template>
           </div>
         </template>
       </Dialog>
@@ -449,10 +782,13 @@ import InputIcon from 'primevue/inputicon';
 import IconField from 'primevue/iconfield';
 import Dialog from 'primevue/dialog';
 import Textarea from 'primevue/textarea';
+import Select from 'primevue/select';
+import SelectButton from 'primevue/selectbutton';
 import Skeleton from 'primevue/skeleton';
 import Paginator from 'primevue/paginator';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from 'vue-i18n';
+import { ClientKind } from '@tracker/shared';
 import { apiClient } from '@/api/client';
 import { usePermissions } from '@/composables/usePermissions';
 import { useAuthStore } from '@/stores/auth.store';
@@ -475,6 +811,7 @@ const rowHasClientActions = computed(() => canTrackableUpdate.value || canTracka
 interface ClientRow {
   id: string;
   name: string;
+  clientKind?: string;
   email?: string;
   phone?: string;
   documentId?: string;
@@ -524,7 +861,31 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalSearchHotkey));
 const dialogVisible = ref(false);
 const editingId = ref<string | null>(null);
 const saving = ref(false);
+
+const createStepLabels = computed(() => [t('clients.wizardStepIdentity'), t('clients.wizardStepContact')]);
+
+const naturalLegalKindOptions = computed(() => [
+  { label: t('clients.kindNatural'), value: ClientKind.NATURAL },
+  { label: t('clients.kindLegal'), value: ClientKind.LEGAL },
+]);
+
+const clientKindEditOptions = computed(() => [
+  { label: t('clients.kindUnknown'), value: ClientKind.UNKNOWN },
+  { label: t('clients.kindNatural'), value: ClientKind.NATURAL },
+  { label: t('clients.kindLegal'), value: ClientKind.LEGAL },
+]);
+
+const dialogShellWidth = computed(() =>
+  editingId.value ? 'min(520px, 96vw)' : 'min(640px, 96vw)',
+);
+const wizardStep = ref(0);
+const stepDirection = ref<'forward' | 'backward'>('forward');
+const stepTransitionName = computed(() => (stepDirection.value === 'forward' ? 'step-fwd' : 'step-back'));
+const identityLoading = ref(false);
+const createSnapshot = ref('');
+
 const form = ref({
+  clientKind: ClientKind.NATURAL as ClientKind,
   name: '',
   email: '',
   phone: '',
@@ -538,29 +899,128 @@ const editIsDirty = computed(() => {
   return JSON.stringify(form.value) !== editSnapshot.value;
 });
 
-const formDialogBlockedByDirty = computed(() => editingId.value != null && editIsDirty.value);
+const createIsDirty = computed(() => {
+  if (editingId.value || !dialogVisible.value) return false;
+  return JSON.stringify(form.value) !== createSnapshot.value;
+});
 
-const errors = ref({ name: '' });
+const formDialogBlockedByDirty = computed(
+  () => (editingId.value != null && editIsDirty.value) || (!editingId.value && createIsDirty.value),
+);
 
-function validateField(field: 'name') {
+const errors = ref({ name: '', documentId: '' });
+
+function clientKindFromApi(v: string | undefined): ClientKind {
+  if (v === ClientKind.NATURAL || v === 'natural') return ClientKind.NATURAL;
+  if (v === ClientKind.LEGAL || v === 'legal') return ClientKind.LEGAL;
+  return ClientKind.UNKNOWN;
+}
+
+function clientKindLabelFromRow(row: ClientRow): string {
+  const k = row.clientKind;
+  if (k === ClientKind.NATURAL || k === 'natural') return t('clients.kindNatural');
+  if (k === ClientKind.LEGAL || k === 'legal') return t('clients.kindLegal');
+  return t('clients.kindUnknown');
+}
+
+function digitsOnly(s: string): string {
+  return s.replace(/\D/g, '');
+}
+
+function validateField(field: 'name' | 'documentId') {
   if (field === 'name' && !form.value.name?.trim()) {
     errors.value.name = t('clients.fieldNameRequired');
+  }
+  if (field === 'documentId') {
+    const d = digitsOnly(form.value.documentId);
+    if (form.value.clientKind === ClientKind.NATURAL) {
+      if (d.length !== 8) {
+        errors.value.documentId = t('clients.errorDniLength');
+        return;
+      }
+    } else if (form.value.clientKind === ClientKind.LEGAL) {
+      if (d.length !== 11) {
+        errors.value.documentId = t('clients.errorRucLength');
+        return;
+      }
+    }
+    errors.value.documentId = '';
+  }
+}
+
+const canGoNextWizardStep = computed(() => {
+  if (form.value.clientKind !== ClientKind.NATURAL && form.value.clientKind !== ClientKind.LEGAL) {
+    return false;
+  }
+  const d = digitsOnly(form.value.documentId);
+  if (form.value.clientKind === ClientKind.NATURAL) return d.length === 8;
+  if (form.value.clientKind === ClientKind.LEGAL) return d.length === 11;
+  return false;
+});
+
+const canSubmitCreate = computed(() => !!form.value.name?.trim() && canGoNextWizardStep.value);
+
+function onDocumentInput() {
+  errors.value.documentId = '';
+  const raw = form.value.documentId;
+  const d = digitsOnly(raw);
+  form.value.documentId = d;
+}
+
+function nextWizardStep() {
+  validateField('documentId');
+  if (errors.value.documentId) return;
+  if (!canGoNextWizardStep.value) return;
+  stepDirection.value = 'forward';
+  wizardStep.value = 1;
+  void nextTick(() => {
+    const nameInput = document.getElementById('client-wizard-name') as HTMLInputElement | null;
+    nameInput?.focus();
+  });
+}
+
+function prevWizardStep() {
+  if (wizardStep.value <= 0) return;
+  stepDirection.value = 'backward';
+  wizardStep.value = 0;
+}
+
+async function onIdentityConsult() {
+  identityLoading.value = true;
+  try {
+    await new Promise((r) => setTimeout(r, 450));
+    toast.add({
+      severity: 'info',
+      summary: t('clients.identityConsultStubTitle'),
+      detail: t('clients.identityConsultStubDetail'),
+      life: 4500,
+    });
+  } finally {
+    identityLoading.value = false;
   }
 }
 
 const canSubmitForm = computed(() => {
+  if (!editingId.value) return false;
   const nameOk = !!form.value.name?.trim();
-  if (!editingId.value) return nameOk;
   return nameOk && editIsDirty.value;
 });
 
-const primaryFormLabel = computed(() => (editingId.value ? t('common.save') : t('common.create')));
-
 function resetForm() {
-  form.value = { name: '', email: '', phone: '', documentId: '', notes: '' };
+  form.value = {
+    clientKind: ClientKind.NATURAL,
+    name: '',
+    email: '',
+    phone: '',
+    documentId: '',
+    notes: '',
+  };
   editingId.value = null;
-  errors.value = { name: '' };
+  errors.value = { name: '', documentId: '' };
   editSnapshot.value = '';
+  createSnapshot.value = '';
+  wizardStep.value = 0;
+  stepDirection.value = 'forward';
 }
 
 function openCreate() {
@@ -568,6 +1028,7 @@ function openCreate() {
   resetForm();
   dialogVisible.value = true;
   void nextTick(() => {
+    createSnapshot.value = JSON.stringify(form.value);
     const el = firstFieldRef.value as unknown as { $el?: HTMLElement } | undefined;
     el?.$el?.querySelector?.('input')?.focus?.();
   });
@@ -576,8 +1037,9 @@ function openCreate() {
 function openEdit(row: ClientRow) {
   if (!canTrackableUpdate.value) return;
   editingId.value = row.id;
-  errors.value = { name: '' };
+  errors.value = { name: '', documentId: '' };
   form.value = {
+    clientKind: clientKindFromApi(row.clientKind),
     name: row.name,
     email: row.email || '',
     phone: row.phone || '',
@@ -605,12 +1067,35 @@ function onFormDialogHide() {
 
 function onFormKeydown(e: KeyboardEvent) {
   if (e.key !== 'Enter' || (e.target as HTMLElement)?.tagName?.toLowerCase() === 'textarea') return;
-  if (!canSubmitForm.value || saving.value) return;
+  if (saving.value) return;
+  if (editingId.value) {
+    if (!canSubmitForm.value) return;
+    e.preventDefault();
+    void saveClient();
+    return;
+  }
+  if (wizardStep.value === 0) {
+    if (!canGoNextWizardStep.value) return;
+    e.preventDefault();
+    nextWizardStep();
+    return;
+  }
+  if (!canSubmitCreate.value) return;
   e.preventDefault();
   void saveClient();
 }
 
 function onFormSubmit() {
+  if (!editingId.value) {
+    if (wizardStep.value === 0) {
+      nextWizardStep();
+      return;
+    }
+    validateField('name');
+    if (errors.value.name) return;
+    void saveClient();
+    return;
+  }
   validateField('name');
   if (errors.value.name) return;
   void saveClient();
@@ -648,16 +1133,24 @@ async function saveClient() {
     errors.value.name = t('clients.fieldNameRequired');
     return;
   }
-  if (editingId.value && !canSubmitForm.value) return;
-  if (editingId.value && !canTrackableUpdate.value) return;
-  if (!editingId.value && !canTrackableCreate.value) return;
+  if (!editingId.value) {
+    if (wizardStep.value !== 1) return;
+    validateField('documentId');
+    if (errors.value.documentId) return;
+    if (!canTrackableCreate.value) return;
+  } else {
+    if (!canSubmitForm.value) return;
+    if (!canTrackableUpdate.value) return;
+  }
   saving.value = true;
   try {
+    const docNorm = digitsOnly(form.value.documentId);
     const payload = {
       name,
+      clientKind: form.value.clientKind,
       email: form.value.email.trim() || undefined,
       phone: form.value.phone.trim() || undefined,
-      documentId: form.value.documentId.trim() || undefined,
+      documentId: docNorm || undefined,
       notes: form.value.notes.trim() || undefined,
     };
     if (editingId.value) {
@@ -675,14 +1168,6 @@ async function saveClient() {
   } finally {
     saving.value = false;
   }
-}
-
-function clientMetaLine(row: ClientRow): string {
-  const phone = row.phone?.trim();
-  const doc = row.documentId?.trim();
-  if (phone) return phone;
-  if (doc) return doc;
-  return t('clients.metaNone');
 }
 
 const showDeleteConfirm = ref(false);
@@ -729,6 +1214,13 @@ watch(
   },
   { immediate: true },
 );
+
+watch(
+  () => form.value.clientKind,
+  () => {
+    errors.value.documentId = '';
+  },
+);
 </script>
 
 <style scoped>
@@ -742,89 +1234,6 @@ watch(
 .toolbar-search :deep(.p-inputtext) {
   width: 100%;
   border-radius: 0.75rem;
-}
-/* Degradado de marca bajo el mesh (la tarjeta se leía muy plana solo con radiales suaves) */
-.exp-kpi-brandwash {
-  z-index: 0;
-  opacity: 0.22;
-  background: linear-gradient(
-    125deg,
-    color-mix(in srgb, var(--brand-zafiro) 55%, transparent) 0%,
-    transparent 38%,
-    color-mix(in srgb, #7c3aed 38%, transparent) 100%
-  );
-}
-:global(html.dark) .clients-kpi-wrap .exp-kpi-brandwash {
-  opacity: 0.35;
-  background: linear-gradient(
-    125deg,
-    color-mix(in srgb, var(--brand-hielo) 42%, transparent) 0%,
-    transparent 40%,
-    color-mix(in srgb, #a78bfa 35%, transparent) 100%
-  );
-}
-.exp-kpi-mesh {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background:
-    radial-gradient(120% 80% at 0% 0%, var(--kpi-mesh-1, transparent), transparent 60%),
-    radial-gradient(120% 80% at 100% 100%, var(--kpi-mesh-2, transparent), transparent 60%);
-  pointer-events: none;
-}
-.exp-kpi-grain {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  opacity: 0.35;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.06'/></svg>");
-  mix-blend-mode: overlay;
-  pointer-events: none;
-}
-.exp-kpi-icon-wrap {
-  border: 1px solid color-mix(in srgb, var(--kpi-accent) 24%, var(--surface-border));
-  background: color-mix(in srgb, var(--kpi-accent) 10%, var(--surface-raised));
-  color: var(--kpi-accent);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 28%, transparent);
-}
-:global(.dark) .exp-kpi-icon-wrap {
-  background: color-mix(in srgb, var(--kpi-accent) 18%, var(--surface-raised));
-  box-shadow: none;
-}
-.clients-kpi-wrap .exp-kpi-card {
-  cursor: default;
-  animation: expKpiFadeSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: var(--stagger-delay, 0ms);
-}
-.exp-kpi-card--total-bar {
-  border-left: 3px solid color-mix(in srgb, #2d3fbf 85%, var(--surface-border));
-}
-@keyframes expKpiFadeSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(14px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .clients-kpi-wrap .exp-kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .clients-kpi-wrap .exp-kpi-card {
-    animation: none !important;
-  }
-  .clients-kpi-wrap .exp-kpi-card:hover {
-    transform: none !important;
-  }
-  .exp-kpi-grain {
-    opacity: 0.12 !important;
-  }
 }
 :deep(.client-actions-header) {
   text-align: center !important;
@@ -1005,5 +1414,77 @@ watch(
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.client-wizard-step__circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--surface-border);
+  color: var(--fg-subtle);
+  transition:
+    background-color 220ms ease,
+    color 220ms ease;
+}
+.client-wizard-step__circle--active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.client-wizard-step__circle--done {
+  background: #10b981;
+  color: #fff;
+}
+.client-wizard-step__line {
+  height: 1px;
+  background: var(--surface-border);
+  transition: background-color 220ms ease;
+}
+.client-wizard-step__line--done {
+  background: #10b981;
+}
+.step-fwd-enter-active,
+.step-fwd-leave-active,
+.step-back-enter-active,
+.step-back-leave-active {
+  transition:
+    opacity 240ms ease-out,
+    transform 240ms ease-out;
+  will-change: opacity, transform;
+}
+.step-fwd-enter-from {
+  opacity: 0;
+  transform: translateX(28px);
+}
+.step-fwd-leave-to {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+.step-back-enter-from {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+.step-back-leave-to {
+  opacity: 0;
+  transform: translateX(28px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-fwd-enter-active,
+  .step-fwd-leave-active,
+  .step-back-enter-active,
+  .step-back-leave-active {
+    transition: opacity 120ms ease-out;
+  }
+  .step-fwd-enter-from,
+  .step-fwd-leave-to,
+  .step-back-enter-from,
+  .step-back-leave-to {
+    transform: none;
+  }
 }
 </style>

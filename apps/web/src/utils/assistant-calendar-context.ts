@@ -47,3 +47,24 @@ export function setAssistantCalendarViewportSingleDay(
     /* ignore */
   }
 }
+
+/** Rango local inclusivo (`start` y `endInclusive` por fecha de calendario). */
+export function setAssistantCalendarViewportRange(
+  start: Date,
+  endInclusive: Date,
+  meta?: { view?: string; title?: string },
+): void {
+  try {
+    const payload = {
+      calendarView: {
+        from: dateToYmdLocal(start),
+        to: dateToYmdLocal(endInclusive),
+        view: meta?.view,
+        title: meta?.title,
+      },
+    };
+    sessionStorage.setItem('alega.assistant.calendar', JSON.stringify(payload));
+  } catch {
+    /* ignore */
+  }
+}
