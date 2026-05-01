@@ -1,6 +1,0 @@
-/**
- * The NodeTranslator instance for the w:numPr element.
- * @type {import('@translator').NodeTranslator}
- */
-export const translator: import('../../../node-translator/index.js').NodeTranslator;
-//# sourceMappingURL=numPr-translator.d.ts.map

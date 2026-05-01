@@ -1,8 +1,0 @@
-import { DocumentApiAdapters } from '@superdoc/document-api';
-import { Editor } from '../core/Editor.js';
-/**
- * Backward-compatible adapter entry point used by Editor.
- * Delegates to assembleDocumentApiAdapters so both construction paths stay in lockstep.
- */
-export declare function getDocumentApiAdapters(editor: Editor): DocumentApiAdapters;
-//# sourceMappingURL=index.d.ts.map

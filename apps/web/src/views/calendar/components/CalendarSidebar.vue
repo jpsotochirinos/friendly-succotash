@@ -33,7 +33,7 @@
       <!-- Calendario global: resumen mensual (sandbox). Expediente: rejilla KPI “hoy”. -->
       <div v-if="monthSummaryRows?.length" class="cal-sidebar__month-wrap">
         <h3 class="cal-sidebar__month-title">{{ t('globalCalendar.sidebarMonthSummaryTitle') }}</h3>
-        <ul class="cal-sidebar__month-stats" role="list">
+        <ul class="cal-sidebar__month-stats">
           <li v-for="row in monthSummaryRows" :key="row.key" class="cal-sidebar__month-stat">
             <i
               class="cal-sidebar__month-stat-icon text-sm shrink-0"
@@ -142,7 +142,7 @@
 
       <div class="cal-sidebar-legend-wrap">
         <p class="text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)] m-0 mb-2">{{ t('globalCalendar.legendTitle') }}</p>
-        <LegendBar class="cal-sidebar-legend-urgency" />
+        <CalendarUrgencyLegend compact class="cal-sidebar-legend-urgency" />
       </div>
     </aside>
   </div>
@@ -156,8 +156,8 @@ import MultiSelect from 'primevue/multiselect';
 import { useCalendarStore } from '@/stores/calendar.store';
 import type { CalendarFilterKind } from '@/composables/calendarEventKind';
 import { useCalendarFilterMultiselectOptions } from '@/composables/useCalendarFilterMultiselectOptions';
-import LegendBar from '@/sandbox/recipes/CalendarRedesign/patterns/LegendBar.vue';
 import MiniCalendar from '@/sandbox/recipes/CalendarRedesign/patterns/MiniCalendar.vue';
+import CalendarUrgencyLegend from './CalendarUrgencyLegend.vue';
 
 type MonthSummaryRow = {
   key: string;
@@ -199,7 +199,7 @@ const { kindOptions, priorityOptions } = useCalendarFilterMultiselectOptions();
 /** Panel colapsado por debajo de `lg` (1024px) hasta que el usuario despliega. */
 const mobileOpen = ref(false);
 
-const isLgUp = ref(typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : false);
+const isLgUp = ref(globalThis.window === undefined ? false : globalThis.window.matchMedia('(min-width: 1024px)').matches);
 
 const sidebarPanelVisible = computed(() => isLgUp.value || mobileOpen.value);
 
@@ -210,7 +210,7 @@ function toggleMobilePanel() {
 let removeMqListener: (() => void) | undefined;
 
 onMounted(() => {
-  const mq = window.matchMedia('(min-width: 1024px)');
+  const mq = globalThis.matchMedia('(min-width: 1024px)');
   isLgUp.value = mq.matches;
   const onChange = () => {
     isLgUp.value = mq.matches;
@@ -239,11 +239,6 @@ function goToday() {
 .cal-sidebar-legend-wrap {
   min-width: 0;
 }
-.cal-sidebar-legend-urgency :deep(.legend) {
-  gap: 6px 10px;
-  padding: 0;
-}
-
 /* Resumen mensual (alineado a CalendarRedesignSandbox — activity-stat compacto). */
 .cal-sidebar__month-wrap {
   border: 1px solid var(--surface-border);

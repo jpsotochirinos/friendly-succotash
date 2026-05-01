@@ -1,9 +1,0 @@
-/**
- * Create a ProseMirror plugin that keeps `listRendering` data in sync with the
- * underlying Word numbering definitions.
- *
- * @param {import('../../core/Editor').Editor} editor The active editor instance.
- * @returns {import('prosemirror-state').Plugin}
- */
-export function createNumberingPlugin(editor: import('../../core/Editor').Editor): import('prosemirror-state').Plugin;
-//# sourceMappingURL=numberingPlugin.d.ts.map

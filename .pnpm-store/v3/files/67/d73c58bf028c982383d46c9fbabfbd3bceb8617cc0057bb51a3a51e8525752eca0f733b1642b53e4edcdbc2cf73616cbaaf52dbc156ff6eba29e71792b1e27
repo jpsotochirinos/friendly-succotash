@@ -1,7 +1,0 @@
-import { Plugin } from 'prosemirror-state';
-export function FieldAnnotationPlugin(options?: {
-    editor: Object;
-    annotationClass: string;
-    handleDropOutside?: Function | undefined;
-}): Plugin;
-//# sourceMappingURL=FieldAnnotationPlugin.d.ts.map

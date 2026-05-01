@@ -187,6 +187,7 @@
       <template #actions>
         <Button
           v-if="canTrackableCreate && listScope === 'active'"
+          class="alega-btn-cta-brand border-0"
           :label="t('trackables.newMatter')"
           icon="pi pi-plus"
           size="small"
@@ -195,24 +196,45 @@
       </template>
     </PageHeader>
 
-    <SelectButton
-      v-model="listScope"
-      :options="scopeOptions"
-      option-label="label"
-      option-value="value"
-      :allow-empty="false"
-      class="scope-tabs"
-    />
-
     <template v-if="listScope === 'trash'">
       <template v-if="!canDocRead">
-        <div class="flex flex-col items-center justify-center gap-3 py-16 text-center text-[var(--fg-muted)]">
-          <i class="pi pi-lock text-4xl opacity-60" />
-          <p>{{ t('trackables.trashNoPermission') }}</p>
+        <div class="app-card overflow-hidden">
+          <div
+            class="matters-workbench-scope flex min-h-[2.75rem] items-stretch border-b border-[var(--surface-border)]"
+            style="background: color-mix(in srgb, var(--surface-sunken) 88%, var(--surface-raised));"
+          >
+            <SelectButton
+              v-model="listScope"
+              :options="scopeOptions"
+              option-label="label"
+              option-value="value"
+              :allow-empty="false"
+              class="matters-workbench-scope-tabs scope-tabs flex-1 min-w-0"
+              :aria-label="t('trackables.workbenchScopeAria')"
+            />
+          </div>
+          <div class="flex flex-col items-center justify-center gap-3 py-16 text-center text-[var(--fg-muted)]">
+            <i class="pi pi-lock text-4xl opacity-60" />
+            <p>{{ t('trackables.trashNoPermission') }}</p>
+          </div>
         </div>
       </template>
       <template v-else>
         <div class="app-card overflow-hidden">
+          <div
+            class="matters-workbench-scope flex min-h-[2.75rem] items-stretch border-b border-[var(--surface-border)]"
+            style="background: color-mix(in srgb, var(--surface-sunken) 88%, var(--surface-raised));"
+          >
+            <SelectButton
+              v-model="listScope"
+              :options="scopeOptions"
+              option-label="label"
+              option-value="value"
+              :allow-empty="false"
+              class="matters-workbench-scope-tabs scope-tabs flex-1 min-w-0"
+              :aria-label="t('trackables.workbenchScopeAria')"
+            />
+          </div>
           <div v-if="trashLoading && trashDocuments.length === 0" class="overflow-x-auto">
             <div class="min-w-[560px]">
               <div class="grid grid-cols-[minmax(260px,1fr)_160px_120px] gap-4 border-b border-[var(--surface-border)] px-4 py-3">
@@ -320,612 +342,528 @@
     </template>
 
     <template v-else>
-    <!-- KPI: solo en expedientes en curso -->
-    <UrgencyKpiChipsBar
-      v-if="listScope === 'active'"
-      :facets="listingFacets"
-      :model-value="filters.urgency"
-      :assigned-to-me-active="isAssignedToMeFilter"
-      :mine-count="isAssignedToMeFilter ? totalRecords : null"
-      :show-mine-chip="Boolean(user?.id)"
-      @update:model-value="onListingUrgencyChange"
-      @toggle-assigned-to-me="toggleAssignedToMeFilter"
-    />
-
-    <div
-      class="app-card matters-cockpit-card flex h-[min(82vh,calc(100dvh-11rem))] min-h-[520px] flex-col overflow-hidden shadow-sm"
-    >
-      <!-- Command toolbar -->
-      <div
-        class="matters-command-toolbar flex flex-shrink-0 flex-col gap-3 border-b border-[var(--surface-border)] bg-[var(--surface-raised)] px-4 py-2.5 sm:gap-4 sm:px-5 sm:py-3"
-        role="toolbar"
-        :aria-label="t('trackables.toolbarCommandBarAria')"
-      >
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-5">
-          <IconField ref="mattersSearchFieldRef" class="toolbar-iconfield min-w-0 flex-1">
-            <InputIcon class="pi pi-search text-[var(--fg-subtle)]" />
-            <InputText
-              v-model="filters.search"
-              :placeholder="t('trackables.toolbarSearchPlaceholder')"
-              class="toolbar-search w-full min-w-0 rounded-xl"
-              :aria-label="t('common.search')"
-              autocomplete="off"
+    <div class="exp21">
+      <div class="app-card wb-card">
+        <div class="wb-toolbar" role="toolbar" :aria-label="t('trackables.toolbarCommandBarAria')">
+          <div class="wb-toolbar__primary">
+            <SelectButton
+              v-model="listScope"
+              :options="scopeOptions"
+              option-label="label"
+              option-value="value"
+              :allow-empty="false"
+              size="small"
+              :aria-label="t('trackables.workbenchScopeAria')"
+              class="wb-scope-select"
             />
-          </IconField>
-          <div
-            class="flex min-w-0 shrink-0 flex-col gap-2 border-t border-[var(--surface-border)] pt-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-2 sm:border-t-0 sm:pt-0 lg:border-l lg:border-t-0 lg:pl-5"
-            role="group"
-            :aria-label="t('trackables.toolbarResultsGroupAria')"
-          >
-            <div
-              class="toolbar-results-line flex flex-wrap items-center gap-x-2 gap-y-1 text-sm tabular-nums text-[var(--fg-default)]"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              <span>{{ t('trackables.toolbarResults', { n: totalRecords }) }}</span>
-              <template v-if="activeFilterCount > 0">
-                <span class="text-[var(--fg-subtle)]" aria-hidden="true">·</span>
-                <Button
-                  type="button"
-                  class="matters-active-filters-btn !p-0 text-sm font-medium normal-case tabular-nums text-accent underline-offset-2 hover:underline"
-                  :label="t('trackables.toolbarFiltersActive', { n: activeFilterCount })"
-                  text
-                  @click="(e) => filtersPopoverRef?.toggle(e)"
-                />
-              </template>
-            </div>
-            <div class="flex flex-wrap items-center justify-end gap-1.5">
-              <Button
-                v-if="hasActiveFilters"
-                :label="t('trackables.clearFilters')"
-                icon="pi pi-filter-slash"
-                text
-                size="small"
-                class="shrink-0"
-                @click="clearFilters"
-              />
-              <Button
-                type="button"
-                :label="t('trackables.toolbarSavedViews')"
-                icon="pi pi-bookmark"
-                text
-                size="small"
-                class="shrink-0"
-                :aria-haspopup="true"
-                :aria-expanded="false"
-                @click="(e) => savedViewsMenuRef?.toggle(e)"
-              />
-              <Button
-                type="button"
-                icon="pi pi-ellipsis-h"
-                text
-                rounded
-                size="small"
-                class="shrink-0"
-                :aria-label="t('trackables.toolbarMoreActions')"
-                @click="(e) => moreActionsMenuRef?.toggle(e)"
-              />
-            </div>
           </div>
-        </div>
-        <Popover ref="filtersPopoverRef" class="matters-filters-popover w-[min(100vw-2rem,22rem)]">
-          <div class="flex flex-col gap-2 p-3">
-            <p class="m-0 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--fg-muted)]">
-              {{ t('trackables.activeFiltersTitle') }}
-            </p>
-            <ul class="m-0 flex list-none flex-col gap-1 p-0">
-              <li
-                v-for="row in activeFilterRows"
-                :key="row.id"
-                class="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 hover:bg-[color-mix(in_srgb,var(--accent-soft)_55%,transparent)]"
+
+          <div class="wb-toolbar__row wb-toolbar__row--main">
+            <IconField class="wb-search">
+              <InputIcon class="pi pi-search" />
+              <InputText
+                ref="toolbarSearchInputRef"
+                v-model="filters.search"
+                size="small"
+                name="matters-toolbar-search"
+                autocomplete="off"
+                :placeholder="t('trackables.toolbarSearchPlaceholder')"
+                :aria-label="t('common.search')"
+              />
+            </IconField>
+
+            <div class="wb-signals" :aria-label="t('trackables.signalFiltersAria')">
+              <button
+                v-for="f in workbenchSignalFilters"
+                :key="f.key"
+                type="button"
+                class="wb-signal"
+                :class="{ 'wb-signal--active': activeWorkbenchSignals.includes(f.key) }"
+                :style="{ '--sa': f.accent } as Record<string, string>"
+                :aria-pressed="activeWorkbenchSignals.includes(f.key)"
+                @click="toggleWorkbenchSignal(f.key)"
               >
-                <span class="min-w-0 flex-1 text-sm text-[var(--fg-default)]">{{ row.label }}</span>
-                <Button
-                  icon="pi pi-times"
-                  text
-                  rounded
-                  size="small"
-                  :aria-label="t('trackables.activeFilterRemoveAria')"
-                  @click="removeActiveFilterRow(row)"
-                />
-              </li>
-            </ul>
-          </div>
-        </Popover>
-        <Menu ref="savedViewsMenuRef" :model="savedViewsMenuItems" popup />
-        <Menu ref="moreActionsMenuRef" :model="moreActionsMenuItems" popup />
-        <div
-          class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between lg:gap-4"
-          role="group"
-          :aria-label="t('trackables.typeLabel')"
-        >
-          <div class="-mx-1 flex min-w-0 flex-1 flex-nowrap gap-2 overflow-x-auto overscroll-x-contain px-1 pb-0.5 [scrollbar-width:thin] snap-x snap-mandatory sm:flex-wrap sm:snap-none sm:overflow-x-visible">
-            <button
-              v-for="opt in typeChipOptions"
-              :key="String(opt.value ?? 'all')"
-              type="button"
-              class="type-chip shrink-0 snap-start"
-              :class="[
-                filters.type === opt.value ? 'type-chip--active' : '',
-                opt.value == null ? 'type-chip--all' : `type-chip--${opt.value}`,
-              ]"
-              :style="{ '--chip-accent': typeChipAccentColor(opt.value) }"
-              :aria-pressed="filters.type === opt.value"
-              @click="setTypeChip(opt.value)"
-            >
-              <span
-                class="type-chip__dot shrink-0"
-                :style="{ background: typeChipAccentColor(opt.value) }"
-                aria-hidden="true"
-              />
-              {{ opt.label }}
-            </button>
-          </div>
-          <div class="flex min-w-0 shrink-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 lg:shrink-0">
-            <MattersToolbarScopeFilters
-              v-model:status="filters.status"
-              v-model:assigned-to-id="filters.assignedToId"
-              :show-status="listScope === 'active'"
-              :status-options="statusFilterOptions"
-              :assignee-options="assigneeFilterOptions"
-              @applied="resetAndLoad"
-            />
-          </div>
-        </div>
-      </div>
+                <i :class="f.icon" aria-hidden="true" />
+                {{ f.label }}
+              </button>
 
-      <div
-        v-if="mattersShowSkeleton"
-        class="matters-skeleton-shell flex-1 min-h-[420px] overflow-x-auto overscroll-x-contain"
-        :aria-label="t('trackables.loadingTable')"
-      >
-        <div class="min-w-[560px]">
-          <div
-            v-for="row in tableSkeletonRows"
-            :key="`matter-skeleton-${row}`"
-            class="matter-skeleton-row grid items-start gap-3 border-b border-[var(--surface-border)] px-4 py-4 last:border-0"
-            style="grid-template-columns: 1fr 3rem 7.5rem;"
-          >
-            <!-- Info cell skeleton (aligned with matter-info-layout) -->
-            <div class="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-2">
-              <div class="matter-info-text flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-                <div class="flex min-w-0 items-start gap-3">
-                  <Skeleton shape="circle" size="2.25rem" />
-                  <div class="flex min-w-0 flex-1 flex-col gap-2">
-                    <div class="flex flex-wrap items-center gap-2">
-                      <Skeleton height="1rem" width="4.5rem" border-radius="0.375rem" />
-                      <Skeleton height="1.25rem" width="4rem" border-radius="999px" />
-                    </div>
-                    <Skeleton height="0.9rem" width="78%" />
-                    <Skeleton height="0.7rem" width="55%" />
-                  </div>
+              <CalendarFilterTrigger
+                :a11y-label="t('trackables.assigneeFilterPlaceholder')"
+                :label="t('trackables.assigneeFilterShortLabel')"
+                icon="pi pi-user-plus"
+                :active="assigneeFilters.length > 0"
+                :expanded="assigneeToolbarPopoverOpen"
+                @toggle="(e) => assigneeToolbarPopoverRef?.toggle(e)"
+              >
+                <AvatarGroup v-if="assigneeTriggerAvatars.length > 0" class="wb-filter-avatar-group">
+                  <Avatar
+                    v-for="av in assigneeTriggerAvatars"
+                    :key="av.name"
+                    :label="av.initials"
+                    shape="circle"
+                    size="small"
+                    class="wb-filter-avatar"
+                    :style="{ background: av.color, color: '#fff' }"
+                    :aria-label="av.name"
+                    v-tooltip.top="av.name"
+                  />
+                  <Avatar
+                    v-if="assigneeTriggerOverflow > 0"
+                    :label="`+${assigneeTriggerOverflow}`"
+                    shape="circle"
+                    size="small"
+                    class="wb-filter-avatar"
+                    :style="{
+                      background: 'var(--surface-sunken)',
+                      color: 'var(--fg-muted)',
+                      border: '1px solid var(--surface-border)',
+                    }"
+                    :aria-label="assigneeTriggerOverflowTooltip"
+                    v-tooltip.top="assigneeTriggerOverflowTooltip"
+                  />
+                </AvatarGroup>
+                <AvatarGroup v-else-if="assigneeFilters.includes('__unassigned__')" class="wb-filter-avatar-group">
+                  <Avatar
+                    label="SA"
+                    shape="circle"
+                    size="small"
+                    class="wb-filter-avatar"
+                    :style="{
+                      background: 'var(--surface-sunken)',
+                      color: 'var(--fg-muted)',
+                      border: '1px dashed var(--surface-border)',
+                    }"
+                    :aria-label="t('trackables.unassigned')"
+                    v-tooltip.top="t('trackables.unassigned')"
+                  />
+                </AvatarGroup>
+                <div v-else class="cal-filter-trigger-empty" aria-hidden="true">
+                  <i class="pi pi-user-plus" />
                 </div>
-              </div>
-              <div
-                class="flex w-full min-w-0 items-start justify-start pl-[calc(2.25rem+0.75rem)] lg:w-auto lg:max-w-none lg:shrink-0 lg:pl-0"
+              </CalendarFilterTrigger>
+
+              <Popover
+                ref="assigneeToolbarPopoverRef"
+                class="wb-assignee-pop"
+                @show="assigneeToolbarPopoverOpen = true"
+                @hide="assigneeToolbarPopoverOpen = false"
               >
-                <Skeleton height="1.75rem" width="11rem" border-radius="0.625rem" />
+                <div class="wb-assignee-pop__header">
+                  <p>{{ t('trackables.assigneePopoverHeader') }}</p>
+                  <button
+                    v-if="assigneeFilters.length > 0"
+                    type="button"
+                    class="wb-assignee-pop__clear"
+                    @click="clearAssigneeFiltersOnly"
+                  >
+                    {{ t('trackables.clearFilters') }}
+                  </button>
+                </div>
+                <ul class="wb-assignee-pop__list" :aria-label="t('trackables.assigneeFilterPlaceholder')">
+                  <template v-for="opt in workbenchAssigneeOptions" :key="opt.id">
+                    <li v-if="opt.isDivider" class="wb-assignee-pop__divider" aria-hidden="true" />
+                    <li v-else>
+                      <label
+                        :for="`wb-af-${opt.id}`"
+                        class="wb-assignee-pop__item"
+                        :class="{ 'wb-assignee-pop__item--mine': opt.isMine }"
+                      >
+                        <Checkbox
+                          :model-value="assigneeFilters.includes(opt.id)"
+                          binary
+                          :input-id="`wb-af-${opt.id}`"
+                          @update:model-value="toggleAssigneeFilter(opt.id)"
+                        />
+                        <span
+                          v-if="opt.isMine"
+                          class="wb-assignee-pop__avatar wb-assignee-pop__avatar--mine"
+                          :style="{ background: opt.avatarColor }"
+                          aria-hidden="true"
+                        >
+                          {{ opt.initials }}
+                          <span class="wb-assignee-pop__me-badge">{{ t('trackables.assigneeMeBadge') }}</span>
+                        </span>
+                        <Avatar
+                          v-else-if="!opt.isUnassigned"
+                          :label="opt.initials"
+                          shape="circle"
+                          size="small"
+                          class="wb-assignee-pop__avatar-pv shrink-0"
+                          :style="{ background: hashAvatarColor(opt.name), color: '#fff' }"
+                          aria-hidden="true"
+                        />
+                        <span
+                          v-else
+                          class="wb-assignee-pop__avatar wb-assignee-pop__avatar--empty"
+                          aria-hidden="true"
+                        ><i class="pi pi-user-plus" /></span>
+                        <span class="wb-assignee-pop__name">{{ opt.name }}</span>
+                      </label>
+                    </li>
+                  </template>
+                </ul>
+              </Popover>
+
+              <button
+                v-if="hasActiveFilters"
+                type="button"
+                class="wb-signal wb-signal--reset"
+                @click="clearFilters"
+              >
+                <i class="pi pi-filter-slash" aria-hidden="true" />
+                {{ t('trackables.clearFilters') }}
+              </button>
+            </div>
+
+            <span class="wb-count" aria-live="polite" aria-atomic="true">
+              {{ totalRecords }}
+              {{
+                totalRecords === 1
+                  ? t('trackables.toolbarMattersCountSingular')
+                  : t('trackables.toolbarMattersCountPlural')
+              }}
+            </span>
+          </div>
+        </div>
+
+        <div
+          v-if="mattersShowSkeleton"
+          class="wb-skeleton flex-1 min-h-0 overflow-hidden"
+          aria-live="polite"
+          :aria-label="t('trackables.loadingTable')"
+        >
+          <div
+            v-for="n in tableSkeletonRows"
+            :key="`wb-sk-${n}`"
+            class="wb-skeleton__row"
+            :class="{ 'wb-skeleton__row--no-actions': !rowHasTrackableActions }"
+          >
+            <div class="wb-skeleton__col wb-skeleton__col--main">
+              <Skeleton shape="circle" size="2rem" />
+              <div class="flex min-w-0 flex-1 flex-col gap-2">
+                <Skeleton height="0.75rem" width="60%" />
+                <Skeleton height="0.65rem" width="42%" />
               </div>
             </div>
-            <!-- Assignee avatar only -->
-            <div class="flex justify-center pt-1">
-              <Skeleton shape="circle" size="2rem" />
+            <Skeleton height="0.75rem" width="9rem" />
+            <Skeleton height="1.2rem" width="6.5rem" border-radius="999px" />
+            <div class="wb-assignee">
+              <Skeleton shape="circle" size="1.75rem" />
+              <Skeleton height="0.65rem" width="4rem" />
             </div>
-            <!-- Actions -->
-            <div class="flex justify-end gap-2 pt-1">
-              <Skeleton shape="circle" size="2rem" />
-              <Skeleton shape="circle" size="2rem" />
+            <div v-if="rowHasTrackableActions" class="flex gap-1">
+              <Skeleton shape="circle" size="1.75rem" />
+              <Skeleton shape="circle" size="1.75rem" />
+              <Skeleton shape="circle" size="1.75rem" />
             </div>
           </div>
         </div>
-      </div>
-      <div
-        v-else
-        class="matters-dt-region relative flex min-h-0 flex-1 flex-col"
-        :class="{ 'matters-dt-region--scrolled': mattersDtScrolled }"
-      >
+
         <div
-          v-if="mattersShowEmptyState"
-          class="flex min-h-[320px] flex-1 flex-col items-center justify-center gap-3 px-6 py-14 text-center"
+          v-else-if="mattersShowEmptyState"
+          class="wb-empty wb-empty--standalone flex-1 min-h-0"
         >
-          <span
-            class="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--surface-border)] bg-[color-mix(in_srgb,var(--accent-soft)_55%,var(--surface-raised))] text-[var(--accent)]"
-            aria-hidden="true"
-          >
-            <i class="pi pi-folder-open text-2xl" />
-          </span>
-          <div class="flex max-w-md flex-col gap-1">
-            <p class="m-0 text-base font-medium text-[var(--fg-default)]">
-              {{ t('trackables.tableEmptyTitle') }}
-            </p>
-            <p class="m-0 text-sm text-[var(--fg-muted)]">
-              {{
-                listScope === 'archived'
-                  ? t('trackables.tableEmptyArchived')
-                  : t('trackables.tableEmptyActive')
-              }}
-            </p>
-          </div>
+          <i class="pi pi-folder-open" aria-hidden="true" />
+          <h3>{{ t('trackables.tableEmptyTitle') }}</h3>
+          <p>
+            {{
+              listScope === 'archived'
+                ? t('trackables.tableEmptyArchived')
+                : t('trackables.tableEmptyActive')
+            }}
+          </p>
           <Button
             v-if="hasActiveFilters"
             :label="t('trackables.clearFilters')"
             icon="pi pi-filter-slash"
             size="small"
             outlined
+            severity="secondary"
             @click="clearFilters"
           />
         </div>
-        <DataTable
+
+        <div
           v-else
-          ref="mattersDtRef"
-          class="matters-data-table matters-data-table--cockpit min-h-0 flex-1"
-          :class="{ 'matters-dt--comfortable': tableDensity === 'comfortable' }"
-          :value="trackables"
-          :loading="loading"
-          data-key="id"
-          :size="tableDensity === 'compact' ? 'small' : undefined"
-          scrollable
-          scroll-height="flex"
-          row-hover
-          responsive-layout="scroll"
-          :show-headers="false"
-          :virtual-scroller-options="mattersUseVirtualScroller ? mattersVirtualScrollerOptions : undefined"
-          :row-class="matterRowClass"
-          export-filename="expedientes"
-          :table-props="{ 'aria-label': t('trackables.tableAriaLabel') }"
+          class="matters-dt-region relative flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden"
+          :class="{ 'matters-dt-region--scrolled': mattersDtScrolled }"
         >
-        <template #empty>
-          <div
-            v-if="!loading"
-            class="flex flex-col items-center justify-center gap-2 py-16 text-center"
+          <DataTable
+            ref="mattersDtRef"
+            :value="trackables"
+            :loading="loading"
+            data-key="id"
+            size="small"
+            scrollable
+            scroll-height="flex"
+            row-hover
+            responsive-layout="scroll"
+            :row-class="wbRowClass"
+            export-filename="expedientes"
+            class="wb-table flex-1 min-h-0"
+            :table-props="{ 'aria-label': t('trackables.tableAriaLabel') }"
           >
-            <i
-              class="pi pi-folder-open text-4xl text-[var(--fg-subtle)]"
-              aria-hidden="true"
-            />
-            <p class="m-0 text-base font-medium text-[var(--fg-default)]">
-              {{ t('trackables.tableEmptyTitle') }}
-            </p>
-            <p class="m-0 max-w-sm text-sm text-[var(--fg-muted)]">
-              {{ listScope === 'archived' ? t('trackables.tableEmptyArchived') : t('trackables.tableEmptyActive') }}
-            </p>
-          </div>
-        </template>
-        <Column
-          field="title"
-          :header="t('trackables.tableColTitle')"
-          body-class="matter-col-info align-top"
-        >
-          <template #body="{ data }">
-            <div class="matter-info-cell flex min-w-0 flex-col gap-2 py-1">
-              <span class="sr-only">{{ t('trackables.matterRowInfoSr') }}</span>
-              <div
-                class="matter-info-layout flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:justify-start lg:gap-x-2 lg:gap-y-2"
-                :style="matterPrimaryColumnCssVars"
-              >
-              <div
-                class="matter-info-text flex min-h-0 min-w-0 flex-1 items-start gap-3 lg:min-w-0 lg:flex-none lg:overflow-hidden lg:w-[min(var(--matter-primary-col,280px),calc(100%-13rem))]"
-              >
-                <span
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--surface-border)] bg-[var(--accent-soft)] text-lg"
-                  :aria-label="t('trackables.matterEmojiLabel')"
-                >
-                  {{ matterEmoji(data) }}
-                </span>
-                <div class="flex min-w-0 flex-1 flex-col gap-1">
-                  <div class="matter-info-cell__topline flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span
-                      v-if="matterCaseKey(data)"
-                      class="matter-case-key font-mono-num inline-flex w-fit max-w-full truncate rounded-md border border-[var(--surface-border)] bg-[color-mix(in_srgb,var(--surface-raised)_88%,var(--accent-soft))] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-[var(--fg-muted)]"
-                    >
-                      {{ matterCaseKey(data) }}
-                    </span>
+            <template #empty>
+              <div v-if="!loading" class="wb-empty">
+                <i class="pi pi-folder-open" aria-hidden="true" />
+                <h3>{{ t('trackables.tableEmptyTitle') }}</h3>
+                <p>
+                  {{
+                    listScope === 'archived'
+                      ? t('trackables.tableEmptyArchived')
+                      : t('trackables.tableEmptyActive')
+                  }}
+                </p>
+              </div>
+            </template>
+
+            <Column
+              field="title"
+              :header="t('trackables.tableColTitle')"
+              header-class="wb-col-matter"
+              body-class="wb-col-matter align-top"
+            >
+              <template #body="{ data }">
+                <div class="wb-matter">
+                  <span class="sr-only">{{ t('trackables.matterRowInfoSr') }}</span>
+                  <span class="wb-matter__emoji" aria-hidden="true">{{ matterEmoji(data) }}</span>
+                  <div class="wb-matter__copy">
+                    <div class="wb-matter__topline">
+                      <span v-if="matterCaseKey(data)" class="wb-case" translate="no">{{ matterCaseKey(data) }}</span>
+                      <button
+                        v-else-if="canTrackableUpdate"
+                        type="button"
+                        class="matters-wb-expediente-ring"
+                        :aria-label="t('trackables.assignExpedienteHint')"
+                        v-tooltip.top="t('trackables.assignExpedienteHint')"
+                        @click="openEditDialog(data)"
+                      >
+                        <i class="pi pi-hashtag text-[11px]" aria-hidden="true" />
+                      </button>
+                      <span v-else class="matters-wb-expediente-ring matters-wb-expediente-ring--readonly" aria-hidden="true">
+                        <i class="pi pi-hashtag text-[11px] opacity-70" aria-hidden="true" />
+                      </span>
+                      <span class="wb-chip">{{ typeLabel(data.type).toLocaleUpperCase(dateLocaleTag()) }}</span>
+                      <span v-if="matterStageChip(data)" class="wb-chip wb-chip--stage">{{ matterStageChip(data) }}</span>
+                      <span
+                        v-if="listingRowShowsSinoeHint(data)"
+                        class="wb-chip wb-chip--sinoe"
+                        :title="t('trackables.sinoeChipTitle')"
+                      >SINOE</span>
+                    </div>
+                    <router-link :to="`/trackables/${data.id}`" class="wb-matter__title">
+                      <span class="line-clamp-1">{{ data.title }}</span>
+                    </router-link>
+                    <p class="wb-matter__client">
+                      <i class="pi pi-building" aria-hidden="true" />
+                      <button
+                        v-if="matterMetaLooksIncomplete(data) && canTrackableUpdate"
+                        type="button"
+                        class="matters-wb-matter__client-btn"
+                        :aria-label="t('trackables.assignClientPopoverTitle')"
+                        v-tooltip.top="t('trackables.assignClientPopoverHint')"
+                        @click="(e) => openClientInlinePopover(e, data)"
+                      >
+                        {{ t('trackables.matterMetaCockpitClientHint') }}
+                      </button>
+                      <span v-else-if="matterMetaLooksIncomplete(data)">{{
+                        t('trackables.matterMetaCockpitClientHint')
+                      }}</span>
+                      <span v-else>{{ data.client?.name ?? t('trackables.matterMetaCockpitClientHint') }}</span>
+                    </p>
+                  </div>
+                </div>
+              </template>
+            </Column>
+
+            <Column
+              :header="t('trackables.tableColTodo')"
+              body-class="wb-col-action align-top"
+              style="width: 13rem;"
+            >
+              <template #body="{ data }">
+                <div class="wb-actions-cell" role="list" :aria-label="t('trackables.tableColTodo')">
+                  <router-link
+                    v-for="task in matterRowPendingTasks(data).slice(0, MAX_MATTER_TASK_ROWS)"
+                    :key="task.id"
+                    role="listitem"
+                    class="wb-action-stat"
+                    :to="matterPendingActionTo(data, task)"
+                    v-tooltip.top="task.tooltip"
+                  >
+                    <i
+                      :class="task.icon"
+                      class="wb-action-stat__icon shrink-0 text-[11px]"
+                      :style="{ color: task.accent }"
+                      aria-hidden="true"
+                    />
+                    <span class="wb-action-stat__label">{{ task.label }}</span>
+                    <i class="pi pi-angle-right wb-action-stat__go shrink-0 text-[10px]" aria-hidden="true" />
+                  </router-link>
+                  <span
+                    v-if="matterRowPendingTasks(data).length > MAX_MATTER_TASK_ROWS"
+                    class="wb-action-overflow"
+                    v-tooltip.top="
+                      matterRowPendingTasks(data)
+                        .slice(MAX_MATTER_TASK_ROWS)
+                        .map((x) => x.label)
+                        .join(' · ')
+                    "
+                  >
+                    +{{ matterRowPendingTasks(data).length - MAX_MATTER_TASK_ROWS }}
+                  </span>
+                </div>
+              </template>
+            </Column>
+
+            <Column
+              :header="t('trackables.tableColDue')"
+              body-class="wb-col-deadline align-middle"
+              style="width: 8.5rem;"
+            >
+              <template #body="{ data }">
+                <Tag
+                  :value="matterDeadlineCell(data).label"
+                  :severity="matterDeadlineCell(data).severity"
+                  class="wb-deadline-tag"
+                  v-tooltip.top="matterDeadlineCell(data).label"
+                />
+              </template>
+            </Column>
+
+            <Column
+              :header="t('trackables.tableColInvolved')"
+              body-class="wb-col-assignee align-middle"
+              style="width: 10rem;"
+            >
+              <template #body="{ data }">
+                <div class="wb-involved">
+                  <template v-if="!data.assignedTo">
                     <button
-                      v-else-if="canTrackableUpdate"
+                      v-if="canTrackableUpdate"
                       type="button"
-                      class="matter-expediente-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--fg-subtle)] text-[var(--fg-subtle)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                      :aria-label="t('trackables.assignExpedienteHint')"
-                      v-tooltip.top="t('trackables.assignExpedienteHint')"
-                      @click="openEditDialog(data)"
+                      class="wb-avatar-primary wb-avatar-primary--empty"
+                      :aria-label="t('trackables.assignInlineCta')"
+                      v-tooltip.right="t('trackables.assignInlineCta')"
+                      @click="(e) => openAssignInlinePopover(e, data)"
                     >
-                      <i class="pi pi-hashtag text-[11px]" aria-hidden="true" />
+                      <i class="pi pi-user-plus" aria-hidden="true" />
                     </button>
                     <span
                       v-else
-                      class="matter-expediente-ring matter-expediente-ring--readonly flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-dashed border-[var(--surface-border)] text-[var(--fg-subtle)]"
-                      aria-hidden="true"
+                      class="wb-avatar-primary wb-avatar-primary--empty"
+                      :aria-label="t('trackables.unassigned')"
+                      v-tooltip.right="t('trackables.unassigned')"
                     >
-                      <i class="pi pi-hashtag text-[11px] opacity-70" aria-hidden="true" />
+                      <i class="pi pi-user" aria-hidden="true" />
                     </span>
-                    <Tag
-                      :value="typeLabel(data.type).toLocaleUpperCase(dateLocaleTag())"
-                      :severity="typeSeverity(data.type)"
-                      class="matter-type-tag shrink-0 tracking-wide"
-                    />
-                  </div>
-                  <router-link
-                    :to="`/trackables/${data.id}`"
-                    class="font-semibold leading-snug text-accent hover:underline"
-                  >
-                    <span class="line-clamp-2">{{ data.title }}</span>
-                  </router-link>
-                  <button
-                    v-if="matterMetaLooksIncomplete(data) && canTrackableUpdate"
-                    type="button"
-                    class="matter-meta-incomplete matter-meta-incomplete--cockpit matter-meta-incomplete--action m-0 inline-block max-w-full text-left text-[var(--fg-subtle)] line-clamp-1"
-                    :aria-label="t('trackables.assignClientPopoverTitle')"
-                    v-tooltip.top="t('trackables.assignClientPopoverHint')"
-                    @click="(e) => openClientInlinePopover(e, data)"
-                  >
-                    {{ t('trackables.matterMetaCockpitClientHint') }}
-                  </button>
-                  <p
-                    v-else
-                    class="m-0 max-w-full text-xs leading-snug text-[var(--fg-subtle)]"
-                    :class="
-                      matterMetaLooksIncomplete(data)
-                        ? 'matter-meta-incomplete matter-meta-incomplete--cockpit line-clamp-1'
-                        : 'line-clamp-1'
-                    "
-                  >
-                    {{
-                      matterMetaLooksIncomplete(data)
-                        ? t('trackables.matterMetaCockpitClientHint')
-                        : matterCaseKey(data)
-                          ? matterSubtitleLine(data)
-                          : matterMetaLine(data)
-                    }}
-                  </p>
-                </div>
-              </div>
-              <div
-                class="matter-info-cell__activity flex w-full min-w-0 flex-col pl-[calc(2.5rem+0.75rem)] lg:w-auto lg:max-w-none lg:shrink-0 lg:items-start lg:justify-start lg:pl-0"
-              >
-                <template v-if="activitySummary(data).total > 0">
-                  <div
-                    class="activity-stats min-w-0 justify-start lg:w-fit lg:max-w-full"
-                    :class="activitySummary(data).overdue ? 'activity-stats--has-danger' : ''"
-                  >
-                    <div class="activity-stat activity-stat--done">
-                      <span class="activity-stat__icon" aria-hidden="true">
-                        <i class="pi pi-check-square" />
-                      </span>
-                      <span class="activity-stat__body">
-                        <span class="activity-stat__label">
-                          {{ t('trackables.activityDone') }}
-                        </span>
-                        <span class="activity-stat__value tabular-nums">
-                          {{ activitySummary(data).done }}<span class="activity-stat__total">/{{ activitySummary(data).total }}</span>
-                        </span>
-                      </span>
+                    <div class="wb-involved__copy">
+                      <span class="wb-involved__name wb-involved__name--empty">{{ t('trackables.unassigned') }}</span>
+                      <span class="wb-involved__role">{{ t('trackables.matterInvolvedPrimaryRole') }}</span>
                     </div>
-                    <div
-                      v-if="activitySummary(data).inProgress"
-                      class="activity-stat activity-stat--progress"
-                    >
-                      <span class="activity-stat__icon" aria-hidden="true">
-                        <i class="pi pi-spin pi-cog" v-if="false" />
-                        <i class="pi pi-clock" />
-                      </span>
-                      <span class="activity-stat__body">
-                        <span class="activity-stat__label">
-                          {{ t('trackables.activityInProgress') }}
-                        </span>
-                        <span class="activity-stat__value tabular-nums">
-                          {{ activitySummary(data).inProgress }}
-                        </span>
-                      </span>
-                    </div>
-                    <div
-                      class="activity-stat"
-                      :class="
-                        activitySummary(data).overdue
-                          ? 'activity-stat--danger'
-                          : 'activity-stat--overdue-zero'
-                      "
-                    >
-                      <span class="activity-stat__icon" aria-hidden="true">
-                        <i class="pi pi-exclamation-triangle" />
-                      </span>
-                      <span class="activity-stat__body">
-                        <span class="activity-stat__label">
-                          {{ t('trackables.activityOverdue') }}
-                        </span>
-                        <span class="activity-stat__value tabular-nums">
-                          {{ activitySummary(data).overdue }}
-                        </span>
-                      </span>
-                    </div>
-                    <i
-                      v-if="activityDetailLoading(data)"
-                      class="pi pi-spin pi-spinner shrink-0 text-[10px] text-[var(--fg-muted)]"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <div
-                    class="matter-activity-progress mt-2 w-full min-w-[12rem] max-w-[min(22rem,calc(100vw-12rem))]"
-                  >
-                    <div
-                      class="rounded-xl border border-[var(--surface-border)] bg-white/70 px-2 py-1.5 dark:bg-white/5"
-                    >
-                      <p class="m-0 text-[10px] font-medium uppercase tracking-wide text-[var(--fg-muted)]">
-                        {{
-                          t('trackables.expedienteSummary.completedPct', {
-                            n: activityDonePct(data),
-                          })
-                        }}
-                      </p>
-                      <div
-                        class="relative mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-200/90 dark:bg-slate-700/80"
+                  </template>
+                  <template v-else>
+                    <div class="wb-inv-stack">
+                      <img
+                        v-if="data.assignedTo.avatarUrl"
+                        :src="data.assignedTo.avatarUrl"
+                        :alt="assignedToName(data.assignedTo)"
+                        class="wb-avatar-primary wb-avatar-primary--img"
+                        v-tooltip.right="`${assignedToName(data.assignedTo)} · ${t('trackables.matterInvolvedPrimaryRole')}`"
+                      />
+                      <span
+                        v-else
+                        class="wb-avatar-primary"
+                        :style="{ background: assigneeAvatarBg(data.assignedTo.id) }"
+                        :aria-label="`${assignedToName(data.assignedTo)} – ${t('trackables.matterInvolvedPrimaryRole')}`"
+                        v-tooltip.right="`${assignedToName(data.assignedTo)} · ${t('trackables.matterInvolvedPrimaryRole')}`"
                       >
-                        <div
-                          class="absolute inset-y-0 left-0 h-full rounded-full bg-slate-400/45 transition-[width] dark:bg-slate-500/35"
-                          :style="{ width: `${activityActivePct(data)}%` }"
-                        />
-                        <div
-                          class="absolute inset-y-0 left-0 h-full rounded-full transition-[width]"
-                          role="progressbar"
-                          :aria-valuenow="activityDonePct(data)"
-                          aria-valuemin="0"
-                          aria-valuemax="100"
-                          :aria-label="t('trackables.expedienteSummary.avanceTitle')"
-                          :style="{
-                            width: `${activityDonePct(data)}%`,
-                            background:
-                              'linear-gradient(90deg, #0F6E7A 0%, #2D3FBF 50%, #3FB58C 100%)',
-                          }"
-                        />
-                      </div>
+                        {{ assigneeInitials(data.assignedTo) }}
+                      </span>
                     </div>
-                  </div>
-                </template>
-                <span
-                  v-else
-                  class="text-left text-xs italic text-[var(--fg-subtle)] lg:max-w-[18rem]"
-                >
-                  {{ t('trackables.activityEmpty') }}
-                </span>
-              </div>
-              </div>
-            </div>
-          </template>
-        </Column>
-        <Column
-          field="assignedTo"
-          :header="t('trackables.tableColAssigned')"
-          body-class="matter-col-assignee align-middle"
-        >
-          <template #body="{ data }">
-            <!-- Avatar only + tooltip (cockpit pattern) -->
-            <template v-if="data.assignedTo">
-              <img
-                v-if="data.assignedTo.avatarUrl"
-                :src="data.assignedTo.avatarUrl"
-                :alt="assignedToName(data.assignedTo)"
-                class="mx-auto h-8 w-8 rounded-full object-cover"
-                v-tooltip.left="assignedToName(data.assignedTo)"
-              />
-              <span
-                v-else
-                class="mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-[var(--fg-on-brand)]"
-                :style="{ background: assigneeAvatarBg(data.assignedTo.id) }"
-                v-tooltip.left="assignedToName(data.assignedTo)"
-                :aria-label="assignedToName(data.assignedTo)"
-              >
-                {{ assigneeInitials(data.assignedTo) }}
-              </span>
-            </template>
-            <!-- Sin asignar: icono fantasma clicable si tiene permiso -->
-            <button
-              v-else-if="canTrackableUpdate"
-              type="button"
-              class="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-[var(--fg-subtle)] text-[var(--fg-subtle)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
-              v-tooltip.left="t('trackables.assignInlineCta')"
-              :aria-label="t('trackables.assignInlineCta')"
-              @click="(e) => openAssignInlinePopover(e, data)"
-            >
-              <i class="pi pi-user-plus text-sm" aria-hidden="true" />
-            </button>
-            <span
-              v-else
-              class="mx-auto flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-[var(--fg-subtle)]"
-              v-tooltip.left="t('trackables.unassigned')"
-              :aria-label="t('trackables.unassigned')"
-            >
-              <i class="pi pi-user text-xs text-[var(--fg-subtle)]" aria-hidden="true" />
-            </span>
-          </template>
-        </Column>
-        <Column
-          v-if="rowHasTrackableActions"
-          :header="t('common.actions')"
-          header-class="matter-actions-header"
-          body-class="matter-actions-cell align-middle"
-          class="min-w-[7.5rem] whitespace-nowrap"
-        >
-          <template #body="{ data }">
-            <div class="matters-row-actions" role="group" :aria-label="t('common.actions')">
-              <Button
-                v-if="canTrackableUpdate"
-                type="button"
-                icon="pi pi-pencil"
-                variant="outlined"
-                rounded
-                raised 
-                size="small"
-                severity="secondary"
-                class="matter-action matter-action--edit"
-                :aria-label="t('trackables.tooltipEditMatter')"
-                v-tooltip.top="t('trackables.tooltipEditMatter')"
-                @click="openEditDialog(data)"
-              />
-              <Button
-                v-if="canTrackableUpdate && listScope === 'active'"
-                type="button"
-                icon="pi pi-inbox"
-                variant="outlined"
-                rounded
-                raised 
-                size="small"
-                severity="warn"
-                class="matter-action matter-action--archive"
-                :aria-label="t('trackables.tooltipArchiveMatter')"
-                v-tooltip.top="t('trackables.tooltipArchiveMatter')"
-                @click="archiveTrackable(data)"
-              />
-              <Button
-                v-if="canTrackableUpdate && listScope === 'archived'"
-                type="button"
-                icon="pi pi-replay"
-                variant="outlined"
-                rounded
-                raised 
-                size="small"
-                severity="success"
-                class="matter-action matter-action--restore"
-                :aria-label="t('trackables.tooltipReactivateMatter')"
-                v-tooltip.top="t('trackables.tooltipReactivateMatter')"
-                @click="reactivateTrackable(data)"
-              />
-              <Button
-                v-if="canTrackableDelete"
-                type="button"
-                icon="pi pi-trash"
-                variant="outlined"
-                rounded
-                raised 
-                size="small"
-                severity="danger"
-                class="matter-action matter-action--danger"
-                :aria-label="t('trackables.tooltipOpenDelete')"
-                v-tooltip.top="t('trackables.tooltipOpenDelete')"
-                @click="openDeleteWizard(data)"
-              />
-            </div>
-          </template>
-        </Column>
-      </DataTable>
-      </div>
+                    <div class="wb-involved__copy">
+                      <span class="wb-involved__name">{{ assignedToName(data.assignedTo) }}</span>
+                      <span class="wb-involved__role">{{ t('trackables.matterInvolvedPrimaryRole') }}</span>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </Column>
 
-      <div
-        v-if="!mattersShowSkeleton && totalRecords > 0"
-        class="flex-shrink-0 border-t border-[var(--surface-border)] bg-[var(--surface-raised)] px-4 py-3 sm:px-5"
-      >
-        <Paginator
-          :first="listingFirst"
-          :rows="listingRowsPerPage"
-          :total-records="totalRecords"
-          :rows-per-page-options="[25, 50, 100]"
-          :current-page-report-template="t('trackables.tablePageReport')"
-          template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-          @page="onListingPaginatorPage"
-        />
-        <p
-          v-if="activeFilterCount > 0"
-          class="m-0 mt-2 text-xs tabular-nums text-[var(--fg-muted)]"
-        >
-          {{ t('trackables.toolbarFiltersActive', { n: activeFilterCount }) }}
-        </p>
+            <Column
+              v-if="rowHasTrackableActions"
+              :header="t('common.actions')"
+              header-class="wb-actions-header"
+              body-class="wb-col-actions align-middle"
+              style="width: 8rem;"
+            >
+              <template #body="{ data }">
+                <div class="wb-row-actions" role="group" :aria-label="t('common.actions')">
+                  <Button
+                    v-if="canTrackableUpdate"
+                    type="button"
+                    icon="pi pi-pencil"
+                    variant="outlined"
+                    rounded
+                    size="small"
+                    severity="secondary"
+                    :aria-label="t('trackables.tooltipEditMatter')"
+                    v-tooltip.top="t('trackables.tooltipEditMatter')"
+                    @click="openEditDialog(data)"
+                  />
+                  <Button
+                    v-if="canTrackableUpdate && listScope === 'active'"
+                    type="button"
+                    icon="pi pi-inbox"
+                    variant="outlined"
+                    rounded
+                    size="small"
+                    severity="warn"
+                    :aria-label="t('trackables.tooltipArchiveMatter')"
+                    v-tooltip.top="t('trackables.tooltipArchiveMatter')"
+                    @click="archiveTrackable(data)"
+                  />
+                  <Button
+                    v-if="canTrackableUpdate && listScope === 'archived'"
+                    type="button"
+                    icon="pi pi-replay"
+                    variant="outlined"
+                    rounded
+                    size="small"
+                    severity="success"
+                    :aria-label="t('trackables.tooltipReactivateMatter')"
+                    v-tooltip.top="t('trackables.tooltipReactivateMatter')"
+                    @click="reactivateTrackable(data)"
+                  />
+                  <Button
+                    v-if="canTrackableDelete"
+                    type="button"
+                    icon="pi pi-trash"
+                    variant="outlined"
+                    rounded
+                    size="small"
+                    severity="danger"
+                    :aria-label="t('trackables.tooltipOpenDelete')"
+                    v-tooltip.top="t('trackables.tooltipOpenDelete')"
+                    @click="openDeleteWizard(data)"
+                  />
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+        </div>
+
+        <div v-if="!mattersShowSkeleton && totalRecords > 0" class="wb-footer">
+          <Paginator
+            :first="listingFirst"
+            :rows="listingRowsPerPage"
+            :total-records="totalRecords"
+            :rows-per-page-options="[25, 50, 100]"
+            :current-page-report-template="t('trackables.tablePageReport')"
+            template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
+            @page="onListingPaginatorPage"
+          />
+        </div>
       </div>
     </div>
     </template>
@@ -1504,7 +1442,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import ProgressSpinner from 'primevue/progressspinner';
@@ -1519,16 +1457,18 @@ import Calendar from 'primevue/calendar';
 import Tag from 'primevue/tag';
 import SelectButton from 'primevue/selectbutton';
 import Skeleton from 'primevue/skeleton';
+import Popover from 'primevue/popover';
+import Paginator from 'primevue/paginator';
+import Avatar from 'primevue/avatar';
+import AvatarGroup from 'primevue/avatargroup';
+import Checkbox from 'primevue/checkbox';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
-import Popover from 'primevue/popover';
-import Menu from 'primevue/menu';
-import Paginator from 'primevue/paginator';
+import CalendarFilterTrigger from '@/views/calendar/components/CalendarFilterTrigger.vue';
 import ConfirmDialogBase from '@/components/common/ConfirmDialogBase.vue';
 import DeleteTrackableDialog from '@/components/common/DeleteTrackableDialog.vue';
-import UrgencyKpiChipsBar from '@/views/trackables/components/UrgencyKpiChipsBar.vue';
-import MattersToolbarScopeFilters from '@/views/trackables/components/MattersToolbarScopeFilters.vue';
 import PageHeader from '@/components/common/PageHeader.vue';
+import { hashAvatarColor } from '@/utils/avatarColor';
 import axios from 'axios';
 import { apiClient } from '@/api/client';
 import {
@@ -1622,22 +1562,33 @@ let listingAbort: AbortController | null = null;
 
 const filters = ref({
   search: '',
-  status: null as string | null,
-  type: null as string | null,
-  assignedToId: null as string | null,
-  urgency: null as TrackableListingUrgency | null,
 });
 
-/** Toolbar chip «A mí»: mismo criterio que filtrar asignado = usuario actual */
-const isAssignedToMeFilter = computed(
-  () => Boolean(user.value?.id && filters.value.assignedToId === user.value.id),
-);
+/** Una sola vez: expedientes activos abren filtrados por el usuario actual (mesa v2.1). */
+const assigneeMineBootstrapped = ref(false);
+
+type WorkbenchSignalKey = 'decision' | 'sinoe' | 'hearing';
+
+const activeWorkbenchSignals = ref<WorkbenchSignalKey[]>([]);
+const assigneeFilters = ref<string[]>([]);
+const assigneeToolbarPopoverRef = ref<InstanceType<typeof Popover> | null>(null);
+const assigneeToolbarPopoverOpen = ref(false);
+
+const MAX_MATTER_TASK_ROWS = 3;
+
+interface MatterPendingTaskRow {
+  id: string;
+  label: string;
+  tooltip: string;
+  icon: string;
+  accent: string;
+  tab: 0 | 1;
+}
 
 const tableSkeletonRows = Array.from({ length: 8 }, (_, i) => i);
 
 const mattersDtRef = ref<InstanceType<typeof DataTable> | null>(null);
-const mattersSearchFieldRef = ref<InstanceType<typeof IconField> | null>(null);
-const filtersPopoverRef = ref<InstanceType<typeof Popover> | null>(null);
+const toolbarSearchInputRef = ref<InstanceType<typeof InputText> | null>(null);
 const assignInlinePopoverRef = ref<InstanceType<typeof Popover> | null>(null);
 const assignInlineTrackable = ref<any | null>(null);
 const showAssignConfirm = ref(false);
@@ -1656,9 +1607,6 @@ const clientConfirmPayload = ref<{
   clientName: string;
 } | null>(null);
 const assigningClientInline = ref(false);
-const savedViewsMenuRef = ref<InstanceType<typeof Menu> | null>(null);
-const moreActionsMenuRef = ref<InstanceType<typeof Menu> | null>(null);
-const tableDensity = ref<'compact' | 'comfortable'>('compact');
 const mattersDtScrolled = ref(false);
 let mattersScrollCleanup: (() => void) | undefined;
 
@@ -1666,36 +1614,10 @@ const listScope = ref<ListScope>(
   route.query.scope === 'trash' ? 'trash' : 'active',
 );
 
-const statusFilterOptions = computed(() => [
-  { label: t('trackables.statuses.created'), value: 'created' },
-  { label: t('trackables.statuses.active'), value: 'active' },
-  { label: t('trackables.statuses.under_review'), value: 'under_review' },
-  { label: t('trackables.statuses.completed'), value: 'completed' },
-]);
 const typeOptions = ['case', 'process', 'project', 'audit'];
 const typeSelectOptions = computed(() =>
   typeOptions.map((value) => ({ value, label: t(`trackables.types.${value}`) })),
 );
-const typeChipOptions = computed(() => [
-  { value: null as string | null, label: t('trackables.typeChipAll') },
-  ...typeOptions.map((value) => ({ value, label: t(`trackables.types.${value}`) })),
-]);
-/** Accent for type filter chips (dot + active state); null = todos (zafiro marca). */
-function typeChipAccentColor(value: string | null): string {
-  if (value === null) return 'var(--brand-zafiro)';
-  switch (value) {
-    case 'case':
-      return '#0F766E';
-    case 'process':
-      return '#7C3AED';
-    case 'project':
-      return '#B45309';
-    case 'audit':
-      return '#0E7490';
-    default:
-      return 'var(--brand-zafiro)';
-  }
-}
 function typeLabel(value: string): string {
   if (!value) return '';
   const key = `trackables.types.${value}`;
@@ -1748,15 +1670,158 @@ const userOptions = computed(() =>
     };
   }),
 );
-const assigneeFilterOptions = computed(() => [
-  { label: t('trackables.unassigned'), value: '__unassigned__' },
-  ...userOptions.value,
+
+interface WorkbenchAssigneeOption {
+  id: string;
+  name: string;
+  initials: string;
+  avatarColor: string;
+  isMine?: boolean;
+  isUnassigned?: boolean;
+  isDivider?: boolean;
+}
+
+const workbenchAssigneeOptions = computed((): WorkbenchAssigneeOption[] => {
+  const uid = user.value?.id ?? '';
+  const cu = users.value.find((u) => u.id === uid);
+  const mineName = cu ? assignListPrimaryName(cu) || cu.email : t('trackables.assigneeMineOption');
+  const mineInitials = cu ? initialsFromLabel(mineName) : 'Yo';
+  return [
+    {
+      id: '__mine',
+      name: t('trackables.assigneeMineOption'),
+      initials: mineInitials,
+      avatarColor: assigneeAvatarBg(uid || 'me'),
+      isMine: true,
+    },
+    { id: '__d1', name: '', initials: '', avatarColor: '', isDivider: true },
+    ...users.value.map((u) => {
+      const nm = assignListPrimaryName(u) || u.email;
+      return {
+        id: u.id,
+        name: nm,
+        initials: initialsFromLabel(nm),
+        avatarColor: hashAvatarColor(nm),
+      };
+    }),
+    { id: '__d2', name: '', initials: '', avatarColor: '', isDivider: true },
+    {
+      id: '__unassigned__',
+      name: t('trackables.unassigned'),
+      initials: 'SA',
+      avatarColor: '',
+      isUnassigned: true,
+    },
+  ];
+});
+
+const workbenchSignalFilters = computed(() => [
+  {
+    key: 'decision' as const,
+    label: t('trackables.signalDecision'),
+    icon: 'pi pi-exclamation-circle',
+    accent: '#dc2626',
+  },
+  {
+    key: 'sinoe' as const,
+    label: t('trackables.signalSinoe'),
+    icon: 'pi pi-inbox',
+    accent: '#7c3aed',
+  },
+  {
+    key: 'hearing' as const,
+    label: t('trackables.signalHearing'),
+    icon: 'pi pi-calendar',
+    accent: '#0e7490',
+  },
 ]);
 
-function assigneeDisplayLabel(value: string | null | undefined) {
-  if (value == null || value === '') return '';
-  const opt = assigneeFilterOptions.value.find((o) => o.value === value);
-  return opt?.label ?? String(value);
+const MAX_TRIGGER_AVATARS = 3;
+
+const assigneeTriggerAvatars = computed(() =>
+  assigneeFilters.value
+    .filter((id) => id !== '__unassigned__')
+    .map((id): { initials: string; color: string; name: string } | null => {
+      if (id === '__mine') {
+        const uid = user.value?.id;
+        const cu = uid ? users.value.find((m) => m.id === uid) : undefined;
+        const nm = cu ? assignListPrimaryName(cu) || cu.email : t('trackables.assigneeMineOption');
+        return {
+          initials: cu ? initialsFromLabel(nm) : 'Yo',
+          color: assigneeAvatarBg(uid ?? 'me'),
+          name: t('trackables.assigneeMineOption'),
+        };
+      }
+      const u = users.value.find((m) => m.id === id);
+      if (!u) return null;
+      const nm = assignListPrimaryName(u) || u.email;
+      return { initials: initialsFromLabel(nm), color: hashAvatarColor(nm), name: nm };
+    })
+    .filter((x): x is { initials: string; color: string; name: string } => x !== null)
+    .slice(0, MAX_TRIGGER_AVATARS),
+);
+
+const assigneeTriggerOverflow = computed(() =>
+  Math.max(0, assigneeFilters.value.filter((id) => id !== '__unassigned__').length - MAX_TRIGGER_AVATARS),
+);
+
+const assigneeTriggerOverflowTooltip = computed(() =>
+  assigneeFilters.value
+    .filter((id) => id !== '__unassigned__')
+    .slice(MAX_TRIGGER_AVATARS)
+    .map((id) => {
+      if (id === '__mine') return t('trackables.assigneeMineOption');
+      return users.value.find((u) => u.id === id)?.email ?? id;
+    })
+    .join(', '),
+);
+
+function toggleAssigneeFilter(id: string) {
+  const next = new Set(assigneeFilters.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  assigneeFilters.value = Array.from(next);
+  listingFirst.value = 0;
+  void resetAndLoad();
+}
+
+function clearAssigneeFiltersOnly() {
+  assigneeFilters.value = [];
+  listingFirst.value = 0;
+  void resetAndLoad();
+}
+
+function toggleWorkbenchSignal(key: WorkbenchSignalKey) {
+  const next = new Set(activeWorkbenchSignals.value);
+  if (next.has(key)) next.delete(key);
+  else next.add(key);
+  activeWorkbenchSignals.value = Array.from(next);
+  listingFirst.value = 0;
+  void resetAndLoad();
+}
+
+function listingUrgenciaFromSignals(): TrackableListingUrgency | undefined {
+  const s = activeWorkbenchSignals.value;
+  if (s.includes('decision')) return 'overdue';
+  if (s.includes('hearing')) return 'due_today';
+  if (s.includes('sinoe')) return 'due_week';
+  return undefined;
+}
+
+function buildAsignadoIdForApi(): string[] | undefined {
+  if (!assigneeFilters.value.length) return undefined;
+  const out: string[] = [];
+  const uid = user.value?.id;
+  for (const id of assigneeFilters.value) {
+    if (id === '__mine') {
+      if (uid) out.push(uid);
+    } else if (id === '__unassigned__') {
+      out.push('__unassigned__');
+    } else {
+      out.push(id);
+    }
+  }
+  return out.length ? out : undefined;
 }
 
 function assignListPrimaryName(u: { firstName?: string; lastName?: string; email: string }) {
@@ -1819,163 +1884,15 @@ const sortedAssignableClients = computed(() => {
 const hasActiveFilters = computed(
   () =>
     Boolean(filters.value.search.trim()) ||
-    Boolean(filters.value.status) ||
-    Boolean(filters.value.type) ||
-    Boolean(filters.value.assignedToId) ||
-    Boolean(filters.value.urgency),
+    activeWorkbenchSignals.value.length > 0 ||
+    assigneeFilters.value.length > 0,
 );
 
-const activeFilterCount = computed(() => {
-  let n = 0;
-  if (filters.value.search.trim()) n += 1;
-  if (filters.value.status) n += 1;
-  if (filters.value.type) n += 1;
-  if (filters.value.assignedToId) n += 1;
-  if (filters.value.urgency) n += 1;
-  return n;
-});
-
-type ActiveFilterRow = { id: string; label: string; clear: () => void };
-
-const activeFilterRows = computed((): ActiveFilterRow[] => {
-  const rows: ActiveFilterRow[] = [];
-  const f = filters.value;
-  if (f.search.trim()) {
-    rows.push({
-      id: 'search',
-      label: t('trackables.activeFilterSearch', { q: f.search.trim() }),
-      clear: () => {
-        filters.value.search = '';
-        resetAndLoad();
-      },
-    });
-  }
-  if (f.status) {
-    const label = statusFilterOptions.value.find((o) => o.value === f.status)?.label ?? f.status;
-    rows.push({
-      id: 'status',
-      label: t('trackables.activeFilterStatus', { label }),
-      clear: () => {
-        filters.value.status = null;
-        resetAndLoad();
-      },
-    });
-  }
-  if (f.type) {
-    rows.push({
-      id: 'type',
-      label: t('trackables.activeFilterType', { label: typeLabel(f.type) }),
-      clear: () => {
-        filters.value.type = null;
-        resetAndLoad();
-      },
-    });
-  }
-  if (f.assignedToId) {
-    rows.push({
-      id: 'assigned',
-      label: t('trackables.activeFilterAssigned', { label: assigneeDisplayLabel(f.assignedToId) }),
-      clear: () => {
-        filters.value.assignedToId = null;
-        resetAndLoad();
-      },
-    });
-  }
-  if (f.urgency) {
-    const map: Record<TrackableListingUrgency, string> = {
-      overdue: t('trackables.listingChipOverdue'),
-      due_today: t('trackables.listingChipDueToday'),
-      due_week: t('trackables.listingChipDueWeek'),
-      due_month: t('trackables.listingChipDueMonth'),
-      normal: t('trackables.listingChipNormal'),
-      no_deadline: t('trackables.listingChipNoDeadline'),
-    };
-    rows.push({
-      id: 'urgency',
-      label: t('trackables.activeFilterUrgency', { label: map[f.urgency] ?? f.urgency }),
-      clear: () => {
-        filters.value.urgency = null;
-        resetAndLoad();
-      },
-    });
-  }
-  return rows;
-});
-
-const savedViewsMenuItems = computed(() => [
-  {
-    label: t('trackables.savedViewMineOpen'),
-    command: () => {
-      filters.value = {
-        search: '',
-        status: null,
-        type: null,
-        assignedToId: user.value?.id ?? null,
-        urgency: null,
-      };
-      resetAndLoad();
-    },
-  },
-  {
-    label: t('trackables.savedViewOverdueWeek'),
-    command: () => {
-      filters.value = {
-        search: '',
-        status: null,
-        type: null,
-        assignedToId: null,
-        urgency: 'overdue',
-      };
-      resetAndLoad();
-    },
-  },
-  {
-    label: t('trackables.savedViewUnassigned'),
-    command: () => {
-      filters.value = {
-        search: '',
-        status: null,
-        type: null,
-        assignedToId: '__unassigned__',
-        urgency: null,
-      };
-      resetAndLoad();
-    },
-  },
-]);
-
-const moreActionsMenuItems = computed(() => {
-  const compact = tableDensity.value === 'compact';
-  return [
-    {
-      label: t('trackables.moreExportCsv'),
-      icon: 'pi pi-download',
-      command: () => {
-        (mattersDtRef.value as unknown as { exportCSV?: (opts?: object) => void })?.exportCSV?.();
-      },
-    },
-    { separator: true },
-    {
-      label: t('trackables.densityCompact'),
-      icon: compact ? 'pi pi-check' : 'pi pi-fw',
-      command: () => {
-        tableDensity.value = 'compact';
-      },
-    },
-    {
-      label: t('trackables.densityComfortable'),
-      icon: !compact ? 'pi pi-check' : 'pi pi-fw',
-      command: () => {
-        tableDensity.value = 'comfortable';
-      },
-    },
-  ];
-});
-
 function focusMattersSearch() {
-  const root = (mattersSearchFieldRef.value as unknown as { $el?: HTMLElement } | null)?.$el;
-  const input = root?.querySelector('input');
-  input?.focus();
+  const el = (toolbarSearchInputRef.value as unknown as { $el?: HTMLElement } | null)?.$el?.querySelector?.(
+    'input',
+  ) as HTMLInputElement | null | undefined;
+  el?.focus();
 }
 
 function onGlobalSearchHotkey(e: KeyboardEvent) {
@@ -1987,19 +1904,12 @@ function onGlobalSearchHotkey(e: KeyboardEvent) {
   }
 }
 
-function removeActiveFilterRow(row: ActiveFilterRow) {
-  row.clear();
-  filtersPopoverRef.value?.hide?.();
-}
-
 function bindMattersDataTableScroll() {
   mattersScrollCleanup?.();
   mattersScrollCleanup = undefined;
   const root = (mattersDtRef.value as unknown as { $el?: HTMLElement } | null)?.$el;
   if (!root) return;
-  const scrollHost =
-    (root.querySelector('[data-pc-name="virtualscroller"]') as HTMLElement | null) ??
-    (root.querySelector('[data-pc-section="tablecontainer"]') as HTMLElement | null);
+  const scrollHost = root.querySelector('[data-pc-section="tablecontainer"]') as HTMLElement | null;
   if (!scrollHost) return;
   const onScroll = () => {
     mattersDtScrolled.value = scrollHost.scrollTop > 2;
@@ -2015,75 +1925,6 @@ const mattersShowSkeleton = computed(() => loading.value && trackables.value.len
 const mattersShowEmptyState = computed(
   () => !loading.value && trackables.value.length === 0,
 );
-const mattersUseVirtualScroller = computed(
-  () => totalRecords.value > 100 || trackables.value.length > 100,
-);
-
-const mattersVirtualScrollerOptions = computed(() => ({
-  itemSize: tableDensity.value === 'compact' ? 72 : 104,
-}));
-
-/** Cockpit: anchura unificada de la columna principal = máximo entre filas cargadas (chips alineados). */
-let matterMeasureCanvasCtx: CanvasRenderingContext2D | null = null;
-function measureMatterCanvasTextWidth(text: string, font: string): number {
-  if (typeof document === 'undefined') return text.length * 8;
-  if (!matterMeasureCanvasCtx) {
-    matterMeasureCanvasCtx = document.createElement('canvas').getContext('2d');
-  }
-  if (!matterMeasureCanvasCtx) return text.length * 8;
-  matterMeasureCanvasCtx.font = font;
-  return matterMeasureCanvasCtx.measureText(text).width;
-}
-
-function estimatePrimaryColumnWidthPx(row: any): number {
-  const emojiCol = 40;
-  const gap = 12;
-  const left = emojiCol + gap;
-
-  const key = matterCaseKey(row);
-  const keySegment = key
-    ? measureMatterCanvasTextWidth(key, '600 10px ui-monospace, SFMono-Regular, Menlo, Monaco, monospace') +
-      14
-    : 36;
-
-  const tagLabel = typeLabel(row.type).toLocaleUpperCase(dateLocaleTag());
-  const tagSegment =
-    measureMatterCanvasTextWidth(tagLabel, '600 11px Inter, system-ui, sans-serif') + 44;
-
-  const topLine = keySegment + 8 + tagSegment;
-
-  const title = String(row.title ?? '');
-  const titleW =
-    title.length > 0
-      ? measureMatterCanvasTextWidth(title, '600 15px Inter, system-ui, sans-serif')
-      : 0;
-
-  const meta = matterMetaLooksIncomplete(row)
-    ? t('trackables.matterMetaCockpitClientHint')
-    : matterCaseKey(row)
-      ? matterSubtitleLine(row)
-      : matterMetaLine(row);
-  const metaW = measureMatterCanvasTextWidth(meta, '400 12px Inter, system-ui, sans-serif');
-
-  const inner = Math.max(topLine, titleW, metaW);
-  return Math.ceil(left + inner + 6);
-}
-
-const matterPrimaryColumnCssVars = computed(() => {
-  const rows = trackables.value;
-  if (!rows.length) return undefined;
-  let max = 0;
-  for (const row of rows) {
-    max = Math.max(max, estimatePrimaryColumnWidthPx(row));
-  }
-  const w = Math.min(Math.max(240, max), 920);
-  return { '--matter-primary-col': `${w}px` };
-});
-
-function setTypeChip(value: string | null) {
-  filters.value.type = value;
-  resetAndLoad();
-}
 
 async function loadClientsForCase() {
   try {
@@ -2346,17 +2187,6 @@ function onEditKeydown(event: KeyboardEvent) {
 const showDeleteWizard = ref(false);
 const deleteTarget = ref<any | null>(null);
 
-const typeSeverityMap: Record<string, string> = {
-  case: 'info',
-  process: 'warn',
-  project: 'success',
-  audit: 'secondary',
-};
-
-function typeSeverity(type: string): string {
-  return typeSeverityMap[type] || 'secondary';
-}
-
 async function loadTrash() {
   if (!canDocRead.value) return;
   trashLoading.value = true;
@@ -2419,34 +2249,13 @@ function syncScopeFromRoute() {
   }
 }
 
-const EXPEDIENTES_PREFS_KEY = 'alega:expedientes:prefs:v1';
-
 onMounted(() => {
   syncScopeFromRoute();
   window.addEventListener('keydown', onGlobalSearchHotkey);
-  try {
-    const raw = localStorage.getItem(EXPEDIENTES_PREFS_KEY);
-    if (raw) {
-      const p = JSON.parse(raw) as { density?: 'compact' | 'comfortable' };
-      if (p.density === 'compact' || p.density === 'comfortable') {
-        tableDensity.value = p.density;
-      }
-    }
-  } catch {
-    /* ignore */
-  }
 });
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onGlobalSearchHotkey);
   mattersScrollCleanup?.();
-});
-
-watch(tableDensity, (d) => {
-  try {
-    localStorage.setItem(EXPEDIENTES_PREFS_KEY, JSON.stringify({ v: 1, density: d }));
-  } catch {
-    /* ignore */
-  }
 });
 
 watch(() => route.query.scope, syncScopeFromRoute);
@@ -2514,21 +2323,9 @@ function mapListingDtoToTrackableRow(d: TrackableListItemDto) {
     listingUrgency: d.urgencia,
     __listingMapped: true,
     __proximoPlazo: d.proximoPlazo,
+    __contadores: d.contadores,
     metadata: {},
   };
-}
-
-function onListingUrgencyChange(v: TrackableListingUrgency | null) {
-  filters.value.urgency = v;
-  resetAndLoad();
-}
-
-function toggleAssignedToMeFilter() {
-  const uid = user.value?.id;
-  if (!uid) return;
-  if (filters.value.assignedToId === uid) filters.value.assignedToId = null;
-  else filters.value.assignedToId = uid;
-  resetAndLoad();
 }
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -2548,15 +2345,8 @@ function listingParams(cursor?: string): TrackableListParams {
   return {
     scope,
     search: filters.value.search.trim() || undefined,
-    status:
-      listScope.value === 'active' ? (filters.value.status as string | undefined) || undefined : undefined,
-    tipo: filters.value.type ? [filters.value.type] : undefined,
-    asignadoId: filters.value.assignedToId
-      ? filters.value.assignedToId === '__unassigned__'
-        ? ['__unassigned__']
-        : [filters.value.assignedToId]
-      : undefined,
-    urgencia: filters.value.urgency || undefined,
+    asignadoId: buildAsignadoIdForApi(),
+    urgencia: listingUrgenciaFromSignals(),
     sortBy: 'urgency',
     cursor,
     limit: listingRowsPerPage.value,
@@ -2627,14 +2417,10 @@ function onListingPaginatorPage(event: { first: number; rows: number }) {
 }
 
 function clearFilters() {
-  filters.value = {
-    search: '',
-    status: null,
-    type: null,
-    assignedToId: null,
-    urgency: null,
-  };
-  resetAndLoad();
+  filters.value = { search: '' };
+  activeWorkbenchSignals.value = [];
+  assigneeFilters.value = [];
+  void resetAndLoad();
 }
 
 function dateLocaleTag() {
@@ -2868,18 +2654,6 @@ function activitySummary(row: any): ActivitySummary {
   };
 }
 
-function activityDonePct(row: any) {
-  const summary = activitySummary(row);
-  if (!summary.total) return 0;
-  return Math.min(100, Math.round((summary.done / summary.total) * 100));
-}
-
-function activityActivePct(row: any) {
-  const summary = activitySummary(row);
-  if (!summary.total) return 0;
-  return Math.min(100, Math.round(((summary.done + summary.inProgress) / summary.total) * 100));
-}
-
 function matterEmoji(row: any) {
   const metadataEmoji = row?.metadata?.emoji;
   if (typeof metadataEmoji === 'string' && metadataEmoji.trim()) {
@@ -2967,15 +2741,162 @@ function activityDeadlineHint(row: any): string | null {
   return null;
 }
 
-function activityDetailLoading(row: any) {
-  return Boolean(trackableActivityDetailState(row)?.loading);
+function listingHashId(value: string): number {
+  return Array.from(value).reduce((sum, char) => sum + (char.codePointAt(0) ?? 0), 0);
 }
 
-function matterRowClass(data: any) {
+function listingRowShowsSinoeHint(row: any): boolean {
+  const c = row?.__contadores as { comentarios?: number } | undefined;
+  const n = c?.comentarios ?? 0;
+  return (listingHashId(String(row?.id ?? '')) + n) % 4 === 0;
+}
+
+function matterStageChip(row: any): string {
+  const m = row?.matterType;
+  if (m != null && String(m).trim() !== '') return String(m).trim();
+  const st = row?.status;
+  if (st != null && String(st).trim() !== '') {
+    const key = `trackables.statuses.${String(st)}`;
+    const tr = t(key);
+    return tr === key ? String(st) : tr;
+  }
+  return '';
+}
+
+function wbRowClass(data: any) {
   const u = data?.listingUrgency as TrackableListingUrgency | undefined;
   const parts = ['matter-datatable-row'];
-  if (u) parts.push(`matter-row--urg-${u}`);
+  if (u === 'overdue' || u === 'due_today') parts.push('wb-row--urgent');
+  else if (u === 'due_week') parts.push('wb-row--warn');
   return parts.join(' ');
+}
+
+function daysFromProximoPlazo(row: any): number | null {
+  const pz = row?.__proximoPlazo as { fecha?: string; diasRestantes?: number } | null | undefined;
+  if (!pz) return null;
+  if (typeof pz.diasRestantes === 'number') return pz.diasRestantes;
+  if (pz.fecha) {
+    const d = new Date(pz.fecha);
+    if (Number.isNaN(d.getTime())) return null;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    const due = new Date(d);
+    due.setHours(0, 0, 0, 0);
+    return Math.round((due.getTime() - start.getTime()) / 86400000);
+  }
+  return null;
+}
+
+function matterRowPendingTasks(row: any): MatterPendingTaskRow[] {
+  const actions: MatterPendingTaskRow[] = [];
+  const u = row?.listingUrgency as TrackableListingUrgency | undefined;
+  const days = daysFromProximoPlazo(row);
+
+  if (u === 'overdue' || (days != null && days < 0)) {
+    actions.push({
+      id: 'overdue',
+      label: t('trackables.matterRowTasksOverdue'),
+      tooltip: activityDeadlineHint(row) ?? t('trackables.matterRowTasksOverdue'),
+      icon: 'pi pi-send',
+      accent: '#dc2626',
+      tab: 1,
+    });
+  } else if (u === 'due_today' || days === 0) {
+    actions.push({
+      id: 'today',
+      label: t('trackables.matterRowTasksDueToday'),
+      tooltip: activityDeadlineHint(row) ?? t('trackables.matterRowTasksDueToday'),
+      icon: 'pi pi-send',
+      accent: '#dc2626',
+      tab: 1,
+    });
+  } else if (
+    u === 'due_week' ||
+    u === 'due_month' ||
+    (days != null && days > 0 && days <= 7)
+  ) {
+    actions.push({
+      id: 'soon',
+      label: t('trackables.matterRowTasksDueSoon'),
+      tooltip: activityDeadlineHint(row) ?? t('trackables.matterRowTasksDueSoon'),
+      icon: 'pi pi-file-edit',
+      accent: '#d97706',
+      tab: 1,
+    });
+  }
+
+  if (!row.assignedTo && canTrackableUpdate.value) {
+    actions.push({
+      id: 'assign',
+      label: t('trackables.unassigned'),
+      tooltip: t('trackables.assignInlineCta'),
+      icon: 'pi pi-user-plus',
+      accent: '#64748b',
+      tab: 0,
+    });
+  }
+
+  if (matterMetaLooksIncomplete(row) && canTrackableUpdate.value) {
+    actions.push({
+      id: 'client',
+      label: t('trackables.matterRowTasksAssignClient'),
+      tooltip: t('trackables.assignClientPopoverHint'),
+      icon: 'pi pi-building',
+      accent: '#0e7490',
+      tab: 0,
+    });
+  }
+
+  if (actions.length === 0) {
+    actions.push({
+      id: 'open',
+      label: t('trackables.matterRowTasksOpen'),
+      tooltip: t('trackables.tooltipEditMatter'),
+      icon: 'pi pi-flag',
+      accent: '#0f766e',
+      tab: 1,
+    });
+  }
+
+  return actions;
+}
+
+function matterPendingActionTo(row: any, task: MatterPendingTaskRow): RouteLocationRaw {
+  const path = `/trackables/${row.id}`;
+  if (task.tab === 1) return { path, query: { tab: '1' } };
+  return path;
+}
+
+function matterDeadlineCell(row: any): {
+  label: string;
+  severity: 'danger' | 'warn' | 'info' | 'secondary';
+} {
+  const u = row?.listingUrgency as TrackableListingUrgency | undefined;
+  const pz = row?.__proximoPlazo as { fecha?: string; tipo?: string } | null | undefined;
+  let label = t('trackables.matterDeadlineFallback');
+  if (pz?.fecha) {
+    const short = formatDateShort(pz.fecha);
+    label = pz.tipo ? `${pz.tipo} · ${short}` : short;
+  } else if (u) {
+    const map: Record<TrackableListingUrgency, string> = {
+      overdue: t('trackables.listingChipOverdue'),
+      due_today: t('trackables.listingChipDueToday'),
+      due_week: t('trackables.listingChipDueWeek'),
+      due_month: t('trackables.listingChipDueMonth'),
+      normal: t('trackables.listingChipNormal'),
+      no_deadline: t('trackables.listingChipNoDeadline'),
+    };
+    label = map[u] ?? label;
+  }
+  const severity =
+    u === 'overdue' || u === 'due_today'
+      ? 'danger'
+      : u === 'due_week'
+        ? 'warn'
+        : u === 'due_month'
+          ? 'info'
+          : 'secondary';
+  return { label, severity };
 }
 
 function closeCreateDialog() {
@@ -3359,6 +3280,10 @@ watch(
       loadTrash();
       return;
     }
+    if (scope === 'active' && user.value?.id && !assigneeMineBootstrapped.value) {
+      assigneeMineBootstrapped.value = true;
+      assigneeFilters.value = ['__mine'];
+    }
     void loadClientsForCase();
     void loadUsers();
     void resetAndLoad();
@@ -3367,12 +3292,6 @@ watch(
 );
 
 watch(listScope, (scope) => {
-  if (scope !== 'trash') {
-    filters.value.status = null;
-  }
-  if (scope !== 'active') {
-    filters.value.urgency = null;
-  }
   if (scope === 'trash' && canDocRead.value) {
     router.replace({ path: '/trackables', query: { scope: 'trash' } });
   } else if (scope !== 'trash') {
@@ -3397,125 +3316,9 @@ watch(canDocRead, (ok) => {
     width: fit-content;
   }
 }
-.matters-data-table :deep(.p-datatable-tbody > tr),
+.wb-table :deep(.p-datatable-tbody > tr),
 .trash-data-table :deep(.p-datatable-tbody > tr) {
   transition: background-color 0.15s ease;
-}
-.activity-stats {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: stretch;
-  gap: 0.5rem;
-  width: 100%;
-  min-width: 0;
-}
-@media (min-width: 1024px) {
-  .activity-stats {
-    width: fit-content;
-    max-width: 100%;
-    justify-content: flex-start;
-  }
-}
-.activity-stat {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.25rem;
-  padding: 0.25rem 0.55rem 0.25rem 0.4rem;
-  border-radius: 0.625rem;
-  border: 1px solid color-mix(in srgb, var(--surface-border) 92%, transparent);
-  background: color-mix(in srgb, var(--surface-raised) 96%, var(--surface-app));
-  box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
-  --stat-accent: var(--brand-zafiro);
-}
-.activity-stat__icon {
-  display: inline-flex;
-  width: 1.5rem;
-  height: 1.5rem;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.4rem;
-  background: color-mix(in srgb, var(--stat-accent) 14%, var(--surface-raised));
-  color: var(--stat-accent);
-  font-size: 11px;
-}
-.activity-stat__body {
-  display: inline-flex;
-  flex-direction: column;
-  line-height: 1;
-  gap: 0.1rem;
-}
-.activity-stat__label {
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-  white-space: nowrap;
-}
-.activity-stat__value {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--fg-default);
-  letter-spacing: -0.01em;
-}
-.activity-stat__total {
-  font-weight: 600;
-  color: var(--fg-subtle);
-}
-.activity-stat--done {
-  --stat-accent: #0f766e;
-}
-.activity-stat--progress {
-  --stat-accent: #b45309;
-}
-.activity-stat--danger {
-  --stat-accent: #b91c1c;
-  border-color: color-mix(in srgb, #b91c1c 28%, var(--surface-border));
-  background: color-mix(in srgb, #fef2f2 70%, var(--surface-raised));
-}
-.activity-stat--danger .activity-stat__value {
-  color: #991b1b;
-}
-.activity-stat--danger .activity-stat__label {
-  color: #b91c1c;
-}
-:global(.dark) .activity-stat--danger {
-  border-color: color-mix(in srgb, #dc2626 38%, var(--surface-border));
-  background: color-mix(in srgb, #dc2626 14%, var(--surface-raised));
-}
-:global(.dark) .activity-stat--danger .activity-stat__value {
-  color: #fecaca;
-}
-:global(.dark) .activity-stat--danger .activity-stat__label {
-  color: #fca5a5;
-}
-/** VENCIDAS en 0: mismo chip, tono neutro (sin alerta). */
-.activity-stat--overdue-zero {
-  --stat-accent: rgb(148 163 184);
-  border-color: color-mix(in srgb, var(--surface-border) 96%, transparent);
-  background: color-mix(in srgb, var(--surface-sunken) 65%, var(--surface-raised));
-  opacity: 0.95;
-}
-.activity-stat--overdue-zero .activity-stat__icon {
-  background: color-mix(in srgb, var(--fg-muted) 12%, var(--surface-raised));
-  color: var(--fg-muted);
-}
-.activity-stat--overdue-zero .activity-stat__value {
-  color: var(--fg-muted);
-  font-weight: 600;
-}
-.activity-stat--overdue-zero .activity-stat__label {
-  color: var(--fg-subtle);
-}
-:global(.dark) .activity-stat--overdue-zero {
-  border-color: color-mix(in srgb, var(--surface-border) 88%, transparent);
-  background: color-mix(in srgb, var(--surface-sunken) 55%, transparent);
-}
-:global(.dark) .activity-stat--overdue-zero .activity-stat__value {
-  color: var(--fg-muted);
 }
 .exp-kpi-mesh {
   position: absolute;
@@ -3587,115 +3390,6 @@ watch(canDocRead, (ok) => {
     transform: scale(1.15);
   }
 }
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .exp-kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
-}
-.toolbar-iconfield {
-  width: 100%;
-}
-.toolbar-iconfield :deep(.p-inputtext),
-.toolbar-search :deep(.p-inputtext) {
-  width: 100%;
-  border-radius: 0.75rem;
-}
-.matters-command-toolbar {
-  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--brand-zafiro) 6%, transparent);
-}
-.matter-type-tag :deep(.p-tag) {
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  border-radius: 0.375rem;
-}
-:deep(.matter-actions-header) {
-  text-align: center !important;
-}
-:deep(.matter-actions-cell) {
-  text-align: center !important;
-  vertical-align: middle !important;
-}
-:deep(.matters-row-actions) {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem !important;
-  column-gap: 1rem !important;
-}
-:deep(.matters-row-actions > *) {
-  margin: 0 0.000em !important;
-}
-:deep(.matter-action.p-button) {
-  width: 2.25rem !important;
-  height: 2.25rem !important;
-  padding: 0 !important;
-}
-:deep(.matter-action .p-button-icon) {
-  font-size: 0.875rem;
-}
-.matters-dt-region--scrolled :deep([data-pc-section='tablecontainer']) {
-  box-shadow: inset 0 10px 14px -12px color-mix(in srgb, #000 14%, transparent);
-}
-.matters-dt-region :deep([data-pc-name='datatable']) {
-  display: flex;
-  min-height: 0;
-  flex: 1 1 auto;
-  flex-direction: column;
-}
-.matters-data-table :deep([data-pc-section='tablecontainer']) {
-  transition: box-shadow 0.2s ease;
-}
-.matters-dt--comfortable :deep([data-pc-section='tbody'] > tr > td) {
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
-}
-.type-chip {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-height: 2.75rem;
-  border-radius: 9999px;
-  border: 1px solid var(--surface-border);
-  background: var(--surface-raised);
-  padding: 0.35rem 0.95rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--fg-muted);
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-.type-chip__dot {
-  width: 6px;
-  height: 6px;
-  flex-shrink: 0;
-  border-radius: 9999px;
-}
-.type-chip:hover {
-  border-color: color-mix(in srgb, var(--chip-accent, var(--accent)) 35%, var(--surface-border));
-  color: var(--fg-default);
-}
-.type-chip--active {
-  border-width: 1.5px;
-  border-color: var(--chip-accent, var(--accent));
-  background: color-mix(in srgb, var(--chip-accent, var(--accent)) 12%, var(--surface-raised));
-  color: var(--chip-accent, var(--accent));
-}
-:global(.dark) .type-chip--active {
-  background: color-mix(in srgb, var(--chip-accent, var(--accent)) 22%, var(--surface-raised));
-}
-.type-chip:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--chip-accent, var(--accent)) 45%, var(--surface-border));
-  outline-offset: 2px;
-}
-.toolbar-dropdown :deep(.p-dropdown),
-.toolbar-dropdown :deep(.p-select) {
-  width: 100%;
-  border-radius: 0.75rem;
-}
 @keyframes expKpiFadeSlideUp {
   from {
     opacity: 0;
@@ -3704,6 +3398,12 @@ watch(canDocRead, (ok) => {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .exp-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3720,103 +3420,921 @@ watch(canDocRead, (ok) => {
     opacity: 0.12 !important;
   }
 }
-.matters-data-table {
-  min-width: 760px;
-}
-.matters-data-table--cockpit {
-  min-width: 640px;
-}
-.matters-data-table :deep([data-pc-section='thead'] > tr > th) {
-  background: var(--surface-raised);
-  border-bottom: 1px solid var(--surface-border);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-feature-settings: 'tnum' 1;
-}
-/* Info cell: expand to fill remaining space */
-.matters-data-table--cockpit :deep(th.matter-col-info),
-.matters-data-table--cockpit :deep(td.matter-col-info) {
-  width: 100%;
-  min-width: 280px;
-}
-/* Assignee: slim — only avatar (no text) */
-.matters-data-table--cockpit :deep(th.matter-col-assignee),
-.matters-data-table--cockpit :deep(td.matter-col-assignee) {
-  width: 3rem;
-  min-width: 3rem;
-  max-width: 3rem;
-  text-align: center;
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+/* ── Expediente v2.1 workbench (wb-*) — portado desde ExpedienteV21Sandbox ───────── */
+.exp21 {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-/* Expediente ausente: mismo lenguaje que avatar sin asignar (borde punteado + acción en edición) */
-.matter-expediente-ring:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 55%, var(--surface-border));
-  outline-offset: 2px;
+.wb-toolbar__primary {
+  display: flex;
+  align-items: stretch;
+  min-height: 2.75rem;
+  border-bottom: 1px solid var(--surface-border);
+  background: color-mix(in srgb, var(--surface-sunken) 88%, var(--surface-raised));
 }
-.matter-meta-incomplete {
-  width: fit-content;
-  max-width: 100%;
-  padding: 0.28rem 0.55rem;
-  border-radius: 0.5rem;
-  border: 1px dashed color-mix(in srgb, var(--fg-subtle) 42%, var(--surface-border));
-  background: color-mix(in srgb, var(--surface-sunken) 82%, transparent);
+
+.wb-scope-select {
+  align-self: stretch;
+  display: flex;
+  align-items: stretch;
 }
-/** Lista cockpit: hint incompleto más liviano (una línea; detalle en tooltip / aria). */
-.matter-meta-incomplete--cockpit {
-  padding: 0.125rem 0.4rem;
-  border-radius: 0.375rem;
-  font-size: 0.6875rem;
-  line-height: 1.25;
+
+:deep(.wb-scope-select .p-selectbutton) {
+  display: flex;
+  align-items: stretch;
+  min-height: 2.75rem;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 0;
 }
-.matter-meta-incomplete--action {
+
+:deep(.wb-scope-select .p-togglebutton),
+:deep(.wb-scope-select .p-togglebutton:first-child),
+:deep(.wb-scope-select .p-togglebutton:last-child) {
+  align-self: stretch;
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding-inline: 1.1rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+:deep(.wb-scope-select .p-togglebutton-checked),
+:deep(.wb-scope-select .p-togglebutton-checked:first-child),
+:deep(.wb-scope-select .p-togglebutton-checked:last-child) {
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 0 1px var(--surface-border);
+  color: var(--fg-default);
+  border-radius: 0;
+}
+
+:deep(.wb-scope-select .p-togglebutton:not(.p-togglebutton-checked)) {
+  background: transparent;
+  color: var(--fg-muted);
+}
+
+:deep(.wb-scope-select .p-togglebutton .p-togglebutton-content),
+:deep(.wb-scope-select .p-togglebutton-checked .p-togglebutton-content) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+}
+
+.wb-card {
+  height: min(84vh, calc(100dvh - 9.5rem));
+  min-height: 520px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.wb-toolbar {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--surface-border);
+  background: var(--surface-raised);
+}
+
+.wb-toolbar__row {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+}
+
+.wb-toolbar__row--main {
+  gap: 0.6rem;
+}
+
+.wb-search {
+  min-width: 13rem;
+  max-width: min(22rem, 38%);
+  flex: 0 0 auto;
+}
+
+.wb-search :deep(.p-inputtext) {
+  width: 100%;
+}
+
+.wb-signals {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.wb-signal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  min-height: 1.875rem;
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--fg-muted);
   cursor: pointer;
-  appearance: none;
-  border-style: dashed;
-}
-.matter-meta-incomplete--action:not(.matter-meta-incomplete--cockpit) {
   font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  padding-inline: 0.6rem;
+  touch-action: manipulation;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
-@media (hover: hover) {
-  .matter-meta-incomplete--action:hover {
-    border-color: color-mix(in srgb, var(--accent) 38%, var(--surface-border));
-    background: color-mix(in srgb, var(--accent-soft) 42%, var(--surface-sunken));
-    color: var(--fg-muted);
-  }
-}
-.matter-meta-incomplete--action:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 55%, var(--surface-border));
+
+.wb-signal:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 44%, var(--surface-border));
   outline-offset: 2px;
 }
+
+.wb-signal:hover,
+.wb-signal--active {
+  border-color: color-mix(in srgb, var(--sa, var(--accent)) 38%, var(--surface-border));
+  color: var(--fg-default);
+}
+
+.wb-signal--active {
+  background: color-mix(in srgb, var(--sa, var(--accent)) 11%, var(--surface-raised));
+  color: var(--sa, var(--accent));
+}
+
+.wb-signal--reset {
+  border-color: color-mix(in srgb, var(--accent) 36%, var(--surface-border));
+  background: var(--accent-soft);
+  color: var(--accent);
+  --sa: var(--accent);
+}
+
+.wb-count {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--fg-subtle);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wb-filter-avatar-group :deep(.p-avatar) {
+  width: 1.375rem;
+  height: 1.375rem;
+  font-size: 0.52rem;
+}
+
+:deep(.wb-assignee-pop) {
+  width: min(100vw - 2rem, 14rem);
+}
+
+.wb-assignee-pop__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+}
+
+.wb-assignee-pop__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--surface-border);
+  padding: 0.55rem 0.75rem 0.45rem;
+}
+
+.wb-assignee-pop__header p {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.wb-assignee-pop__clear {
+  border: none;
+  background: none;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 650;
+  padding: 0;
+}
+
+.wb-assignee-pop__clear:hover {
+  text-decoration: underline;
+}
+
+.wb-assignee-pop__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  border-radius: 0.55rem;
+  color: var(--fg-default);
+  cursor: pointer;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.55rem;
+  transition: background-color 0.1s ease;
+}
+
+.wb-assignee-pop__item:hover {
+  background: color-mix(in srgb, var(--accent-soft) 60%, transparent);
+}
+
+.wb-assignee-pop__item--mine {
+  font-weight: 650;
+}
+
+.wb-assignee-pop__avatar {
+  display: inline-grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--fg-on-brand);
+  font-size: 0.6rem;
+  font-weight: 760;
+}
+
+.wb-assignee-pop__avatar--empty,
+.wb-assignee-pop__avatar--all {
+  background: var(--surface-sunken);
+  border: 1px dashed var(--surface-border);
+  color: var(--fg-muted);
+  font-size: 0.72rem;
+}
+
+.wb-assignee-pop__name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wb-assignee-pop__avatar-pv :deep(.p-avatar) {
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: 0.6rem;
+}
+
+.wb-assignee-pop__divider {
+  height: 1px;
+  margin: 0.25rem 0.55rem;
+  background: var(--surface-border);
+}
+
+.wb-assignee-pop__avatar--mine {
+  position: relative;
+}
+
+.wb-assignee-pop__me-badge {
+  position: absolute;
+  bottom: -0.25rem;
+  right: -0.35rem;
+  display: inline-grid;
+  place-items: center;
+  border: 1.5px solid var(--surface-raised);
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--fg-on-brand);
+  font-size: 0.42rem;
+  font-weight: 760;
+  line-height: 1;
+  padding: 0.08rem 0.22rem;
+  pointer-events: none;
+}
+
+.wb-skeleton {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 0 0.85rem;
+}
+
+.wb-skeleton__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 13rem 8.5rem 10rem 8rem;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid var(--surface-border);
+  padding-block: 0.9rem;
+}
+
+.wb-skeleton__row--no-actions {
+  grid-template-columns: minmax(0, 1fr) 13rem 8.5rem 10rem;
+}
+
+.wb-skeleton__col--main {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.wb-assignee {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:deep(.wb-table .p-datatable-table-container) {
+  overflow-x: hidden;
+}
+
+:deep(.wb-table .p-datatable-thead > tr > th:first-child),
+:deep(.wb-table .p-datatable-tbody > tr > td:first-child) {
+  width: auto;
+}
+
+:deep(.wb-table .wb-col-assignee) {
+  isolation: isolate;
+}
+
+:deep(.wb-table .p-datatable-thead > tr > th) {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  background: var(--surface-sunken);
+  padding-block: 0.6rem;
+  padding-inline: 0.85rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+:deep(.wb-table .p-datatable-tbody > tr) {
+  transition: background-color 0.12s ease;
+}
+
+:deep(.wb-table .p-datatable-tbody > tr > td) {
+  padding: 0.7rem 0.85rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+:deep(.wb-table .wb-row--urgent > td:first-child) {
+  border-left: 3px solid #dc2626;
+}
+
+:deep(.wb-table .wb-row--warn > td:first-child) {
+  border-left: 3px solid #d97706;
+}
+
+:deep(.wb-table .wb-col-matter),
+:deep(.wb-table .wb-col-action) {
+  vertical-align: top;
+}
+
+/* Expediente: tope que NO depende del % del <table> (ese % crece con el layout y amplía la celda) */
+:deep(.wb-table .p-datatable-thead > tr > th.wb-col-matter),
+:deep(.wb-table .p-datatable-thead > tr > th:nth-child(1)),
+:deep(.wb-table .p-datatable-tbody > tr > td.wb-col-matter),
+:deep(.wb-table .p-datatable-tbody > tr > td:nth-child(1)) {
+  width: min(22rem, 42vw);
+  max-width: min(22rem, 42vw);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+:deep(.wb-table .p-datatable-tbody > tr > td:nth-child(1) .wb-matter) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+:deep(.wb-table .p-datatable-tbody > tr > td:nth-child(1) .wb-matter__copy) {
+  max-width: 100%;
+  min-width: 0;
+}
+
+:deep(.wb-table .p-datatable-tbody > tr > td:nth-child(1) .wb-matter__topline),
+:deep(.wb-table .p-datatable-tbody > tr > td:nth-child(1) .wb-matter__title),
+:deep(.wb-table .p-datatable-tbody > tr > td:nth-child(1) .wb-matter__client) {
+  max-width: 100%;
+}
+
+:deep(.wb-table .p-datatable-tbody > tr > td:nth-child(1) .wb-matter__title .line-clamp-1) {
+  display: block;
+  max-width: 100%;
+}
+
+.wb-matter {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.wb-matter__emoji {
+  display: inline-grid;
+  width: 2.1rem;
+  height: 2.1rem;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.55rem;
+  background: var(--surface-sunken);
+  font-size: 1rem;
+}
+
+.wb-matter__copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.wb-matter__topline {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.28rem;
+  margin-bottom: 0.22rem;
+}
+
+.wb-case {
+  max-width: min(9rem, 100%);
+  overflow: hidden;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--surface-sunken) 68%, var(--surface-raised));
+  color: var(--fg-muted);
+  font-size: 0.6rem;
+  font-weight: 760;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.35rem;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.wb-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.1rem;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--fg-muted);
+  font-size: 0.6rem;
+  font-weight: 760;
+  letter-spacing: 0.04em;
+  padding-inline: 0.42rem;
+  text-transform: uppercase;
+}
+
+.wb-chip--stage {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.wb-chip--sinoe {
+  background: color-mix(in srgb, #7c3aed 14%, var(--surface-raised));
+  color: #7c3aed;
+}
+
+.wb-matter__title {
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  color: var(--accent);
+  font-size: 0.875rem;
+  font-weight: 650;
+  line-height: 1.25;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wb-matter__title:hover {
+  text-decoration: underline;
+}
+
+.wb-matter__title:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.wb-matter__client {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0.2rem 0 0;
+  overflow: hidden;
+  color: var(--fg-subtle);
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wb-actions-cell {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.2rem;
+}
+
+.wb-action-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 1.65rem;
+  padding: 0.15rem 0.35rem 0.15rem 0.4rem;
+  border-radius: 0.375rem;
+  border: 1px solid transparent;
+  background: var(--surface-sunken);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.wb-action-stat:hover {
+  background: color-mix(in srgb, var(--surface-border) 45%, var(--surface-sunken));
+  border-color: var(--surface-border);
+}
+
+.wb-action-stat:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 1px;
+}
+
+.wb-action-stat__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--fg-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wb-action-stat__go {
+  margin-left: 0.1rem;
+  color: var(--fg-subtle);
+  opacity: 0.55;
+}
+
+.wb-action-stat:hover .wb-action-stat__go {
+  opacity: 0.85;
+}
+
+.wb-action-overflow {
+  align-self: flex-start;
+  display: inline-grid;
+  min-width: 1.45rem;
+  min-height: 1.35rem;
+  place-items: center;
+  border: 1px solid var(--surface-border);
+  border-radius: 0.3rem;
+  background: var(--surface-raised);
+  color: var(--fg-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.1rem 0.28rem;
+  cursor: default;
+}
+
+:deep(.wb-deadline-tag.p-tag) {
+  font-size: 0.68rem;
+  white-space: nowrap;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wb-involved {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.wb-inv-stack {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: center;
+  width: 2.15rem;
+}
+
+.wb-avatar-primary {
+  display: inline-grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 2px var(--surface-raised),
+    0 0 0 3.5px color-mix(in srgb, var(--accent) 40%, var(--surface-border));
+  color: var(--fg-on-brand);
+  font-size: 0.7rem;
+  font-weight: 760;
+  position: relative;
+  z-index: 4;
+  cursor: default;
+}
+
+.wb-avatar-primary--img {
+  object-fit: cover;
+}
+
+.wb-avatar-primary--empty {
+  background: var(--surface-sunken);
+  border: 1.5px dashed var(--surface-border);
+  box-shadow: none;
+  color: var(--fg-subtle);
+  font-size: 0.82rem;
+}
+
+.wb-involved__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.06rem;
+}
+
+.wb-involved__name {
+  overflow: hidden;
+  color: var(--fg-default);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wb-involved__name--empty {
+  color: var(--fg-subtle);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.wb-involved__role {
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.wb-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+:deep(.wb-row-actions .p-button) {
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+}
+
+:deep(.wb-row-actions .p-button-icon) {
+  font-size: 0.78rem;
+}
+
+:deep(.wb-actions-header) {
+  text-align: center !important;
+}
+
+.wb-empty {
+  display: flex;
+  min-height: 18rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+.wb-empty--standalone {
+  min-height: 320px;
+}
+
+.wb-empty .pi {
+  color: var(--fg-subtle);
+  font-size: 2.25rem;
+}
+
+.wb-empty h3 {
+  margin: 0;
+  color: var(--fg-default);
+  font-size: 1rem;
+}
+
+.wb-empty p {
+  margin: 0;
+  max-width: 24rem;
+  font-size: 0.82rem;
+}
+
+.wb-footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--surface-border);
+  background: var(--surface-raised);
+}
+
+:deep(.wb-footer .p-paginator) {
+  padding: 0.35rem 0.75rem;
+  background: transparent;
+  border: none;
+  font-size: 0.78rem;
+}
+
+:deep(.wb-footer .p-paginator .p-paginator-current) {
+  color: var(--fg-subtle);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.matters-dt-region :deep([data-pc-name='datatable']) {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.matters-dt-region--scrolled :deep([data-pc-section='tablecontainer']) {
+  box-shadow: inset 0 10px 14px -12px color-mix(in srgb, #000 14%, transparent);
+}
+
+:deep(.wb-table .p-datatable-table-container),
+:deep(.wb-table [data-pc-section='tablecontainer']) {
+  overflow-x: hidden !important;
+  min-width: 0;
+}
+
+:deep(.wb-table table) {
+  table-layout: fixed;
+  width: 100%;
+}
+
 @media (hover: hover) {
-  .matters-data-table :deep(.p-datatable-tbody > tr:hover) {
+  :deep(.wb-table .p-datatable-tbody > tr:hover) {
     background: color-mix(in srgb, var(--accent-soft) 50%, var(--surface-raised));
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wb-signal,
+  :deep(.wb-table .p-datatable-tbody > tr) {
+    transition: none;
+  }
+}
+
+@container (max-width: 640px) {
+  .wb-toolbar__primary {
+    min-height: 0;
+  }
+
+  :deep(.wb-scope-select .p-selectbutton) {
+    width: 100%;
+    flex-wrap: wrap;
+    min-height: 0;
+  }
+
+  :deep(.wb-scope-select .p-togglebutton) {
+    flex: 1 1 auto;
+    min-height: 2.5rem;
+  }
+
+  .wb-toolbar__row--main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wb-search {
+    max-width: none;
+    width: 100%;
+  }
+
+  .wb-count {
+    margin-left: 0;
+  }
+}
+
+/* Expediente v2.1 — anillo expediente + botón cliente (reutilizado en celda wb) */
+.matters-wb-matter__client-btn {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.matters-wb-matter__client-btn:hover {
+  color: var(--accent);
+}
+.matters-wb-matter__client-btn:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.matters-wb-expediente-ring {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px dashed var(--fg-subtle);
+  color: var(--fg-subtle);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+.matters-wb-expediente-ring:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.matters-wb-expediente-ring:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, var(--surface-border));
+  outline-offset: 2px;
+}
+.matters-wb-expediente-ring--readonly {
+  border-color: var(--surface-border);
+  cursor: default;
+}
+/* Workbench: scope tabs edge-to-edge (papelera / sin permiso) */
+.matters-workbench-scope {
+  container-type: inline-size;
+}
+.matters-workbench-scope-tabs :deep(.p-selectbutton) {
+  display: flex;
+  align-items: stretch;
+  min-height: 2.75rem;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  gap: 0;
+}
+.matters-workbench-scope-tabs :deep(.p-togglebutton),
+.matters-workbench-scope-tabs :deep(.p-togglebutton:first-child),
+.matters-workbench-scope-tabs :deep(.p-togglebutton:last-child) {
+  align-self: stretch;
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding-inline: 1.1rem;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.matters-workbench-scope-tabs :deep(.p-togglebutton-checked),
+.matters-workbench-scope-tabs :deep(.p-togglebutton-checked:first-child),
+.matters-workbench-scope-tabs :deep(.p-togglebutton-checked:last-child) {
+  background: var(--surface-raised);
+  color: var(--fg-default);
+  box-shadow: inset 0 -2px 0 0 var(--accent);
+}
+@media (hover: hover) {
   .trash-data-table :deep(.p-datatable-tbody > tr:hover) {
     background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface-raised));
   }
-}
-
-.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-overdue) {
-  border-left: 3px solid #dc2626;
-}
-.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-due_today) {
-  border-left: 3px solid #d97706;
-}
-.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-due_week) {
-  border-left: 3px solid #ca8a04;
-}
-.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-due_month) {
-  border-left: 3px solid #0f766e;
-}
-.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-normal) {
-  border-left: 3px solid color-mix(in srgb, var(--brand-zafiro) 55%, var(--surface-border));
-}
-.matters-data-table :deep(.p-datatable-tbody > tr.matter-row--urg-no_deadline) {
-  border-left: 3px solid var(--fg-subtle);
 }
 
 /* ------------------------------------------------------------------ */

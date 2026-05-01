@@ -1,7 +1,0 @@
-export function setSectionPageMarginsAtSelection({ topInches, rightInches, bottomInches, leftInches }?: {
-    topInches?: number;
-    rightInches?: number;
-    bottomInches?: number;
-    leftInches?: number;
-}): import('./types/index.js').Command;
-//# sourceMappingURL=setSectionPageMarginsAtSelection.d.ts.map

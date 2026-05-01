@@ -1,6 +1,0 @@
-import { Node } from '../../core/Node.js';
-export function createPermissionBlockMarkerNode({ name, attributes }: {
-    name: any;
-    attributes: any;
-}): Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=permission-block-marker-factory.d.ts.map

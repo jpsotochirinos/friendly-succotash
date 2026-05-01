@@ -1,2 +1,0 @@
-import { t as remarkGfm } from "./remark-gfm-BhnWr3yf.es.js";
-export { remarkGfm as default };

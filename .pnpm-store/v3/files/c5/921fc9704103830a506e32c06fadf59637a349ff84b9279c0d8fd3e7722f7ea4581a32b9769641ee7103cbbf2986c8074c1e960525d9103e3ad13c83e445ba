@@ -1,5 +1,0 @@
-export function preProcessPageFieldsOnly(nodes?: OpenXmlNode[], depth?: number): {
-    processedNodes: OpenXmlNode[];
-};
-export type OpenXmlNode = import('../v2/types/index.js').OpenXmlNode;
-//# sourceMappingURL=preProcessPageFieldsOnly.d.ts.map

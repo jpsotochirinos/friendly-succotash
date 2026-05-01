@@ -64,15 +64,15 @@ import Column from 'primevue/column';
 | **Dialog (form simple)** | `primevue/dialog` | `/sandbox/components/dialog` | [alega-form-dialog](../alega-form-dialog/SKILL.md) |
 | **Dialog (form wizard)** | `primevue/dialog` | `/sandbox/components/dialog` | [alega-form-dialog](../alega-form-dialog/SKILL.md) |
 | **InformationalDialogBase** | componente local | `/sandbox/components/informational-dialog` | [alega-informational-dialog](../alega-informational-dialog/SKILL.md) |
-| **Button** | `primevue/button` | `/sandbox/components/button` | — |
-| **SelectButton / ToggleButton** | `primevue/selectbutton`, `primevue/togglebutton` | `/sandbox/components/selectbutton-toggle` | — |
+| **Button** | `primevue/button` | `/sandbox/components/button` | Incluye `CalendarNavButtons` como patrón genérico de navegación anterior/siguiente. |
+| **SelectButton / ToggleButton** | `primevue/selectbutton`, `primevue/togglebutton` | `/sandbox/components/selectbutton-toggle` | Incluye `CalendarViewSelect` y `CalendarScopeSelect` como patrones edge-to-edge reutilizables. |
 | **Tooltip** | directiva `v-tooltip` | `/sandbox/components/tooltip` | — |
 | **Skeleton / ProgressSpinner / ProgressBar** | `primevue/skeleton`, etc. | `/sandbox/components/loading` | — |
-| **Tag / Chip / Badge** | `primevue/tag`, `primevue/chip`, `primevue/badge` | `/sandbox/components/tag-chip-badge` | — |
+| **Tag / Chip / Badge** | `primevue/tag`, `primevue/chip`, `primevue/badge` | `/sandbox/components/tag-chip-badge` | Incluye `CalendarUrgencyLegend` como leyenda reusable de pills de estado. |
 | **Avatar / AvatarGroup** | `primevue/avatar`, `primevue/avatargroup` | `/sandbox/components/avatar` | — |
-| **Menu / Popover** | `primevue/menu`, `primevue/popover` | `/sandbox/components/menu-popover` | — |
+| **Menu / Popover** | `primevue/menu`, `primevue/popover` | `/sandbox/components/menu-popover` | Incluye `CalendarFilterTrigger` como trigger compacto de filtros (calendario: `GlobalCalendarFiltersBar.vue`; mesa expedientes: `ExpedienteV21Sandbox.vue` y sandbox `/sandbox/patterns/workbench-assignee-filter`). |
 | **Toast / Message / InlineMessage** | `primevue/toast`, `primevue/message` | `/sandbox/components/feedback` | — |
-| **InputText / Textarea / IconField / InputGroup** | varios | `/sandbox/components/inputs` | — |
+| **InputText / Textarea / IconField / InputGroup** | varios | `/sandbox/components/inputs` | Incluye `CalendarToolbarSearch` como buscador reusable de toolbar. |
 | **Dropdown / Select / MultiSelect** | varios | `/sandbox/components/select` | — |
 | **Checkbox / RadioButton / InputSwitch** | varios | `/sandbox/components/toggle` | — |
 | **Calendar / DatePicker** | `primevue/calendar`, `primevue/datepicker` | `/sandbox/components/calendar` | — |
@@ -87,6 +87,7 @@ import Column from 'primevue/column';
 | **type-chip** | `/sandbox/patterns/type-chip` | Pill con dot + `--chip-accent`. Filter de tipo en toolbar. |
 | **kpi-card** | `/sandbox/patterns/kpi-card` | Tarjeta métrica con `--kpi-accent`, pulse dot, animación. |
 | **activity-stat** | `/sandbox/patterns/activity-stat` | Mini-rows icon + label + número. Sidebar de expediente. |
+| **calendar-redesign toolbar** | `/sandbox/recipes/calendar-redesign` | Receta compuesta que reutiliza patrones documentados en Button, SelectButton, Inputs, Popover y Tag/Chip/Badge. Ver [alega-bespoke-patterns](../alega-bespoke-patterns/SKILL.md) §F6. |
 | **misc-pills** | `/sandbox/patterns/misc-pills` | case-key, dirty-dot, counter-chip, empty-states. |
 
 ---

@@ -170,51 +170,53 @@ void levelOf; // avoid unused warning
     <DayHeader v-if="!hideDayHeader" :scope="scope" />
     <PulseChips :chips="chips" :active="filterChip" @select="(k) => (filterChip = k)" />
 
-    <div class="hoy__section">
-      <header class="hoy__section-head">
-        <span class="hoy__section-eyebrow">{{ sectionTitle }}</span>
-        <span class="hoy__section-meta">
-          {{ filteredDayActs.length }} actuación{{ filteredDayActs.length === 1 ? '' : 'es' }}
-        </span>
-      </header>
-      <div v-if="filteredDayActs.length" class="hoy__list">
-        <EventRow
-          v-for="a in filteredDayActs"
-          :key="a.id"
-          :actuacion="a"
-          :asignado-label="asignadoLabel(a)"
-          :now="date"
-          :expedientes="expedientes"
-          @open="(act) => emit('open', act)"
-        />
-      </div>
-      <div v-else class="hoy__empty">
-        <i class="pi pi-inbox" aria-hidden="true" />
-        <div>
-          <p class="hoy__empty-title">
-            {{
-              scope === 'mine'
-                ? 'No tienes actuaciones para hoy.'
-                : 'El despacho no tiene actuaciones programadas hoy.'
-            }}
-          </p>
-          <p class="hoy__empty-sub">
-            Revisa tu bandeja SINOE o consulta los próximos 7 días.
-          </p>
+    <div class="hoy__content">
+      <div class="hoy__section hoy__section--main">
+        <header class="hoy__section-head">
+          <span class="hoy__section-eyebrow">{{ sectionTitle }}</span>
+          <span class="hoy__section-meta">
+            {{ filteredDayActs.length }} actuación{{ filteredDayActs.length === 1 ? '' : 'es' }}
+          </span>
+        </header>
+        <div v-if="filteredDayActs.length" class="hoy__list">
+          <EventRow
+            v-for="a in filteredDayActs"
+            :key="a.id"
+            :actuacion="a"
+            :asignado-label="asignadoLabel(a)"
+            :now="date"
+            :expedientes="expedientes"
+            @open="(act) => emit('open', act)"
+          />
+        </div>
+        <div v-else class="hoy__empty">
+          <i class="pi pi-inbox" aria-hidden="true" />
+          <div>
+            <p class="hoy__empty-title">
+              {{
+                scope === 'mine'
+                  ? 'No tienes actuaciones para hoy.'
+                  : 'El despacho no tiene actuaciones programadas hoy.'
+              }}
+            </p>
+            <p class="hoy__empty-sub">
+              Revisa tu bandeja SINOE o consulta los próximos 7 días.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="hoy__section">
-      <header class="hoy__section-head">
-        <span class="hoy__section-eyebrow">Próximos 7 días</span>
-        <span class="hoy__section-meta">incluye días no hábiles</span>
-      </header>
-      <SevenDayStrip
-        :start-date="stripStart"
-        :actuaciones="scoped"
-        @select-day="(d) => emit('select-day', d)"
-      />
+      <div class="hoy__section hoy__section--next">
+        <header class="hoy__section-head">
+          <span class="hoy__section-eyebrow">Próximos 7 días</span>
+          <span class="hoy__section-meta">incluye días no hábiles</span>
+        </header>
+        <SevenDayStrip
+          :start-date="stripStart"
+          :actuaciones="scoped"
+          @select-day="(d) => emit('select-day', d)"
+        />
+      </div>
     </div>
   </section>
 </template>
@@ -224,6 +226,12 @@ void levelOf; // avoid unused warning
   display: flex;
   flex-direction: column;
   gap: 18px;
+  container-type: inline-size;
+}
+.hoy__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
 }
 .hoy__section {
   display: flex;
@@ -266,4 +274,15 @@ void levelOf; // avoid unused warning
 .hoy__empty i { font-size: 22px; color: var(--fg-subtle); }
 .hoy__empty-title { margin: 0; font-size: 13px; font-weight: 600; color: var(--fg-default); }
 .hoy__empty-sub { margin: 2px 0 0; font-size: 12px; color: var(--fg-muted); }
+
+@container (min-width: 980px) {
+  .hoy__content {
+    grid-template-columns: minmax(0, 1.45fr) minmax(22rem, 0.9fr);
+    align-items: start;
+  }
+  .hoy__section--next {
+    position: sticky;
+    top: 0;
+  }
+}
 </style>

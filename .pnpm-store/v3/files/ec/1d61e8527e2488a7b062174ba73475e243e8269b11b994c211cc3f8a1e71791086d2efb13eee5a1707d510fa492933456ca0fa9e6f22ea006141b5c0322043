@@ -1,6 +1,0 @@
-import { BuiltInToolbarRegistryEntry } from './internal-types.js';
-import { CreateHeadlessToolbarOptions, PublicToolbarItemId, ToolbarSnapshot } from './types.js';
-export declare const createToolbarSnapshot: ({ superdoc, commands, toolbarRegistry, }: CreateHeadlessToolbarOptions & {
-    toolbarRegistry: Partial<Record<PublicToolbarItemId, BuiltInToolbarRegistryEntry>>;
-}) => ToolbarSnapshot;
-//# sourceMappingURL=create-toolbar-snapshot.d.ts.map

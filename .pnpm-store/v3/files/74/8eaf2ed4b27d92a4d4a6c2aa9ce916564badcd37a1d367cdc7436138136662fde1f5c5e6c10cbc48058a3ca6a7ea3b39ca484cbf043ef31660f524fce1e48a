@@ -1,5 +1,0 @@
-/**
- * @type {import("./docxImporter").NodeHandlerEntry}
- */
-export const footnoteReferenceHandlerEntity: import('./docxImporter').NodeHandlerEntry;
-//# sourceMappingURL=footnoteReferenceImporter.d.ts.map

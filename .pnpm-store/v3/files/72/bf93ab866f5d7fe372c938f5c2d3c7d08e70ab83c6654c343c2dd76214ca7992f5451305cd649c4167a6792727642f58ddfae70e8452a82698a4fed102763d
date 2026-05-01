@@ -1,2 +1,0 @@
-export function getDefaultStyleDefinition(defaultStyleId: string, docx: Object): Object;
-//# sourceMappingURL=get-default-style-definition.d.ts.map

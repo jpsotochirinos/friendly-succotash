@@ -1,3 +1,0 @@
-import { Editor } from '../Editor.js';
-export function createLinkedChildEditor(currentEditor: Editor, options?: Object): Editor;
-//# sourceMappingURL=child-editor.d.ts.map

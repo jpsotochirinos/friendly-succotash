@@ -123,7 +123,7 @@ const cells = computed<Cell[]>(() => {
     const kinds = props.kindsByDay?.[key];
     if (kinds?.length) {
       const uk = urgencyFromKinds(kinds);
-      if (!max || URGENCY_RANK[uk] > URGENCY_RANK[max]) max = uk;
+      if (uk && (!max || URGENCY_RANK[uk] > URGENCY_RANK[max])) max = uk;
     }
     const count = Math.max(dayActs.length, kinds?.length ?? 0);
     out.push({

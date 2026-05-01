@@ -1,4 +1,0 @@
-import { BuiltInToolbarRegistryEntry } from './internal-types.js';
-import { PublicToolbarItemId } from './types.js';
-export declare const createToolbarRegistry: () => Partial<Record<PublicToolbarItemId, BuiltInToolbarRegistryEntry>>;
-//# sourceMappingURL=toolbar-registry.d.ts.map

@@ -1,4 +1,0 @@
-export function exitListItemAt({ pos }: {
-    pos: number;
-}): import('./types/index.js').Command;
-//# sourceMappingURL=exitListItemAt.d.ts.map

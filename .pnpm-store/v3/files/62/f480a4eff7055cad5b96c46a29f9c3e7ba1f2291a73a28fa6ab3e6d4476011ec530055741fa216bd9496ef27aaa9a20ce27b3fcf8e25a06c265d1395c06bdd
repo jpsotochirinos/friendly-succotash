@@ -1,6 +1,0 @@
-import "../chunks/jszip-C49i9kUs.es.js";
-import "../chunks/xml-js-CqGKpaft.es.js";
-import "../chunks/constants-CGhJRd87.es.js";
-import "../chunks/dist-B8HfvhaK.es.js";
-import { t as DocxZipper_default } from "../chunks/DocxZipper-CaIWmehq.es.js";
-export { DocxZipper_default as default };

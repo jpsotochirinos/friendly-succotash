@@ -1,7 +1,0 @@
-import { findRelationshipIdFromTarget, insertNewRelationship, getNewRelationshipId } from './document-rels.js';
-export namespace DocxHelpers {
-    export { findRelationshipIdFromTarget };
-    export { insertNewRelationship };
-    export { getNewRelationshipId };
-}
-//# sourceMappingURL=docx-helpers.d.ts.map

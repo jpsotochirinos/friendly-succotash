@@ -1,5 +1,0 @@
-export function findTrackFormatMark(marks?: any[]): Object | null;
-export function createRunPropertiesChangeElement(trackFormatMark: Object | null | undefined): Object | undefined;
-export function appendTrackFormatChangeToRunProperties(runPropertiesNode: Object | null | undefined, marks?: any[]): Object | null | undefined;
-export function createTrackStyleMark(marks: any[]): Object | undefined;
-//# sourceMappingURL=helpers.d.ts.map

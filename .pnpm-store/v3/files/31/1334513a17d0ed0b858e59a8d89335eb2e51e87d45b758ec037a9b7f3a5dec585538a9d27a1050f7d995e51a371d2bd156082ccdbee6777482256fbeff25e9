@@ -1,8 +1,0 @@
-export function insertParagraphAt({ pos, text, sdBlockId, paraId, tracked }: {
-    pos: number;
-    text?: string;
-    sdBlockId?: string;
-    paraId?: string;
-    tracked?: boolean;
-}): import('./types/index.js').Command;
-//# sourceMappingURL=insertParagraphAt.d.ts.map

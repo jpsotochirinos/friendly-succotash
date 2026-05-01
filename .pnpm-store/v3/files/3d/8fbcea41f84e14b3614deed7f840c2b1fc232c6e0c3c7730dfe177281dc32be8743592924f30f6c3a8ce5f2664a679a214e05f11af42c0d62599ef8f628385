@@ -1,8 +1,0 @@
-/**
- * Build a minimal version-3 CFB container containing root-level streams.
- *
- * This helper exists solely for internal tests and fixture generation. It is
- * intentionally narrow: root-level streams only, no storages, and no DIFAT.
- */
-export function buildCfbContainer(entries: any): Uint8Array<ArrayBuffer>;
-//# sourceMappingURL=cfb-builder.d.ts.map

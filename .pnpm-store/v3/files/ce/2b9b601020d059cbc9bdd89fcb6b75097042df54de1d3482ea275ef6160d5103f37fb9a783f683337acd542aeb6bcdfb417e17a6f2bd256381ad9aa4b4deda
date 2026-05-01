@@ -1,8 +1,0 @@
-/**
- * Normalizes runProperties objects so empty or invalid values are treated as null.
- *
- * @param {Record<string, unknown> | null | undefined} runProperties
- * @returns {Record<string, unknown> | null}
- */
-export function normalizeRunProperties(runProperties: Record<string, unknown> | null | undefined): Record<string, unknown> | null;
-//# sourceMappingURL=normalizeRunProperties.d.ts.map

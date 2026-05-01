@@ -1,9 +1,0 @@
-import { Editor } from '../../core/Editor.js';
-import { TocGetInput, TocInfo, TocConfigureInput, TocUpdateInput, TocRemoveInput, TocMutationResult, TocListQuery, TocListResult, CreateTableOfContentsInput, CreateTableOfContentsResult, MutationOptions } from '@superdoc/document-api';
-export declare function tocListWrapper(editor: Editor, query?: TocListQuery): TocListResult;
-export declare function tocGetWrapper(editor: Editor, input: TocGetInput): TocInfo;
-export declare function tocConfigureWrapper(editor: Editor, input: TocConfigureInput, options?: MutationOptions): TocMutationResult;
-export declare function tocUpdateWrapper(editor: Editor, input: TocUpdateInput, options?: MutationOptions): TocMutationResult;
-export declare function tocRemoveWrapper(editor: Editor, input: TocRemoveInput, options?: MutationOptions): TocMutationResult;
-export declare function createTableOfContentsWrapper(editor: Editor, input: CreateTableOfContentsInput, options?: MutationOptions): CreateTableOfContentsResult;
-//# sourceMappingURL=toc-wrappers.d.ts.map

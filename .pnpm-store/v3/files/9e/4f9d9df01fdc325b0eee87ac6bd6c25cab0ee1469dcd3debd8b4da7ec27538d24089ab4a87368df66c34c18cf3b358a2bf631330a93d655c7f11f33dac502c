@@ -1,7 +1,0 @@
-export function handleParagraphNode(params: import('../../v3/node-translator').SCEncoderConfig): Object;
-/**
- * Paragraph node handler entity
- * @type {Object} Handler entity
- */
-export const paragraphNodeHandlerEntity: Object;
-//# sourceMappingURL=paragraphNodeImporter.d.ts.map

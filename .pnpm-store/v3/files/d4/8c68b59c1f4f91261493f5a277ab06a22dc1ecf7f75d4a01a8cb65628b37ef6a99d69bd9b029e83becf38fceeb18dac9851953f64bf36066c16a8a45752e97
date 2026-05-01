@@ -1,2 +1,0 @@
-export function getSelectionMarks(): import('./types/index.js').Command;
-//# sourceMappingURL=getSelectionMarks.d.ts.map

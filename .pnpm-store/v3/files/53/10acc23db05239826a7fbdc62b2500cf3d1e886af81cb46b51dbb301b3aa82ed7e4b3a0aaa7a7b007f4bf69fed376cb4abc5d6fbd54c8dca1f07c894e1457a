@@ -1,6 +1,0 @@
-export function getLiveInlineMarksInRange({ doc, from, to }: {
-    doc: any;
-    from: any;
-    to: any;
-}): any[];
-//# sourceMappingURL=getLiveInlineMarksInRange.d.ts.map

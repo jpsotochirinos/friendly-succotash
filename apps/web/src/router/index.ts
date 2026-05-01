@@ -159,12 +159,33 @@ export const router = createRouter({
           component: () => import('../sandbox/patterns/MiscPills/MiscPillsSandbox.vue'),
           meta: { public: true },
         },
+        {
+          path: 'patterns/hierarchical-involved',
+          name: 'sandbox-hierarchical-involved',
+          component: () =>
+            import('../sandbox/patterns/HierarchicalInvolved/HierarchicalInvolvedSandbox.vue'),
+          meta: { public: true },
+        },
+        {
+          path: 'patterns/workbench-assignee-filter',
+          name: 'sandbox-workbench-assignee-filter',
+          component: () =>
+            import('../sandbox/patterns/WorkbenchAssigneeFilter/WorkbenchAssigneeFilterSandbox.vue'),
+          meta: { public: true },
+        },
         // ── Recipes ───────────────────────────────────────────────────────
         {
           path: 'recipes/trackables-cockpit',
           name: 'sandbox-trackables-cockpit',
           component: () =>
             import('../sandbox/recipes/TrackablesCockpit/TrackablesCockpitSandbox.vue'),
+          meta: { public: true },
+        },
+        {
+          path: 'recipes/expediente-v21',
+          name: 'sandbox-expediente-v21',
+          component: () =>
+            import('../sandbox/recipes/ExpedienteV21/ExpedienteV21Sandbox.vue'),
           meta: { public: true },
         },
         {

@@ -1,2 +1,0 @@
-export function isInlineNode(node: any, schema: any): any;
-//# sourceMappingURL=is-inline-node.d.ts.map

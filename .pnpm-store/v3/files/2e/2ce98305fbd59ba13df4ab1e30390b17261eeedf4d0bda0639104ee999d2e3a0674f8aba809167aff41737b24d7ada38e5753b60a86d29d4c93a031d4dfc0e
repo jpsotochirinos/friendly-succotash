@@ -1,3 +1,0 @@
-export function createDownload(data: Blob | ArrayBuffer | ArrayBufferView | string, name: string, extension: string): Blob;
-export function cleanName(currentName: string): string;
-//# sourceMappingURL=export.d.ts.map

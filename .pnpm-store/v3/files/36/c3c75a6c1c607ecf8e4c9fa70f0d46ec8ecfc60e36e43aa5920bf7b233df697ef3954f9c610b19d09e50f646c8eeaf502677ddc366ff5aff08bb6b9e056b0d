@@ -1,6 +1,0 @@
-/**
- * @param {Object} options
- * @returns {Object}
- */
-export function handleShapeTextboxImport({ params, pict }: Object): Object;
-//# sourceMappingURL=handle-shape-textbox-import.d.ts.map

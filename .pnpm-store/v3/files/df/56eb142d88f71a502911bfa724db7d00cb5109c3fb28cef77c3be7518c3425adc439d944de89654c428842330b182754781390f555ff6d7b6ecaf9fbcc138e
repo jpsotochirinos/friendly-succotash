@@ -1,3 +1,0 @@
-export const commentRangeStartHandlerEntity: import('./docxImporter.js').NodeHandlerEntry;
-export const commentRangeEndHandlerEntity: import('./docxImporter.js').NodeHandlerEntry;
-//# sourceMappingURL=commentRangeImporter.d.ts.map

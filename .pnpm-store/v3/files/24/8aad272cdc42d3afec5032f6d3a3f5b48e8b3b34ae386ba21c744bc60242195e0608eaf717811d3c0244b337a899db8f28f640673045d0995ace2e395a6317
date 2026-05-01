@@ -1,5 +1,0 @@
-export function findWordBounds(doc: any, pos: any): {
-    from: any;
-    to: any;
-} | undefined;
-//# sourceMappingURL=findWordBounds.d.ts.map

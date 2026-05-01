@@ -1,7 +1,0 @@
-import { PartId, PartDescriptor } from '../types.js';
-export declare function registerPartDescriptor<TPart>(descriptor: PartDescriptor<TPart>): void;
-export declare function getPartDescriptor(partId: PartId): PartDescriptor | undefined;
-export declare function hasPartDescriptor(partId: PartId): boolean;
-/** Removes all registered descriptors. Intended for testing only. */
-export declare function clearPartDescriptors(): void;
-//# sourceMappingURL=part-registry.d.ts.map

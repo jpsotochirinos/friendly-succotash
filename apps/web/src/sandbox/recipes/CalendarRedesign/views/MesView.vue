@@ -142,12 +142,15 @@ function chipFor(a: Actuacion) {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-height: 100%;
+  container-type: inline-size;
 }
 .mes__summary {
   font-size: 12px;
   color: var(--fg-muted);
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 0 2px;
 }
@@ -157,10 +160,13 @@ function chipFor(a: Actuacion) {
 .mes__grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: auto repeat(6, minmax(5.75rem, 1fr));
   background: var(--surface-raised);
   border: 1px solid var(--surface-border);
   border-radius: 8px;
   overflow: hidden;
+  flex: 1;
+  min-height: clamp(32rem, 68vh, 48rem);
 }
 .mes__dow {
   background: var(--surface-sunken);
@@ -180,7 +186,7 @@ function chipFor(a: Actuacion) {
   border-right: 1px solid var(--surface-border);
   border-bottom: 1px solid var(--surface-border);
   padding: 6px 8px;
-  min-height: 92px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -238,5 +244,15 @@ function chipFor(a: Actuacion) {
   font-size: 9px;
   color: var(--fg-subtle);
   font-weight: 600;
+}
+
+@container (max-width: 760px) {
+  .mes__grid {
+    overflow-x: auto;
+    grid-template-columns: repeat(7, minmax(7.25rem, 1fr));
+  }
+  .mes__cell {
+    min-height: 5.75rem;
+  }
 }
 </style>

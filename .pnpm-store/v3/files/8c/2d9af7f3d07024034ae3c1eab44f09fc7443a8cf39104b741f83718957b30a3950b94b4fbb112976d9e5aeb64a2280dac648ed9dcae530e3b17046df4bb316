@@ -1,4 +1,0 @@
-import { DecorationSet } from 'prosemirror-view';
-import { Plugin } from 'prosemirror-state';
-export function createDropcapPlugin(editor: any): Plugin<DecorationSet>;
-//# sourceMappingURL=dropcapPlugin.d.ts.map

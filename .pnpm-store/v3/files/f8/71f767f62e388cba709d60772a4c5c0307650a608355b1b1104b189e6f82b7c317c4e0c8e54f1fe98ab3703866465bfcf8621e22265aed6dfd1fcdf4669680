@@ -1,9 +1,0 @@
-import { Editor } from '../../core/Editor.js';
-import { Receipt, RevisionGuardOptions, TrackChangeInfo, TrackChangesAcceptAllInput, TrackChangesAcceptInput, TrackChangesGetInput, TrackChangesListInput, TrackChangesRejectAllInput, TrackChangesRejectInput, TrackChangesListResult } from '@superdoc/document-api';
-export declare function trackChangesListWrapper(editor: Editor, input?: TrackChangesListInput): TrackChangesListResult;
-export declare function trackChangesGetWrapper(editor: Editor, input: TrackChangesGetInput): TrackChangeInfo;
-export declare function trackChangesAcceptWrapper(editor: Editor, input: TrackChangesAcceptInput, options?: RevisionGuardOptions): Receipt;
-export declare function trackChangesRejectWrapper(editor: Editor, input: TrackChangesRejectInput, options?: RevisionGuardOptions): Receipt;
-export declare function trackChangesAcceptAllWrapper(editor: Editor, _input: TrackChangesAcceptAllInput, options?: RevisionGuardOptions): Receipt;
-export declare function trackChangesRejectAllWrapper(editor: Editor, _input: TrackChangesRejectAllInput, options?: RevisionGuardOptions): Receipt;
-//# sourceMappingURL=track-changes-wrappers.d.ts.map

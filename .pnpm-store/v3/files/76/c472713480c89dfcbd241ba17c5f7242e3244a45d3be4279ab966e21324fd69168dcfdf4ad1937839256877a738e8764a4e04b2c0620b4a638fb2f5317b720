@@ -1,2 +1,0 @@
-export function handleParagraphNode(params: import('../../../../node-translator/index.js').SCEncoderConfig): Object;
-//# sourceMappingURL=legacy-handle-paragraph-node.d.ts.map

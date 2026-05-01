@@ -1,7 +1,0 @@
-export function handler(params: import('../../v3/node-translator').SCEncoderConfig): Object;
-/**
- * Line break node handler entity
- * @type {Object} Handler entity
- */
-export const lineBreakNodeHandlerEntity: Object;
-//# sourceMappingURL=lineBreakImporter.d.ts.map

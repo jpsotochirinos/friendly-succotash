@@ -1,4 +1,0 @@
-export function renderCellBorderStyle(borders: import('../table-cell/helpers/createCellBorders.js').CellBorders | null | undefined): {
-    style: string;
-} | {};
-//# sourceMappingURL=renderCellBorderStyle.d.ts.map

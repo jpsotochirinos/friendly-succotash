@@ -18,7 +18,7 @@ export interface TrackableListItemDto {
   urgencia: TrackableListingUrgency;
   cliente: { id: string; nombre: string } | null;
   asignado: { id: string; nombre: string; avatarUrl?: string } | null;
-  proximoPlazo: { fecha: string; tipo: string; diasRestantes: number } | null;
+  proximoPlazo: { fecha: string; tipo: string; diasRestantes?: number } | null;
   ultimaActividad: string;
   contadores: {
     documentos: number;

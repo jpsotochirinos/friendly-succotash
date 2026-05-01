@@ -1,6 +1,0 @@
-/**
- * @param {Object} params
- * @returns {Object|null}
- */
-export function handleStructuredContentNode(params: Object): Object | null;
-//# sourceMappingURL=handle-structured-content-node.d.ts.map

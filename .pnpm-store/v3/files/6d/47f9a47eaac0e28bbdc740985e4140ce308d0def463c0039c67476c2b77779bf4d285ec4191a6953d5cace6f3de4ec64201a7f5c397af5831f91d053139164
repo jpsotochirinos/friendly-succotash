@@ -1,2 +1,0 @@
-export function parseRowHeight(element: HTMLElement): number | undefined;
-//# sourceMappingURL=parseRowHeight.d.ts.map

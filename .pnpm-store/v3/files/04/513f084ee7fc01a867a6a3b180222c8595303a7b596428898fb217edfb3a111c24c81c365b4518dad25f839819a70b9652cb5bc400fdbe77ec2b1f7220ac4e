@@ -1,9 +1,0 @@
-import { Editor } from '../../core/Editor.js';
-import { CaptionListInput, CaptionGetInput, CaptionInsertInput, CaptionUpdateInput, CaptionRemoveInput, CaptionConfigureInput, CaptionInfo, CaptionMutationResult, CaptionConfigResult, MutationOptions } from '@superdoc/document-api';
-export declare function captionsListWrapper(editor: Editor, query?: CaptionListInput): import('@superdoc/document-api').DiscoveryResult<import('@superdoc/document-api').DiscoveryItem<import('@superdoc/document-api').CaptionDomain>, undefined>;
-export declare function captionsGetWrapper(editor: Editor, input: CaptionGetInput): CaptionInfo;
-export declare function captionsInsertWrapper(editor: Editor, input: CaptionInsertInput, options?: MutationOptions): CaptionMutationResult;
-export declare function captionsUpdateWrapper(editor: Editor, input: CaptionUpdateInput, options?: MutationOptions): CaptionMutationResult;
-export declare function captionsRemoveWrapper(editor: Editor, input: CaptionRemoveInput, options?: MutationOptions): CaptionMutationResult;
-export declare function captionsConfigureWrapper(editor: Editor, input: CaptionConfigureInput, options?: MutationOptions): CaptionConfigResult;
-//# sourceMappingURL=caption-wrappers.d.ts.map

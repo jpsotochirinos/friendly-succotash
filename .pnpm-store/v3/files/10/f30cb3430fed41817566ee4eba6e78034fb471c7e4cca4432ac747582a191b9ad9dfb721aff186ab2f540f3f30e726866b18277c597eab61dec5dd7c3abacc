@@ -1,3 +1,0 @@
-import { Editor } from '../Editor.js';
-export declare function initPartsRuntime(editor: Editor): void;
-//# sourceMappingURL=init-parts-runtime.d.ts.map

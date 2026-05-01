@@ -1,7 +1,0 @@
-/**
- * Translates inline image
- * @param {Object} params - The parameters for translation.
- * @returns {Object} The XML representation.
- */
-export function translateInlineNode(params: Object): Object;
-//# sourceMappingURL=translate-inline-node.d.ts.map

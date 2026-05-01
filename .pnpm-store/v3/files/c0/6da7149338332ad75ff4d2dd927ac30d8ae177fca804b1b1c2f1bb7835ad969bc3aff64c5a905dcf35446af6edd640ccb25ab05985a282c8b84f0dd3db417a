@@ -1,4 +1,0 @@
-import { NodeTranslator } from '../../../node-translator/index.js';
-export const commentRangeStartTranslator: NodeTranslator;
-export const commentRangeEndTranslator: NodeTranslator;
-//# sourceMappingURL=comment-range-translator.d.ts.map

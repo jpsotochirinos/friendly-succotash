@@ -1,0 +1,28 @@
+/**
+ * CTA sólido con gradiente de marca (Zafiro → Real).
+ * Misma receta que el submit de login; usar en PrimeVue <Button class="alega-btn-cta-brand" />.
+ */
+.alega-btn-cta-brand.p-button {
+  background-color: transparent !important;
+  background-image: linear-gradient(135deg, var(--brand-zafiro) 0%, var(--brand-real) 100%) !important;
+  border-color: transparent !important;
+  border-radius: 0.625rem !important;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand-zafiro) 35%, transparent);
+  color: var(--fg-on-brand) !important;
+  font-weight: 600;
+}
+
+.alega-btn-cta-brand.p-button:not(:disabled):not(.p-disabled):hover {
+  filter: brightness(1.05);
+}
+
+.alega-btn-cta-brand.p-button:focus-visible {
+  outline: 2px solid var(--accent-ring);
+  outline-offset: 2px;
+}
+
+.alega-btn-cta-brand.p-button:disabled,
+.alega-btn-cta-brand.p-button.p-disabled {
+  opacity: 0.72;
+  filter: none;
+}

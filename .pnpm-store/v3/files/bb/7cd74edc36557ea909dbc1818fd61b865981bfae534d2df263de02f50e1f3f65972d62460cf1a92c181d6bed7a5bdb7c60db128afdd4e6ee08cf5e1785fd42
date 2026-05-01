@@ -1,5 +1,0 @@
-import { Editor } from '../../core/Editor.js';
-import { CreateParagraphInput, CreateParagraphResult, CreateHeadingInput, CreateHeadingResult, MutationOptions } from '@superdoc/document-api';
-export declare function createParagraphWrapper(editor: Editor, input: CreateParagraphInput, options?: MutationOptions): CreateParagraphResult;
-export declare function createHeadingWrapper(editor: Editor, input: CreateHeadingInput, options?: MutationOptions): CreateHeadingResult;
-//# sourceMappingURL=create-wrappers.d.ts.map

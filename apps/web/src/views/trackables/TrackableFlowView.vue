@@ -22,7 +22,7 @@
 
     <TabView v-model:activeIndex="activeTab" class="flex-1 flex flex-col trackable-tabs">
       <!-- Tab 1: Flujo (Kanban) -->
-      <TabPanel header="Flujo">
+      <TabPanel :value="0" header="Flujo">
         <div class="flex-1 overflow-x-auto p-4">
           <div class="flex gap-4 h-full">
             <div
@@ -87,12 +87,12 @@
       </TabPanel>
 
       <!-- Tab 2: Carpetas -->
-      <TabPanel header="Carpetas">
+      <TabPanel :value="1" header="Carpetas">
         <FolderBrowserView :trackable-id="trackableId" />
       </TabPanel>
 
       <!-- Tab 3: Calendario -->
-      <TabPanel header="Calendario">
+      <TabPanel :value="2" header="Calendario">
         <div class="p-6 space-y-6">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -140,7 +140,7 @@
       </TabPanel>
 
       <!-- Tab 4: Actividades -->
-      <TabPanel header="Actividades">
+      <TabPanel :value="3" header="Actividades">
         <div class="p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-3">
             <h2 class="text-lg font-semibold dark:text-gray-100">Actividades del cliente</h2>
@@ -223,7 +223,7 @@
       </TabPanel>
 
       <!-- Tab 5: Resumen (Dashboard) -->
-      <TabPanel header="Resumen">
+      <TabPanel :value="4" header="Resumen">
         <div class="p-6 space-y-6">
           <div class="flex items-center justify-between">
             <h2 class="text-lg font-semibold dark:text-gray-100">Resumen del cliente</h2>
@@ -364,12 +364,24 @@
 
           <div class="flex flex-col gap-1">
             <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Fecha de inicio</label>
-            <Calendar v-model="editingItem.startDate" date-format="dd/mm/yy" show-icon class="w-full" />
+            <Calendar
+              :model-value="dateFromIso(editingItem.startDate)"
+              date-format="dd/mm/yy"
+              show-icon
+              class="w-full"
+              @update:model-value="onEditStartDate"
+            />
           </div>
 
           <div class="flex flex-col gap-1">
             <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Fecha límite</label>
-            <Calendar v-model="editingItem.dueDate" date-format="dd/mm/yy" show-icon class="w-full" />
+            <Calendar
+              :model-value="dateFromIso(editingItem.dueDate)"
+              date-format="dd/mm/yy"
+              show-icon
+              class="w-full"
+              @update:model-value="onEditDueDate"
+            />
           </div>
 
           <div class="col-span-2 flex flex-col gap-1">
@@ -837,6 +849,29 @@ function formatDate(dateStr: string): string {
     month: '2-digit',
     year: 'numeric',
   });
+}
+
+function dateFromIso(iso: string | null | undefined): Date | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function oneDate(value: Date | Date[] | (Date | null)[] | null | undefined): Date | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function onEditStartDate(value: Date | Date[] | (Date | null)[] | null | undefined) {
+  if (!editingItem.value) return;
+  const date = oneDate(value);
+  editingItem.value.startDate = date ? date.toISOString() : undefined;
+}
+
+function onEditDueDate(value: Date | Date[] | (Date | null)[] | null | undefined) {
+  if (!editingItem.value) return;
+  const date = oneDate(value);
+  editingItem.value.dueDate = date ? date.toISOString() : undefined;
 }
 
 // ── Data loading ───────────────────────────────────────────────────────────────

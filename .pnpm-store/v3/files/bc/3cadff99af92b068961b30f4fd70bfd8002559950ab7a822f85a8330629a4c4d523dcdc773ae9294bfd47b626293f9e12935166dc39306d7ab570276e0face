@@ -1,1 +1,0 @@
-{"version":3,"file":"insertContent.d.ts","sourceRoot":"","sources":["../../../../../../../../super-editor/src/editors/v1/core/commands/insertContent.js"],"names":[],"mappings":"AAkBO,qCATI,MAAM,GAAC,MAAM,YAGrB;IAAyB,WAAW;IACV,YAAY;IACiE,oBAAoB,YAA1G,KAAK,CAAC;QAAC,OAAO,EAAE,MAAM,CAAC;QAAC,SAAS,EAAE,MAAM,CAAC;QAAC,KAAK,EAAE,MAAM,CAAA;KAAC,CAAC,KAAK,IAAI;IAC1D,wBAAwB;CAClD,YA6CA"}

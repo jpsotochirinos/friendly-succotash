@@ -1,3 +1,0 @@
-import { Node } from '../../core/Node.js';
-export const Bibliography: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=bibliography.d.ts.map

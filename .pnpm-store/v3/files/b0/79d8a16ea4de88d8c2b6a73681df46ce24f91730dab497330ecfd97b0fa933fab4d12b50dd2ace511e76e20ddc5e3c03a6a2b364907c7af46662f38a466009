@@ -1,3 +1,0 @@
-import { PartDescriptor } from '../types.js';
-export declare const contentTypesPartDescriptor: PartDescriptor;
-//# sourceMappingURL=content-types-part-descriptor.d.ts.map

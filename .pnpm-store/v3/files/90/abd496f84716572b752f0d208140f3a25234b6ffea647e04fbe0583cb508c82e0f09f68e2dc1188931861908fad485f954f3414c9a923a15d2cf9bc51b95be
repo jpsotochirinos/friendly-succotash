@@ -1,3 +1,0 @@
-import { CreateHeadlessToolbarOptions } from './types.js';
-export declare const subscribeToolbarEvents: (options: CreateHeadlessToolbarOptions, onChange: () => void) => (() => void);
-//# sourceMappingURL=subscribe-toolbar-events.d.ts.map

@@ -1,3 +1,0 @@
-import { Selection } from 'prosemirror-state';
-export function getViewModeSelectionWithoutStructuredContent(state: any): Selection | null;
-//# sourceMappingURL=getViewModeSelectionWithoutStructuredContent.d.ts.map

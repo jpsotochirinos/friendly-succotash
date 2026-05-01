@@ -1,9 +1,0 @@
-import { ToolbarContext } from '../types.js';
-export declare const createTrackChangesSelectionActionStateDeriver: (action: "accept" | "reject") => ({ context, superdoc }: {
-    context: ToolbarContext | null;
-    superdoc: Record<string, any>;
-}) => {
-    active: boolean;
-    disabled: boolean;
-};
-//# sourceMappingURL=track-changes.d.ts.map

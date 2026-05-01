@@ -1,8 +1,0 @@
-import { Editor } from '../../core/Editor.js';
-import { BookmarkListInput, BookmarksListResult, BookmarkGetInput, BookmarkInfo, BookmarkInsertInput, BookmarkRenameInput, BookmarkRemoveInput, BookmarkMutationResult, MutationOptions } from '@superdoc/document-api';
-export declare function bookmarksListWrapper(editor: Editor, query?: BookmarkListInput): BookmarksListResult;
-export declare function bookmarksGetWrapper(editor: Editor, input: BookmarkGetInput): BookmarkInfo;
-export declare function bookmarksInsertWrapper(editor: Editor, input: BookmarkInsertInput, options?: MutationOptions): BookmarkMutationResult;
-export declare function bookmarksRenameWrapper(editor: Editor, input: BookmarkRenameInput, options?: MutationOptions): BookmarkMutationResult;
-export declare function bookmarksRemoveWrapper(editor: Editor, input: BookmarkRemoveInput, options?: MutationOptions): BookmarkMutationResult;
-//# sourceMappingURL=bookmark-wrappers.d.ts.map

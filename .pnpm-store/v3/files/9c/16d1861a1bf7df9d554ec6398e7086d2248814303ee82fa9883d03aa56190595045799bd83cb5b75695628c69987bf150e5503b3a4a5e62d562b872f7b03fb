@@ -1,1 +1,0 @@
-{"version":3,"file":"history-adapter.d.ts","sourceRoot":"","sources":["../../../../../../../super-editor/src/editors/v1/document-api-adapters/history-adapter.ts"],"names":[],"mappings":"AAEA,OAAO,KAAK,EAAE,cAAc,EAAkD,MAAM,wBAAwB,CAAC;AAE7G,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,mBAAmB,CAAC;AAuChD,wBAAgB,oBAAoB,CAAC,MAAM,EAAE,MAAM,GAAG,cAAc,CAsDnE"}

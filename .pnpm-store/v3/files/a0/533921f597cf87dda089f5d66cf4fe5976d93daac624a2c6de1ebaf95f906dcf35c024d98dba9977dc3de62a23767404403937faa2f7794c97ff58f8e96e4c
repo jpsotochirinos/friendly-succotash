@@ -1,9 +1,0 @@
-export function getLinkedStyle(styleId: string, styles?: any[]): Object;
-export function getSpacingStyle(spacing: Object): Object;
-export function getSpacingStyleString(spacing: Object, marks: any[], isListItem: any): string;
-export function getMarksStyle(attrs: any[]): string;
-export function getQuickFormatList(editor: Object): any[];
-export function generateLinkedStyleString(linkedStyle: Object, basedOnStyle: Object, node: Object, parent: Object, _includeSpacing?: boolean): string;
-export function applyLinkedStyleToTransaction(tr: Object, editor: Object, style: Object): boolean;
-export function stepInsertsTextIntoStyledParagraph(tr: any, oldEditorState: any, step: any, stepIndex: any): boolean;
-//# sourceMappingURL=helpers.d.ts.map

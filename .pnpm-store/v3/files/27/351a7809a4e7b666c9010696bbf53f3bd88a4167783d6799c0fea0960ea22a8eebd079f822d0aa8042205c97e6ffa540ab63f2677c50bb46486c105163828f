@@ -1,3 +1,0 @@
-import { Node } from '../../core/Node.js';
-export const TableOfContents: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=table-of-contents.d.ts.map

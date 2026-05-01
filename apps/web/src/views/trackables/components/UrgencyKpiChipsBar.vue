@@ -3,26 +3,13 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { TrackableListingUrgency, TrackableListFacets } from '@/api/trackables';
 
-const props = withDefaults(
-  defineProps<{
-    facets: TrackableListFacets;
-    modelValue: TrackableListingUrgency | null;
-    /** Quick filter: expedientes asignados al usuario actual */
-    assignedToMeActive?: boolean;
-    /** Total en lista cuando el filtro «a mí» está activo (p. ej. totalRecords) */
-    mineCount?: number | null;
-    showMineChip?: boolean;
-  }>(),
-  {
-    assignedToMeActive: false,
-    mineCount: null,
-    showMineChip: true,
-  },
-);
+const props = defineProps<{
+  facets: TrackableListFacets;
+  modelValue: TrackableListingUrgency | null;
+}>();
 
 const emit = defineEmits<{
   'update:modelValue': [v: TrackableListingUrgency | null];
-  toggleAssignedToMe: [];
 }>();
 
 const { t } = useI18n();
@@ -142,24 +129,6 @@ function onChip(key: typeof chips.value[number]['key']) {
       <i :class="[chip.icon, 'listing-urgency-chip__icon text-[11px]']" aria-hidden="true" />
       <span class="listing-urgency-chip__label">{{ chip.label }}</span>
       <span class="listing-urgency-chip__count tabular-nums">{{ chip.count }}</span>
-    </button>
-    <button
-      v-if="showMineChip"
-      type="button"
-      class="listing-urgency-chip listing-mine-chip"
-      :class="{ 'listing-urgency-chip--active': assignedToMeActive }"
-      :style="{ '--chip-accent': 'var(--accent)' }"
-      data-chip="mine"
-      :aria-pressed="assignedToMeActive ? 'true' : 'false'"
-      :aria-label="t('trackables.listingChipMineAria')"
-      @click="emit('toggleAssignedToMe')"
-    >
-      <i class="pi pi-user listing-urgency-chip__icon text-[11px]" aria-hidden="true" />
-      <span class="listing-urgency-chip__label">{{ t('trackables.listingChipMine') }}</span>
-      <span
-        v-if="assignedToMeActive && mineCount != null && mineCount >= 0"
-        class="listing-urgency-chip__count tabular-nums"
-      >{{ mineCount }}</span>
     </button>
   </div>
 </template>

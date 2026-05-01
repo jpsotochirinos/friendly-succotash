@@ -1,3 +1,0 @@
-import { Node } from '../../core/Node.js';
-export const SequenceField: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=sequence-field.d.ts.map

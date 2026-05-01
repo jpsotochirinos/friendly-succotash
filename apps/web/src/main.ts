@@ -11,6 +11,7 @@ import { i18n } from './i18n/index';
 import { AlegaPreset } from './theme/alegaPreset';
 import { primeVueLocaleEs } from './config/primeVueLocaleEs';
 import './assets/main.css';
+import './styles/alega-cta-brand-button.css';
 
 const app = createApp(App);
 

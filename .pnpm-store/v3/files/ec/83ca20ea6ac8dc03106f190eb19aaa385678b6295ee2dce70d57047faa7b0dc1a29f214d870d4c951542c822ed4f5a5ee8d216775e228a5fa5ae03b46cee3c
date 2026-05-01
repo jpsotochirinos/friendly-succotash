@@ -1,3 +1,0 @@
-import { Plugin } from 'prosemirror-state';
-export function createLeadingCaretPlugin(): Plugin<any>;
-//# sourceMappingURL=leadingCaretPlugin.d.ts.map

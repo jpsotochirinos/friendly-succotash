@@ -1,2 +1,0 @@
-export function createCell(cellType: any, cellContent?: null, attrs?: null): any;
-//# sourceMappingURL=createCell.d.ts.map

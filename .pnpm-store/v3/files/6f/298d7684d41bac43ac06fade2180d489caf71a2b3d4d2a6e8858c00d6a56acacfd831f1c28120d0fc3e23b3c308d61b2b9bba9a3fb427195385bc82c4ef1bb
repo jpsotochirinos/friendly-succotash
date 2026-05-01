@@ -1,5 +1,0 @@
-export function splitBlock({ keepMarks, attrsToRemoveOverride }?: {
-    keepMarks?: boolean | undefined;
-    attrsToRemoveOverride?: never[] | undefined;
-}): (props: any) => boolean;
-//# sourceMappingURL=splitBlock.d.ts.map

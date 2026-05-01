@@ -1,7 +1,0 @@
-/**
- * Translates anchor image
- * @param {Object} params - The parameters for translation.
- * @returns {Object} The XML representation.
- */
-export function translateAnchorNode(params: Object): Object;
-//# sourceMappingURL=translate-anchor-node.d.ts.map

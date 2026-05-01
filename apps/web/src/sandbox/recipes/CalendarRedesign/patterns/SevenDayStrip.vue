@@ -157,6 +157,7 @@ function urgencyOf(a: Actuacion): UrgencyLevel {
   border: 1px solid var(--surface-border);
   border-radius: 8px;
   overflow: hidden;
+  container-type: inline-size;
 }
 .strip__row {
   display: grid;
@@ -258,6 +259,21 @@ function urgencyOf(a: Actuacion): UrgencyLevel {
   .strip__summary {
     grid-column: 2;
     text-align: left;
+  }
+}
+
+@container (max-width: 520px) {
+  .strip__row {
+    grid-template-columns: 84px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 6px 10px;
+    padding: 9px 11px;
+  }
+  .strip__summary {
+    grid-column: 2;
+    text-align: left;
+    white-space: normal;
   }
 }
 </style>

@@ -1,4 +1,0 @@
-import { CreateTableInput, CreateTableResult, MutationOptions } from '@superdoc/document-api';
-import { Editor } from '../../core/Editor.js';
-export declare function createTableWrapper(editor: Editor, input: CreateTableInput, options?: MutationOptions): CreateTableResult;
-//# sourceMappingURL=create-table-wrapper.d.ts.map

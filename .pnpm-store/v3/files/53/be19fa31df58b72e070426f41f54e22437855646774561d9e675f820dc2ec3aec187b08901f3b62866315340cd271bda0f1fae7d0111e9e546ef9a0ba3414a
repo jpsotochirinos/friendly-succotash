@@ -1,6 +1,0 @@
-export function isOffValue(value: unknown): boolean;
-/** @type {Record<string, (attrs?: Record<string, unknown>) => boolean>} */
-export const negationChecks: Record<string, (attrs?: Record<string, unknown>) => boolean>;
-export function isNegatedMark(name: string, attrs?: Record<string, unknown>): boolean;
-export default isNegatedMark;
-//# sourceMappingURL=format-negation.d.ts.map

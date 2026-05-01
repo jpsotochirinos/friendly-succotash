@@ -1,5 +1,0 @@
-export function setSectionHeaderFooterAtSelection({ headerInches, footerInches }?: {
-    headerInches?: number;
-    footerInches?: number;
-}): import('./types/index.js').Command;
-//# sourceMappingURL=setSectionHeaderFooterAtSelection.d.ts.map

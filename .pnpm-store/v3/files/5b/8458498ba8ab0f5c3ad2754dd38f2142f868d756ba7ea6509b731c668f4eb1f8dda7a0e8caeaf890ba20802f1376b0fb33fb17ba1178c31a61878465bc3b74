@@ -1,8 +1,0 @@
-import { Editor } from '../../core/Editor.js';
-import { BlocksDeleteInput, BlocksDeleteResult, BlocksListInput, BlocksListResult, BlocksDeleteRangeInput, BlocksDeleteRangeResult, MutationOptions } from '@superdoc/document-api';
-import { BlockCandidate } from '../helpers/node-address-resolver.js';
-export declare function collectTopLevelBlocks(editor: Editor): BlockCandidate[];
-export declare function blocksListWrapper(editor: Editor, input?: BlocksListInput): BlocksListResult;
-export declare function blocksDeleteWrapper(editor: Editor, input: BlocksDeleteInput, options?: MutationOptions): BlocksDeleteResult;
-export declare function blocksDeleteRangeWrapper(editor: Editor, input: BlocksDeleteRangeInput, options?: MutationOptions): BlocksDeleteRangeResult;
-//# sourceMappingURL=blocks-wrappers.d.ts.map

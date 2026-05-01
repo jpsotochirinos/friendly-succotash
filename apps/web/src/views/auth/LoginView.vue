@@ -53,7 +53,7 @@
 
       <Button
         type="submit"
-        class="login-submit-btn w-full border-0 font-semibold !text-[var(--fg-on-brand)]"
+        class="alega-btn-cta-brand w-full border-0"
         :label="$t('auth.login')"
         :loading="loading"
       />
@@ -192,18 +192,3 @@ async function handleLogin() {
   }
 }
 </script>
-
-<style scoped>
-.login-submit-btn {
-  background-image: linear-gradient(135deg, var(--brand-zafiro) 0%, var(--brand-real) 100%) !important;
-  border-radius: 0.625rem;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand-zafiro) 35%, transparent);
-}
-.login-submit-btn:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-.login-submit-btn:focus-visible {
-  outline: 2px solid var(--accent-ring);
-  outline-offset: 2px;
-}
-</style>

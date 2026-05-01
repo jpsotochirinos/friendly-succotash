@@ -1,2 +1,0 @@
-export function createTable(schema: Object, rowsCount: number, colsCount: number, withHeaderRow: boolean, cellContent?: Object, columnWidths?: number[], tableAttrsOverride?: Object): Object;
-//# sourceMappingURL=createTable.d.ts.map

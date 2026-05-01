@@ -1,5 +1,0 @@
-export function setBodyHeaderFooter({ headerInches, footerInches }?: {
-    headerInches?: number;
-    footerInches?: number;
-}): import('./types/index.js').Command;
-//# sourceMappingURL=setBodyHeaderFooter.d.ts.map

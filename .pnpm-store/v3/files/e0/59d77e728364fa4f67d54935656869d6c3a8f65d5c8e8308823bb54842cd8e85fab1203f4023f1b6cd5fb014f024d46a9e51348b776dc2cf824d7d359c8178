@@ -1,8 +1,0 @@
-import { Extension } from '../../core/Extension.js';
-/**
- * @module FieldUpdate
- * @sidebarTitle Field Update
- * @shortcut F9 | updateFieldsInSelection | Update fields in selection
- */
-export const FieldUpdate: Extension<Record<string, never>, Record<string, never>>;
-//# sourceMappingURL=field-update.d.ts.map

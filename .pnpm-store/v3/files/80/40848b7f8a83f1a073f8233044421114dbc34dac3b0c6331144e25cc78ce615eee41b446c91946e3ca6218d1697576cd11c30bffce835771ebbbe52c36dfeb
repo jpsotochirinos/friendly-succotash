@@ -1,5 +1,0 @@
-import { Extension } from '../Extension.js';
-export const PositionTrackerExtension: Extension<Record<string, never>, {
-    tracker: null;
-}>;
-//# sourceMappingURL=position-tracker.d.ts.map

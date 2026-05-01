@@ -1,1 +1,0 @@
-{"version":3,"file":"extract-adapter.d.ts","sourceRoot":"","sources":["../../../../../../../super-editor/src/editors/v1/document-api-adapters/extract-adapter.ts"],"names":[],"mappings":"AAAA;;;;;GAKG;AAEH,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,mBAAmB,CAAC;AAChD,OAAO,KAAK,EACV,YAAY,EACZ,aAAa,EAKd,MAAM,wBAAwB,CAAC;AA0DhC,wBAAgB,cAAc,CAAC,MAAM,EAAE,MAAM,EAAE,MAAM,EAAE,YAAY,GAAG,aAAa,CAOlF"}

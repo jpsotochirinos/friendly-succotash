@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import Button from 'primevue/button';
-import SelectButton from 'primevue/selectbutton';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
-import InputText from 'primevue/inputtext';
 import Dialog from 'primevue/dialog';
+import CalendarFilterTrigger from '@/views/calendar/components/CalendarFilterTrigger.vue';
+import CalendarProductFrameHeading from '@/views/calendar/components/CalendarProductFrameHeading.vue';
+import CalendarScopeSelect from '@/views/calendar/components/CalendarScopeSelect.vue';
+import CalendarToolbarSearch from '@/views/calendar/components/CalendarToolbarSearch.vue';
+import CalendarUrgencyLegend from '@/views/calendar/components/CalendarUrgencyLegend.vue';
+import CalendarViewSelect from '@/views/calendar/components/CalendarViewSelect.vue';
 import {
   buildActuaciones,
   buildSinoePendientes,
-  USUARIOS,
   EXPEDIENTES,
   findExpediente,
   type Actuacion,
@@ -21,7 +22,6 @@ import SemanaView from './views/SemanaView.vue';
 import MesView from './views/MesView.vue';
 import ExpedienteView from './views/ExpedienteView.vue';
 import MiniCalendar from './patterns/MiniCalendar.vue';
-import LegendBar from './patterns/LegendBar.vue';
 import ExampleFrame from '../../_shared/ExampleFrame.vue';
 
 type ViewMode = 'hoy' | 'semana' | 'mes' | 'expediente';
@@ -34,6 +34,7 @@ const navDate = ref(new Date(today));
 const view = ref<ViewMode>('hoy');
 const scope = ref<Scope>('team');
 const search = ref('');
+const activeToolbarFilters = ref<string[]>([]);
 const miUsuarioId = 'u-edgar';
 
 const allActuaciones = ref<Actuacion[]>(buildActuaciones(today));
@@ -70,10 +71,16 @@ const scopeOptions = [
 ];
 
 const viewOptions = [
-  { label: 'Hoy', value: 'hoy' as ViewMode, icon: 'pi pi-circle-fill' },
+  { label: 'Hoy', value: 'hoy' as ViewMode, icon: '' },
   { label: 'Semana', value: 'semana' as ViewMode, icon: 'pi pi-calendar' },
   { label: 'Mes', value: 'mes' as ViewMode, icon: 'pi pi-th-large' },
   { label: 'Por expediente', value: 'expediente' as ViewMode, icon: 'pi pi-folder' },
+];
+
+const toolbarFilters = [
+  { key: 'kinds', label: 'Tipos', icon: 'pi pi-th-large' },
+  { key: 'priority', label: 'Prioridad', icon: 'pi pi-flag' },
+  { key: 'assignee', label: 'Asignado', icon: 'pi pi-user-plus' },
 ];
 
 function navPrev() {
@@ -149,6 +156,29 @@ const rangeTitle = computed(() => {
   return fmtFechaLarga(navDate.value).replace(/^\w/, (c) => c.toUpperCase());
 });
 
+const navDayOfMonth = computed(() => navDate.value.getDate());
+
+const frameTitle = computed(() => {
+  if (view.value === 'hoy') return rangeTitle.value;
+  if (view.value === 'semana') return 'Semana';
+  if (view.value === 'mes') return rangeTitle.value;
+  return 'Por expediente';
+});
+
+const frameSubtitle = computed(() => {
+  if (view.value === 'hoy') return scope.value === 'mine' ? 'Mi agenda del día' : 'Agenda del despacho';
+  if (view.value === 'semana') return rangeTitle.value;
+  if (view.value === 'mes') return 'Resumen mensual con plazos, audiencias y feriados';
+  return rangeTitle.value;
+});
+
+function toggleToolbarFilter(key: string) {
+  const next = new Set(activeToolbarFilters.value);
+  if (next.has(key)) next.delete(key);
+  else next.add(key);
+  activeToolbarFilters.value = Array.from(next);
+}
+
 // Selection events
 const drawerOpen = ref(false);
 const selected = ref<Actuacion | null>(null);
@@ -189,7 +219,7 @@ function selectDay(d: Date) {
         <MiniCalendar v-model="navDate" :actuaciones="filteredActuaciones" />
         <div class="cal-redesign__sb-section">
           <h3 class="cal-redesign__sb-title">Resumen del mes</h3>
-          <ul class="cal-redesign__sb-stats" role="list">
+          <ul class="cal-redesign__sb-stats">
             <li
               v-for="row in monthSummaryStats"
               :key="row.key"
@@ -214,90 +244,90 @@ function selectDay(d: Date) {
         </div>
         <div class="cal-redesign__sb-section">
           <h3 class="cal-redesign__sb-title">Leyenda</h3>
-          <LegendBar />
+          <CalendarUrgencyLegend />
         </div>
       </aside>
 
       <main class="cal-redesign__main">
         <div class="cal-redesign__toolbar">
           <div class="cal-redesign__toolbar-primary">
-            <div class="cal-redesign__toolbar-track">
-              <div class="cal-redesign__nav">
-                <Button
-                  icon="pi pi-chevron-left"
-                  outlined
-                  size="small"
-                  aria-label="Anterior"
-                  @click="navPrev"
-                />
-                <Button
-                  icon="pi pi-chevron-right"
-                  outlined
-                  size="small"
-                  aria-label="Siguiente"
-                  @click="navNext"
-                />
-                <Button label="Hoy" outlined size="small" @click="navToday" />
+            <div class="cal-redesign__toolbar-primary-tail">
+              <div class="cal-redesign__toolbar-quick" role="toolbar" aria-label="Selector de calendario">
+                <div class="cal-redesign__toolbar-quick-end">
+                  <CalendarViewSelect
+                    :model-value="view"
+                    :options="viewOptions"
+                    :day-of-month="navDayOfMonth"
+                    class="cal-redesign__views"
+                    a11y-label="Vista del calendario"
+                    @update:model-value="(v) => (view = v as ViewMode)"
+                  />
+                </div>
+                <span class="cal-redesign__toolbar-quick-sep" aria-hidden="true" />
+                <div class="cal-redesign__toolbar-quick-start">
+                  <CalendarScopeSelect
+                    :model-value="scope"
+                    :options="scopeOptions"
+                    class="cal-redesign__scope"
+                    a11y-label="Ámbito"
+                    @update:model-value="(v) => (scope = v as Scope)"
+                  />
+                </div>
               </div>
-              <h2 class="cal-redesign__range">{{ rangeTitle }}</h2>
-            </div>
-            <div class="cal-redesign__toolbar-quick">
-              <SelectButton
-                v-model="scope"
-                :options="scopeOptions"
-                option-label="label"
-                option-value="value"
-                :allow-empty="false"
-                size="small"
-                class="cal-redesign__scope"
-                aria-label="Ámbito"
-              />
             </div>
           </div>
           <div class="cal-redesign__toolbar-actions">
-            <SelectButton
-              v-model="view"
-              :options="viewOptions"
-              option-label="label"
-              option-value="value"
-              :allow-empty="false"
-              size="small"
-              class="cal-redesign__views"
-              aria-label="Vista del calendario"
-            >
-              <template #option="{ option }">
-                <span class="cal-redesign__view-opt">
-                  <i :class="option.icon" aria-hidden="true" />
-                  <span>{{ option.label }}</span>
-                </span>
-              </template>
-            </SelectButton>
-            <IconField class="cal-redesign__search-field">
-              <InputIcon class="pi pi-search" />
-              <InputText
-                v-model="search"
-                placeholder="Buscar plazo, expediente, cliente…"
-                size="small"
-                class="cal-redesign__search"
-                aria-label="Buscar en el calendario"
-                name="cal-redesign-search"
-                autocomplete="off"
-              />
-            </IconField>
-          </div>
-        </div>
-
-        <ExampleFrame v-if="view === 'hoy'" title="Vista Hoy" description="Bloque A (cabecera) + B (chips) + C (Mi día) + D (próximos 7 días).">
-          <template #actions>
+            <CalendarToolbarSearch
+              v-model="search"
+              class="cal-redesign__search-field"
+              placeholder="Buscar plazo, expediente, cliente…"
+              a11y-label="Buscar en el calendario"
+              name="cal-redesign-search"
+            />
+            <div class="cal-redesign__toolbar-filters-inline">
+              <div class="cal-toolbar-filters" aria-label="Filtros compactos">
+                <CalendarFilterTrigger
+                  v-for="filter in toolbarFilters"
+                  :key="filter.key"
+                  :a11y-label="filter.label"
+                  :label="filter.label"
+                  :icon="filter.icon"
+                  :active="activeToolbarFilters.includes(filter.key)"
+                  @toggle="toggleToolbarFilter(filter.key)"
+                />
+                <button
+                  v-if="activeToolbarFilters.length"
+                  type="button"
+                  class="cal-toolbar-filters__reset"
+                  @click="activeToolbarFilters = []"
+                >
+                  <i class="pi pi-filter-slash" aria-hidden="true" />
+                  Limpiar
+                </button>
+              </div>
+            </div>
             <Button
               icon="pi pi-plus"
-              label="Agregar"
+              label="Agregar actividad"
               size="small"
               outlined
               severity="secondary"
-              class="cal-redesign__add-btn"
+              class="cal-redesign__add-btn cal-redesign__toolbar-add"
               aria-label="Agregar actividad"
               @click="openComposer()"
+            />
+          </div>
+        </div>
+
+        <ExampleFrame v-if="view === 'hoy'">
+          <template #heading>
+            <CalendarProductFrameHeading
+              :primary="frameTitle"
+              :secondary="frameSubtitle"
+              nav-prev-label="Anterior"
+              nav-next-label="Siguiente"
+              @prev="navPrev"
+              @next="navNext"
             />
           </template>
           <HoyView
@@ -311,49 +341,43 @@ function selectDay(d: Date) {
           />
         </ExampleFrame>
 
-        <ExampleFrame v-else-if="view === 'semana'" title="Vista Semana" description="7 columnas, audiencias arriba con hora, plazos abajo. Feriados y fines de semana atenuados.">
-          <template #actions>
-            <Button
-              icon="pi pi-plus"
-              label="Agregar"
-              size="small"
-              outlined
-              severity="secondary"
-              class="cal-redesign__add-btn"
-              aria-label="Agregar actividad"
-              @click="openComposer()"
+        <ExampleFrame v-else-if="view === 'semana'">
+          <template #heading>
+            <CalendarProductFrameHeading
+              :primary="frameTitle"
+              :secondary="frameSubtitle"
+              nav-prev-label="Anterior"
+              nav-next-label="Siguiente"
+              @prev="navPrev"
+              @next="navNext"
             />
           </template>
           <SemanaView :start-date="navDate" :actuaciones="filteredActuaciones" @select="openActuacion" />
         </ExampleFrame>
 
-        <ExampleFrame v-else-if="view === 'mes'" title="Vista Mes" description="Grilla 6×7. Color de evento refleja urgencia máxima del día.">
-          <template #actions>
-            <Button
-              icon="pi pi-plus"
-              label="Agregar"
-              size="small"
-              outlined
-              severity="secondary"
-              class="cal-redesign__add-btn"
-              aria-label="Agregar actividad"
-              @click="openComposer()"
+        <ExampleFrame v-else-if="view === 'mes'">
+          <template #heading>
+            <CalendarProductFrameHeading
+              :primary="frameTitle"
+              :secondary="frameSubtitle"
+              nav-prev-label="Anterior"
+              nav-next-label="Siguiente"
+              @prev="navPrev"
+              @next="navNext"
             />
           </template>
           <MesView :month-date="navDate" :actuaciones="filteredActuaciones" @select-day="selectDay" />
         </ExampleFrame>
 
-        <ExampleFrame v-else title="Vista Por expediente" description="Lista de expedientes ordenada por urgencia. Mini-timeline con próximas 5 actuaciones.">
-          <template #actions>
-            <Button
-              icon="pi pi-plus"
-              label="Agregar"
-              size="small"
-              outlined
-              severity="secondary"
-              class="cal-redesign__add-btn"
-              aria-label="Agregar actividad"
-              @click="openComposer()"
+        <ExampleFrame v-else>
+          <template #heading>
+            <CalendarProductFrameHeading
+              :primary="frameTitle"
+              :secondary="frameSubtitle"
+              nav-prev-label="Anterior"
+              nav-next-label="Siguiente"
+              @prev="navPrev"
+              @next="navNext"
             />
           </template>
           <ExpedienteView :actuaciones="filteredActuaciones" @open="openActuacion" @add="openComposer" />
@@ -504,59 +528,207 @@ function selectDay(d: Date) {
   gap: 12px;
   min-width: 0;
 }
-/* Compact command bar: tiempo primero; filtros/action sin competir por jerarquía. */
+/* Product command bar: vistas y alcance arriba; búsqueda/filtros/CTA abajo. */
 .cal-redesign__toolbar {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
-  padding: 8px 10px;
+  gap: 0;
+  padding: 0;
   border-radius: 10px;
   border: 1px solid var(--surface-border);
-  background: color-mix(in srgb, var(--surface-raised) 92%, var(--surface-sunken));
+  background: var(--surface-raised);
+  overflow: hidden;
 }
 .cal-redesign__toolbar-primary {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px 12px;
+  flex-flow: row nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
   width: 100%;
   min-width: 0;
+  min-height: 2.75rem;
+  border-bottom: 1px solid var(--surface-border);
+  background: color-mix(in srgb, var(--surface-sunken) 88%, var(--surface-raised));
 }
-.cal-redesign__toolbar-track {
+.cal-redesign__toolbar-primary-tail {
+  flex: 1 1 0%;
+  min-width: 0;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-  min-width: 0;
-  flex: 1 1 18rem;
-}
-.cal-redesign__nav {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: center;
-}
-.cal-redesign__range {
-  margin: 0;
-  font-size: clamp(0.95rem, 0.9rem + 0.22vw, 1.125rem);
-  font-weight: 600;
-  color: var(--fg-default);
-  text-transform: capitalize;
-  line-height: 1.2;
-  min-width: 0;
-  text-wrap: balance;
+  align-items: stretch;
 }
 .cal-redesign__toolbar-quick {
   display: flex;
-  flex-wrap: wrap;
+  flex-flow: row nowrap;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+}
+.cal-redesign__toolbar-quick-end {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: stretch;
+}
+.cal-redesign__toolbar-quick-start {
+  flex: 0 0 auto;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: stretch;
+}
+.cal-redesign__toolbar-quick-sep {
+  align-self: stretch;
+  width: 1px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--surface-border) 92%, transparent);
+}
+.cal-redesign__views,
+.cal-redesign__scope {
+  align-self: stretch;
+  display: flex;
+  align-items: stretch;
+}
+.cal-redesign__toolbar-quick .cal-redesign__scope :deep(.p-selectbutton),
+.cal-redesign__toolbar-quick .cal-redesign__views :deep(.p-selectbutton) {
+  display: flex;
+  align-items: stretch;
+  min-height: 2.75rem;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 0 !important;
+  flex-wrap: nowrap;
+  gap: 0;
+}
+.cal-redesign__toolbar-quick :deep(.p-togglebutton),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton:first-child),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton:last-child) {
+  align-self: stretch;
+  flex: 0 0 auto;
+  height: auto;
+  min-height: 2.75rem;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+}
+.cal-redesign__toolbar-quick :deep(.p-togglebutton-checked) {
+  background: var(--surface-raised) !important;
+  color: var(--fg-default) !important;
+  box-shadow: inset 0 0 0 1px var(--surface-border) !important;
+}
+.cal-redesign__toolbar-quick :deep(.p-togglebutton:not(.p-togglebutton-checked)) {
+  background: transparent !important;
+  color: var(--fg-muted) !important;
+}
+.cal-redesign__toolbar-quick :deep(.p-togglebutton .p-togglebutton-content),
+.cal-redesign__toolbar-quick :deep(.p-togglebutton-checked .p-togglebutton-content) {
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+.cal-redesign__toolbar-quick :deep(.p-togglebutton-content) {
+  display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
+  justify-content: center;
+  min-height: 2.75rem;
+  width: 100%;
+  padding-block: 0;
+  padding-inline: 0.6rem 0.7rem;
+}
+.cal-redesign__toolbar-actions {
+  display: grid;
+  grid-template-columns: minmax(140px, min(22rem, 360px)) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 6px 12px 8px;
+  background: var(--surface-raised);
+}
+.cal-redesign__search-field {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+}
+.cal-redesign__search-field :deep(.p-inputtext) {
+  line-height: 1.25;
+}
+.cal-redesign__search {
+  width: 100%;
   min-width: 0;
 }
-/* Compact CTA in ExampleFrame header (moved from toolbar). */
+.cal-redesign__views {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.cal-redesign__view-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+.cal-redesign__view-dayball {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  min-width: 1.25rem;
+  border-radius: 9999px;
+  font-size: 8.5px;
+  font-weight: 700;
+  font-feature-settings: 'tnum' 1;
+  line-height: 1;
+  border: 1.5px solid color-mix(in srgb, currentColor 55%, transparent);
+  color: inherit;
+}
+.cal-redesign__views :deep(.p-togglebutton-checked) .cal-redesign__view-dayball {
+  background: color-mix(in srgb, var(--brand-zafiro, var(--accent)) 14%, var(--surface-raised));
+  color: var(--brand-zafiro, var(--accent));
+  border-color: color-mix(in srgb, var(--brand-zafiro, var(--accent)) 40%, var(--surface-border));
+}
+.cal-redesign__toolbar-filters-inline {
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+.cal-toolbar-filters {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+.cal-toolbar-filters__reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2rem;
+  padding-inline: 0.55rem;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--brand-zafiro, var(--accent)) 42%, var(--surface-border));
+  background: color-mix(in srgb, var(--brand-zafiro, var(--accent)) 12%, var(--surface-raised));
+  color: var(--brand-zafiro, var(--accent));
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+}
 .cal-redesign__add-btn.cal-redesign__add-btn {
   gap: 0.3rem;
   padding-block: 0.2rem;
@@ -570,41 +742,9 @@ function selectDay(d: Date) {
 .cal-redesign__add-btn :deep(.p-button-label) {
   font-weight: 600;
 }
-.cal-redesign__toolbar-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 10px;
-  width: 100%;
-  min-width: 0;
-}
-.cal-redesign__search-field {
-  flex: 1 1 16rem;
-  min-width: 140px;
-  max-width: 360px;
-  display: flex;
-  align-items: center;
-}
-.cal-redesign__search-field :deep(.p-inputtext) {
-  line-height: 1.25;
-}
-.cal-redesign__search {
-  width: 100%;
-  min-width: 0;
-}
-.cal-redesign__views {
-  flex: 0 1 auto;
-  min-width: 0;
-}
-.cal-redesign__views :deep(.p-selectbutton) {
-  flex-wrap: wrap;
-}
-.cal-redesign__view-opt {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
+.cal-redesign__toolbar-add {
+  justify-self: end;
+  width: max-content;
 }
 
 .cal-redesign__detail-row {
@@ -630,13 +770,39 @@ function selectDay(d: Date) {
   }
   .cal-redesign__toolbar-primary {
     flex-direction: column;
-    align-items: stretch;
+    min-height: 0;
   }
-  .cal-redesign__toolbar-track {
-    flex-basis: auto;
+  .cal-redesign__toolbar-primary-tail {
+    width: 100%;
   }
   .cal-redesign__toolbar-quick {
-    justify-content: stretch;
+    flex-wrap: wrap;
+    align-items: stretch;
+    min-height: 0;
+  }
+  .cal-redesign__toolbar-quick-end {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+  }
+  .cal-redesign__toolbar-quick-sep {
+    flex-basis: 100%;
+    width: 100%;
+    height: 1px;
+    min-height: 1px;
+  }
+  .cal-redesign__toolbar-quick-start {
+    flex: 1 1 100%;
+    width: 100%;
+    min-height: 2.75rem;
+    justify-content: flex-start;
+  }
+  .cal-redesign__toolbar-quick :deep(.p-togglebutton),
+  .cal-redesign__toolbar-quick-start :deep(.p-togglebutton) {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 2.5rem;
   }
   .cal-redesign__views {
     width: 100%;
@@ -644,15 +810,22 @@ function selectDay(d: Date) {
   }
   .cal-redesign__views :deep(.p-selectbutton) {
     width: 100%;
+    flex-wrap: wrap;
     justify-content: stretch;
+  }
+  .cal-redesign__scope :deep(.p-selectbutton) {
+    width: 100%;
   }
   .cal-redesign__toolbar-actions {
-    justify-content: stretch;
+    grid-template-columns: 1fr;
   }
   .cal-redesign__search-field {
-    flex: 1 1 auto;
     max-width: none;
     min-width: 0;
+  }
+  .cal-redesign__toolbar-add {
+    justify-self: stretch;
+    width: 100%;
   }
 }
 
@@ -665,13 +838,39 @@ function selectDay(d: Date) {
   }
   .cal-redesign__toolbar-primary {
     flex-direction: column;
-    align-items: stretch;
+    min-height: 0;
   }
-  .cal-redesign__toolbar-track {
-    flex-basis: auto;
+  .cal-redesign__toolbar-primary-tail {
+    width: 100%;
   }
   .cal-redesign__toolbar-quick {
-    justify-content: stretch;
+    flex-wrap: wrap;
+    align-items: stretch;
+    min-height: 0;
+  }
+  .cal-redesign__toolbar-quick-end {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+  }
+  .cal-redesign__toolbar-quick-sep {
+    flex-basis: 100%;
+    width: 100%;
+    height: 1px;
+    min-height: 1px;
+  }
+  .cal-redesign__toolbar-quick-start {
+    flex: 1 1 100%;
+    width: 100%;
+    min-height: 2.75rem;
+    justify-content: flex-start;
+  }
+  .cal-redesign__toolbar-quick :deep(.p-togglebutton),
+  .cal-redesign__toolbar-quick-start :deep(.p-togglebutton) {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 2.5rem;
   }
   .cal-redesign__views {
     width: 100%;
@@ -679,15 +878,22 @@ function selectDay(d: Date) {
   }
   .cal-redesign__views :deep(.p-selectbutton) {
     width: 100%;
+    flex-wrap: wrap;
     justify-content: stretch;
+  }
+  .cal-redesign__scope :deep(.p-selectbutton) {
+    width: 100%;
   }
   .cal-redesign__toolbar-actions {
-    justify-content: stretch;
+    grid-template-columns: 1fr;
   }
   .cal-redesign__search-field {
-    flex: 1 1 auto;
     max-width: none;
     min-width: 0;
+  }
+  .cal-redesign__toolbar-add {
+    justify-self: stretch;
+    width: 100%;
   }
 }
 </style>

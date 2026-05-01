@@ -1,4 +1,0 @@
-/** @type {RegisteredHandlers} */
-export const registeredHandlers: RegisteredHandlers;
-export type RegisteredHandlers = Object;
-//# sourceMappingURL=index.d.ts.map

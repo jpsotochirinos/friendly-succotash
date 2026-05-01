@@ -1,3 +1,0 @@
-import { Plugin } from 'prosemirror-state';
-export function wrapTextInRunsPlugin(editor: any): Plugin<any>;
-//# sourceMappingURL=wrapTextInRunsPlugin.d.ts.map

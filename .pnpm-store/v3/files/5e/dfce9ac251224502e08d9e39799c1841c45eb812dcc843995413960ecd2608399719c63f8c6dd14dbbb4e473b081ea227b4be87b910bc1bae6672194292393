@@ -1,8 +1,0 @@
-/**
- * Patch numbering definitions in a DOCX file to ensure proper numbering styles.
- * This function modifies the numbering.xml part of the DOCX to fix issues
- * where a numbering definition might target an undefined abstract numbering definition.
- * @param {Object} docx - The DOCX file object to be patched.
- */
-export function patchNumberingDefinitions(docx: Object): void;
-//# sourceMappingURL=patchNumberingDefinitions.d.ts.map

@@ -1,3 +1,0 @@
-import { Extension } from '../Extension.js';
-export const Commands: Extension<Record<string, never>, Record<string, never>>;
-//# sourceMappingURL=commands.d.ts.map

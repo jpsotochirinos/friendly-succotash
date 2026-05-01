@@ -1,3 +1,0 @@
-import { Node } from '../../core/Node.js';
-export const AuthorityEntry: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=authority-entry.d.ts.map

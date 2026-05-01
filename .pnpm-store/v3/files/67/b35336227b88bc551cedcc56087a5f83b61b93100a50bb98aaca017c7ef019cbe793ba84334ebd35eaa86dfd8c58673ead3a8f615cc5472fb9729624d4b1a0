@@ -1,3 +1,0 @@
-import { CreateHeadlessToolbarOptions, HeadlessToolbarController } from './types.js';
-export declare const createHeadlessToolbar: (options: CreateHeadlessToolbarOptions) => HeadlessToolbarController;
-//# sourceMappingURL=create-headless-toolbar.d.ts.map

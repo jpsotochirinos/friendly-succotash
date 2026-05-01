@@ -69,18 +69,18 @@ const catalog: CatalogItem[] = [
   },
   {
     title: 'Button',
-    description: 'Todas las variantes: severidades, solid/outlined/text/link, tamaños, icon-only, rounded, raised, loading, SplitButton, ButtonGroup y patrones de footer.',
+    description: 'Todas las variantes: severidades, solid/outlined/text/link, tamaños, icon-only, cápsula de navegación, rounded, raised, loading, SplitButton, ButtonGroup y patrones de footer.',
     route: '/sandbox/components/button',
     status: 'stable',
-    tags: ['button', 'splitbutton', 'icon-only', 'severity', 'loading', 'footer'],
+    tags: ['button', 'splitbutton', 'icon-only', 'nav-buttons', 'severity', 'loading', 'footer'],
     section: 'component',
   },
   {
     title: 'SelectButton & ToggleButton',
-    description: 'SelectButton para 2-4 opciones excluyentes (density, scope, modo). ToggleButton para binarios (destacar, fijar, notificaciones).',
+    description: 'SelectButton para 2-4 opciones excluyentes (density, scope, modo) y variante edge-to-edge de toolbar. ToggleButton para binarios.',
     route: '/sandbox/components/selectbutton-toggle',
     status: 'stable',
-    tags: ['selectbutton', 'togglebutton', 'density', 'scope', 'allow-empty'],
+    tags: ['selectbutton', 'togglebutton', 'density', 'scope', 'edge-to-edge', 'allow-empty'],
     section: 'component',
   },
   {
@@ -117,10 +117,10 @@ const catalog: CatalogItem[] = [
   },
   {
     title: 'Menu & Popover',
-    description: 'Menu popup con kebab trigger en filas y toolbars. Popover con filtros activos, saved views y contenido custom. Width responsive.',
+    description: 'Menu popup con kebab trigger. Popover con filtros activos, saved views, trigger compacto de filtro y contenido custom. Width responsive.',
     route: '/sandbox/components/menu-popover',
     status: 'stable',
-    tags: ['menu', 'popover', 'kebab', 'toolbar', 'filters', 'popup'],
+    tags: ['menu', 'popover', 'kebab', 'filter-trigger', 'toolbar', 'filters', 'popup'],
     section: 'component',
   },
   {
@@ -133,10 +133,10 @@ const catalog: CatalogItem[] = [
   },
   {
     title: 'Inputs (InputText, Textarea, IconField)',
-    description: 'InputText (tamaños, invalid, disabled), Textarea auto-resize, IconField buscador, InputGroup con prefijo/sufijo/botón, font-mono-num para números legales.',
+    description: 'InputText (tamaños, invalid, disabled), Textarea auto-resize, IconField buscador, toolbar search, InputGroup con prefijo/sufijo/botón, font-mono-num.',
     route: '/sandbox/components/inputs',
     status: 'stable',
-    tags: ['inputtext', 'textarea', 'iconfield', 'inputgroup', 'font-mono-num', 'search'],
+    tags: ['inputtext', 'textarea', 'iconfield', 'toolbar-search', 'inputgroup', 'font-mono-num', 'search'],
     section: 'component',
   },
   {
@@ -197,6 +197,22 @@ const catalog: CatalogItem[] = [
     section: 'pattern',
   },
   {
+    title: 'Involved stack (avatares jerárquicos)',
+    description: 'Responsable grande + colaboradores en fila solapada bajo el primario; vacío «Sin asignar»; Popover con desglose. Primitiva aislada de Expediente v2.1.',
+    route: '/sandbox/patterns/hierarchical-involved',
+    status: 'stable',
+    tags: ['involucrados', 'avatar', 'hierarchy', 'popover', 'table-cell', 'expediente'],
+    section: 'pattern',
+  },
+  {
+    title: 'Filtro asignado (toolbar)',
+    description: 'CalendarFilterTrigger + Popover con checklist, «Asignado a mí» con badge Yo, AvatarGroup en el trigger. Misma pieza que calendario y mesa Expediente v2.1.',
+    route: '/sandbox/patterns/workbench-assignee-filter',
+    status: 'stable',
+    tags: ['assignee', 'filter', 'popover', 'calendar-filter-trigger', 'toolbar', 'multiselect'],
+    section: 'pattern',
+  },
+  {
     title: 'Misc pills & empty states',
     description: 'matter-case-key (pill expediente), dirty-dot (ámbar), counter-chip (icon + count + tooltip), empty states (4 variantes).',
     route: '/sandbox/patterns/misc-pills',
@@ -211,6 +227,15 @@ const catalog: CatalogItem[] = [
     route: '/sandbox/recipes/trackables-cockpit',
     status: 'stable',
     tags: ['expedientes', 'cockpit', 'priority', 'urgency', 'lawyer-grade', 'asignado'],
+    section: 'recipe',
+  },
+  {
+    title: 'Expediente v2.1',
+    description:
+      'Mesa workbench: toolbar dos bandas (scope edge-to-edge + señales), búsqueda, filtro asignado (CalendarFilterTrigger), columnas Involucrados (involved-stack), Por hacer (activity-stat como enlaces), plazo. Primitivas aisladas: /sandbox/patterns/hierarchical-involved y /sandbox/patterns/workbench-assignee-filter.',
+    route: '/sandbox/recipes/expediente-v21',
+    status: 'wip',
+    tags: ['expedientes', 'v2.1', 'workbench', 'involved-stack', 'assignee-filter', 'tasks', 'datatable'],
     section: 'recipe',
   },
   {

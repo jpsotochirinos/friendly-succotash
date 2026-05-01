@@ -1,2 +1,0 @@
-export { useHeadlessToolbar } from '../../super-editor/src/headless-toolbar/vue.js';
-//# sourceMappingURL=headless-toolbar-vue.d.ts.map

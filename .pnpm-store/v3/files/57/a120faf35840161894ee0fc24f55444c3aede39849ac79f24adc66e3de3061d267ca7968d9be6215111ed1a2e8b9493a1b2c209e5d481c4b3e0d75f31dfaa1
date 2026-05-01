@@ -1,7 +1,0 @@
-import { Node } from '../../core/Node.js';
-/**
- * @module BookmarkEnd
- * @sidebarTitle Bookmarks
- */
-export const BookmarkEnd: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=bookmark-end.d.ts.map

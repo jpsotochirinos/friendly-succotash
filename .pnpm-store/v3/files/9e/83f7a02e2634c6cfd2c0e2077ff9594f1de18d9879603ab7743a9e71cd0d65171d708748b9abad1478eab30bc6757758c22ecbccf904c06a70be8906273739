@@ -1,3 +1,0 @@
-import { TextSelection } from 'prosemirror-state';
-export function isTextSelection(value: any): value is TextSelection;
-//# sourceMappingURL=isTextSelection.d.ts.map

@@ -1,8 +1,0 @@
-import { Editor } from '../../core/Editor.js';
-import { FieldListInput, FieldGetInput, FieldInsertInput, FieldRebuildInput, FieldRemoveInput, FieldInfo, FieldMutationResult, MutationOptions } from '@superdoc/document-api';
-export declare function fieldsListWrapper(editor: Editor, query?: FieldListInput): import('@superdoc/document-api').DiscoveryResult<import('@superdoc/document-api').DiscoveryItem<import('@superdoc/document-api').FieldDomain>, undefined>;
-export declare function fieldsGetWrapper(editor: Editor, input: FieldGetInput): FieldInfo;
-export declare function fieldsInsertWrapper(editor: Editor, input: FieldInsertInput, options?: MutationOptions): FieldMutationResult;
-export declare function fieldsRebuildWrapper(editor: Editor, input: FieldRebuildInput, options?: MutationOptions): FieldMutationResult;
-export declare function fieldsRemoveWrapper(editor: Editor, input: FieldRemoveInput, options?: MutationOptions): FieldMutationResult;
-//# sourceMappingURL=field-wrappers.d.ts.map

@@ -1,4 +1,0 @@
-import { MutationsPreviewInput, MutationsPreviewOutput } from '@superdoc/document-api';
-import { Editor } from '../../core/Editor.js';
-export declare function previewPlan(editor: Editor, input: MutationsPreviewInput): MutationsPreviewOutput;
-//# sourceMappingURL=preview.d.ts.map

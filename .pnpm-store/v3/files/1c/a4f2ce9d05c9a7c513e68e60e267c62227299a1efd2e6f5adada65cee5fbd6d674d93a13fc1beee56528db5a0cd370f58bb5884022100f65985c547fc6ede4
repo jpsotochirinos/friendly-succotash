@@ -1,7 +1,0 @@
-import { Node as PmNode } from 'prosemirror-model';
-/**
- * Resolve the language for a paragraph-like proofing segment.
- * Returns a BCP 47 language tag or null.
- */
-export declare function resolveSegmentLanguage(paraNode: PmNode, defaultLanguage: string | null): string | null;
-//# sourceMappingURL=language-resolution.d.ts.map

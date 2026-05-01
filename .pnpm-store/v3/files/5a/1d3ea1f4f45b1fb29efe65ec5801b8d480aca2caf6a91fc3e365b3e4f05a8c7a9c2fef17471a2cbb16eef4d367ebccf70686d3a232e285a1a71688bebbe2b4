@@ -1,8 +1,0 @@
-import { ProofingSegment } from './types.js';
-import { VisibilitySource } from './visibility-source.js';
-/**
- * Reorder segments so those on visible pages come first.
- * Segments without page metadata or on non-visible pages are appended in document order.
- */
-export declare function prioritizeByVisibility(segments: ProofingSegment[], visibilitySource: VisibilitySource): ProofingSegment[];
-//# sourceMappingURL=visibility-priority.d.ts.map

@@ -1,3 +1,0 @@
-import { Node } from '../../core/Node.js';
-export const DocumentPartObject: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=document-part-object.d.ts.map

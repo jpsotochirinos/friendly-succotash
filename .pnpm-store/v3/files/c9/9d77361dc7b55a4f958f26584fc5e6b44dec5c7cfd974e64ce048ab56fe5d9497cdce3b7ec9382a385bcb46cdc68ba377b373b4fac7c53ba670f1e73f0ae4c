@@ -1,2 +1,0 @@
-export function addMarkStep({ state, step, newTr, doc, user, date }: import('prosemirror-state').EditorState): void;
-//# sourceMappingURL=addMarkStep.d.ts.map

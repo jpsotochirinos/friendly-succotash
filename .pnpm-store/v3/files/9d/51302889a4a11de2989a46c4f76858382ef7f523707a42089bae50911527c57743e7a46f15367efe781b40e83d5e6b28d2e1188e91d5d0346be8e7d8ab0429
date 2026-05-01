@@ -1,3 +1,0 @@
-import { Mark } from '../../core/Mark.js';
-export const TrackFormat: Mark<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=track-format.d.ts.map

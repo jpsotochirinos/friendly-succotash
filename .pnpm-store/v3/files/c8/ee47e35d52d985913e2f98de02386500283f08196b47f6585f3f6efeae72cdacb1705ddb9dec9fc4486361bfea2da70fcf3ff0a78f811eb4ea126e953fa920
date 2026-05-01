@@ -1,3 +1,0 @@
-import { Node } from '../../core/Node.js';
-export const TableOfAuthorities: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=table-of-authorities.d.ts.map

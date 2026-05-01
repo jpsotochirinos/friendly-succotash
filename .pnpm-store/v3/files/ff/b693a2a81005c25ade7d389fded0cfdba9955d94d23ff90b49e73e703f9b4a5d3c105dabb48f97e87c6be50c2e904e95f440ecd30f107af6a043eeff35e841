@@ -1,5 +1,0 @@
-/** Parse Override elements from a [Content_Types].xml string. */
-export function getOverrides(xmlString: any): any;
-/** Parse Relationship elements from a _rels/.rels string. */
-export function getRelationships(xmlString: any): any;
-//# sourceMappingURL=test-helpers.d.ts.map

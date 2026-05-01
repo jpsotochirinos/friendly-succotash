@@ -1,1 +1,0 @@
-{"version":3,"file":"capabilities-adapter.d.ts","sourceRoot":"","sources":["../../../../../../../super-editor/src/editors/v1/document-api-adapters/capabilities-adapter.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,MAAM,EAAE,MAAM,mBAAmB,CAAC;AAChD,OAAO,EAQL,KAAK,uBAAuB,EAO7B,MAAM,wBAAwB,CAAC;AA0hBhC;;;;;;GAMG;AACH,wBAAgB,0BAA0B,CAAC,MAAM,EAAE,MAAM,GAAG,uBAAuB,CAmClF"}

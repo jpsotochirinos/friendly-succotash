@@ -1,4 +1,0 @@
-import { Editor } from '../../core/Editor.js';
-import { CommentsAdapter } from '@superdoc/document-api';
-export declare function createCommentsWrapper(editor: Editor): CommentsAdapter;
-//# sourceMappingURL=comments-wrappers.d.ts.map

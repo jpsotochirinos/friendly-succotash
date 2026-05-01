@@ -1,4 +1,0 @@
-import { ClearContentInput, Receipt, RevisionGuardOptions } from '@superdoc/document-api';
-import { Editor } from '../../core/Editor.js';
-export declare function clearContentWrapper(editor: Editor, _input: ClearContentInput, options?: RevisionGuardOptions): Receipt;
-//# sourceMappingURL=clear-content-wrapper.d.ts.map

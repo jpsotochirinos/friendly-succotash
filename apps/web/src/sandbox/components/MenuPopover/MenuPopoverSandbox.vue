@@ -6,13 +6,16 @@ import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import ExampleFrame from '../../_shared/ExampleFrame.vue';
 import { useToast } from 'primevue/usetoast';
+import CalendarFilterTrigger from '@/views/calendar/components/CalendarFilterTrigger.vue';
 
 const toast = useToast();
 const rowMenuRef = ref<InstanceType<typeof Menu> | null>(null);
 const toolbarMenuRef = ref<InstanceType<typeof Menu> | null>(null);
 const filtersPopoverRef = ref<InstanceType<typeof Popover> | null>(null);
+const compactFilterRef = ref<InstanceType<typeof Popover> | null>(null);
 const savedViewsRef = ref<InstanceType<typeof Popover> | null>(null);
 const filterSearch = ref('');
+const compactFilterOpen = ref(false);
 
 const rowMenuItems = [
   {
@@ -90,6 +93,15 @@ const codePopover = `<!-- Popover con contenido custom -->
     <!-- contenido personalizado -->
   </div>
 </Popover>`;
+
+const codeFilterTrigger = `<!-- Trigger compacto para filtros + Popover -->
+<CalendarFilterTrigger
+  a11y-label="Tipo"
+  icon="pi pi-th-large"
+  :expanded="open"
+  @toggle="(e) => popoverRef?.toggle(e)"
+/>
+<Popover ref="popoverRef">...</Popover>`;
 
 const antiPatterns = [
   { bad: 'Menu con > 7 ítems sin separadores ni agrupación', good: 'Agrupar en secciones con separator. Si supera 7, considerar submenu o página de acciones.' },
@@ -196,6 +208,49 @@ const antiPatterns = [
                   <span class="text-sm" style="color: var(--fg-default);">{{ filter.value }}</span>
                 </div>
                 <Button icon="pi pi-times" text rounded size="small" severity="secondary" :aria-label="`Quitar filtro ${filter.label}`" />
+              </li>
+            </ul>
+          </div>
+        </Popover>
+      </div>
+    </ExampleFrame>
+
+    <!-- Compact filter trigger -->
+    <ExampleFrame
+      title="Popover pattern — trigger compacto de filtros"
+      description="Botón pill de 32px con icono/avatar + chevron. Ideal para toolbars densos con filtros en popover."
+      :code="codeFilterTrigger"
+    >
+      <div class="flex items-center gap-2">
+        <CalendarFilterTrigger
+          a11y-label="Tipo"
+          label="Tipo"
+          icon="pi pi-th-large"
+          :expanded="compactFilterOpen"
+          @toggle="(e) => compactFilterRef?.toggle(e)"
+        />
+        <Popover
+          ref="compactFilterRef"
+          class="w-[min(100vw-2rem,20rem)] border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-lg"
+          @show="compactFilterOpen = true"
+          @hide="compactFilterOpen = false"
+        >
+          <div class="flex max-h-[min(280px,50vh)] flex-col gap-1 overflow-hidden rounded-xl">
+            <div class="shrink-0 border-b border-[var(--surface-border)] px-3 py-2">
+              <p class="m-0 text-[11px] font-semibold uppercase tracking-wide text-[var(--fg-muted)]">Tipo</p>
+            </div>
+            <ul class="m-0 min-h-0 list-none space-y-0.5 overflow-y-auto overscroll-contain p-1">
+              <li v-for="kind in ['Audiencia', 'Plazo', 'Escrito', 'SINOE']" :key="kind">
+                <button
+                  type="button"
+                  class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 bg-transparent px-2 py-2 text-left transition-colors hover:bg-[color-mix(in_srgb,var(--accent-soft)_50%,transparent)]"
+                  style="color: var(--fg-default);"
+                >
+                  <span class="cal-filter-trigger-empty" aria-hidden="true">
+                    <i class="pi pi-circle-fill" />
+                  </span>
+                  <span class="min-w-0 flex-1 truncate text-sm">{{ kind }}</span>
+                </button>
               </li>
             </ul>
           </div>

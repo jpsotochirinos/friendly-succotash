@@ -1,8 +1,0 @@
-/** @type {import('@translator').NodeTranslatorConfig} */
-export const config: import('../../../node-translator/index.js').NodeTranslatorConfig;
-/**
- * The NodeTranslator instance.
- * @type {import('@translator').NodeTranslator}
- */
-export const translator: import('../../../node-translator/index.js').NodeTranslator;
-//# sourceMappingURL=autoPageNumber-translator.d.ts.map

@@ -1,7 +1,0 @@
-/**
- * Translate a document part object node to its XML representation.
- * @param {Object} params - The parameters for translation.
- * @returns {Object} The XML representation of the structured content block.
- */
-export function translateDocumentPartObj(params: Object): Object;
-//# sourceMappingURL=translate-document-part-obj.d.ts.map

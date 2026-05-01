@@ -69,8 +69,9 @@ const ordered = computed(() => {
 
 <style scoped>
 .exps {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 34rem), 1fr));
+  align-items: start;
   gap: 12px;
 }
 </style>

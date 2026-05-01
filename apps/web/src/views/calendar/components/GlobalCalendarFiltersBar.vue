@@ -1,13 +1,12 @@
 <template>
   <div class="cal-toolbar-filters flex min-w-0 flex-1 flex-wrap items-center gap-1">
     <div class="cal-toolbar-filters__chips flex min-w-0 max-w-full flex-wrap items-center gap-1.5">
-    <button
-      type="button"
-      class="cal-filter-trigger"
-      :aria-label="t('globalCalendar.filterKinds')"
-      :aria-expanded="kindPopoverOpen"
-      aria-haspopup="dialog"
-      @click="(e) => kindPopoverRef?.toggle(e)"
+    <CalendarFilterTrigger
+      :a11y-label="t('globalCalendar.filterKinds')"
+      :expanded="kindPopoverOpen"
+      :active="selectedKindRows.length > 0"
+      icon="pi pi-th-large"
+      @toggle="(e) => kindPopoverRef?.toggle(e)"
     >
       <AvatarGroup v-if="selectedKindRows.length > 0" class="cal-filter-avatar-group">
         <Avatar
@@ -43,10 +42,7 @@
       >
         <i class="pi pi-th-large" aria-hidden="true" />
       </div>
-      <span class="cal-filter-trigger__chev" aria-hidden="true">
-        <i class="pi pi-chevron-down" />
-      </span>
-    </button>
+    </CalendarFilterTrigger>
     <Popover
       ref="kindPopoverRef"
       class="cal-filter-popover w-[min(100vw-2rem,20rem)] border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-lg"
@@ -62,6 +58,7 @@
         <ul class="m-0 min-h-0 list-none space-y-0.5 overflow-y-auto overscroll-contain p-1">
           <li v-for="opt in kindOptions" :key="opt.value">
             <label
+              :for="`cal-filter-kind-${opt.value}`"
               class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-[color-mix(in_srgb,var(--accent-soft)_50%,transparent)]"
             >
               <Checkbox
@@ -85,13 +82,12 @@
       </div>
     </Popover>
 
-    <button
-      type="button"
-      class="cal-filter-trigger"
-      :aria-label="t('globalCalendar.filterPriority')"
-      :aria-expanded="priorityPopoverOpen"
-      aria-haspopup="dialog"
-      @click="(e) => priorityPopoverRef?.toggle(e)"
+    <CalendarFilterTrigger
+      :a11y-label="t('globalCalendar.filterPriority')"
+      :expanded="priorityPopoverOpen"
+      :active="selectedPriorityRows.length > 0"
+      icon="pi pi-flag"
+      @toggle="(e) => priorityPopoverRef?.toggle(e)"
     >
       <AvatarGroup v-if="selectedPriorityRows.length > 0" class="cal-filter-avatar-group">
         <Avatar
@@ -127,10 +123,7 @@
       >
         <i class="pi pi-flag" aria-hidden="true" />
       </div>
-      <span class="cal-filter-trigger__chev" aria-hidden="true">
-        <i class="pi pi-chevron-down" />
-      </span>
-    </button>
+    </CalendarFilterTrigger>
     <Popover
       ref="priorityPopoverRef"
       class="cal-filter-popover w-[min(100vw-2rem,20rem)] border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-lg"
@@ -146,6 +139,7 @@
         <ul class="m-0 min-h-0 list-none space-y-0.5 overflow-y-auto overscroll-contain p-1">
           <li v-for="opt in priorityOptions" :key="opt.value">
             <label
+              :for="`cal-filter-priority-${opt.value}`"
               class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-[color-mix(in_srgb,var(--accent-soft)_50%,transparent)]"
             >
               <Checkbox
@@ -173,13 +167,12 @@
     </Popover>
 
     <template v-if="showAssigneeFilter && userOptions.length > 0">
-      <button
-        type="button"
-        class="cal-filter-trigger"
-        :aria-label="t('globalCalendar.filterAssignee')"
-        :aria-expanded="assigneePopoverOpen"
-        aria-haspopup="dialog"
-        @click="(e) => assigneePopoverRef?.toggle(e)"
+      <CalendarFilterTrigger
+        :a11y-label="t('globalCalendar.filterAssignee')"
+        :expanded="assigneePopoverOpen"
+        :active="selectedAssigneeRows.length > 0"
+        icon="pi pi-user-plus"
+        @toggle="(e) => assigneePopoverRef?.toggle(e)"
       >
         <AvatarGroup v-if="selectedAssigneeRows.length > 0" class="cal-filter-avatar-group">
           <Avatar
@@ -215,10 +208,7 @@
         >
           <i class="pi pi-user-plus" aria-hidden="true" />
         </div>
-        <span class="cal-filter-trigger__chev" aria-hidden="true">
-          <i class="pi pi-chevron-down" />
-        </span>
-      </button>
+      </CalendarFilterTrigger>
       <Popover
         ref="assigneePopoverRef"
         class="cal-filter-popover w-[min(100vw-2rem,20rem)] border border-[var(--surface-border)] bg-[var(--surface-raised)] shadow-lg"
@@ -234,6 +224,7 @@
           <ul class="m-0 min-h-0 list-none space-y-0.5 overflow-y-auto overscroll-contain p-1">
             <li v-for="u in userOptions" :key="u.value">
               <label
+                :for="`cal-filter-assignee-${u.value}`"
                 class="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-2 transition-colors hover:bg-[color-mix(in_srgb,var(--accent-soft)_50%,transparent)]"
               >
                 <Checkbox
@@ -286,6 +277,7 @@ import { useCalendarStore } from '@/stores/calendar.store';
 import { useCalendarFilterMultiselectOptions } from '@/composables/useCalendarFilterMultiselectOptions';
 import type { CalendarFilterKind, CalendarPriorityFilter } from '@/composables/calendarEventKind';
 import { avatarInitials, hashAvatarColor } from '@/utils/avatarColor';
+import CalendarFilterTrigger from './CalendarFilterTrigger.vue';
 
 const MAX_FILTER_AVATARS = 3;
 
@@ -443,83 +435,6 @@ function colorMixSoft(hexOrVar: string): string {
   flex-wrap: wrap;
   row-gap: 0.35rem;
 }
-/* Misma escala que PrimeVue Button sm + cal-toolbar-filters__reset (~32px alto). */
-.cal-filter-trigger.cal-filter-trigger {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  flex-shrink: 0;
-  max-width: 100%;
-  box-sizing: border-box;
-  min-height: 2rem;
-  height: 2rem;
-  max-height: 2rem;
-  padding-block: 0;
-  padding-inline: 0.28rem 0.38rem;
-  gap: 0.2rem;
-  border-radius: 9999px;
-  border: 1px solid var(--surface-border);
-  background: var(--surface-raised);
-  color: var(--fg-muted);
-  font: inherit;
-  line-height: 1;
-  cursor: pointer;
-  text-align: left;
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease,
-    color 0.15s ease;
-}
-.cal-filter-trigger:hover {
-  border-color: color-mix(in srgb, var(--brand-zafiro, var(--accent)) 28%, var(--surface-border));
-  color: var(--fg-default);
-}
-.cal-filter-trigger:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--brand-zafiro, var(--accent)) 40%, var(--surface-border));
-  outline-offset: 1px;
-}
-
-.cal-filter-trigger-empty {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 1.375rem;
-  height: 1.375rem;
-  min-width: 1.375rem;
-  min-height: 1.375rem;
-  flex-shrink: 0;
-  border-radius: 9999px;
-  border: 1px dashed var(--surface-border);
-  background: var(--surface-sunken);
-  color: var(--fg-subtle);
-}
-.cal-filter-trigger-empty .pi {
-  font-size: 0.65rem;
-}
-
-.cal-filter-trigger__chev {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  margin-left: 0.05rem;
-  opacity: 0.72;
-}
-.cal-filter-trigger__chev .pi {
-  font-size: 9px;
-}
-
-.cal-filter-trigger .cal-filter-avatar-group :deep(.p-avatar) {
-  width: 1.375rem;
-  height: 1.375rem;
-  font-size: 0.52rem;
-}
-.cal-filter-trigger .cal-filter-avatar--priority :deep(.p-avatar-label) {
-  font-size: 0.58rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
 .cal-filter-avatar--row :deep(.p-avatar) {
   width: 1.75rem;
   height: 1.75rem;

@@ -4,6 +4,7 @@ import Button from 'primevue/button';
 import SplitButton from 'primevue/splitbutton';
 import ExampleFrame from '../../_shared/ExampleFrame.vue';
 import { useToast } from 'primevue/usetoast';
+import CalendarNavButtons from '@/views/calendar/components/CalendarNavButtons.vue';
 
 const toast = useToast();
 const loading = ref(false);
@@ -17,6 +18,22 @@ const splitItems = [
   { label: 'Guardar borrador', icon: 'pi pi-save', command: () => toast.add({ severity: 'info', summary: 'Borrador guardado', life: 2000 }) },
   { label: 'Guardar y enviar', icon: 'pi pi-send', command: () => toast.add({ severity: 'success', summary: 'Enviado', life: 2000 }) },
 ];
+
+const codeNavButtons = `<!-- Cápsula icon-only para navegación anterior/siguiente -->
+<CalendarNavButtons
+  prev-label="Anterior"
+  next-label="Siguiente"
+  @prev="goPrev"
+  @next="goNext"
+/>`;
+
+const codeCtaBrand = `<!-- CTA con gradiente de marca (global: styles/alega-cta-brand-button.css) -->
+<Button
+  class="alega-btn-cta-brand border-0"
+  label="Nuevo expediente"
+  icon="pi pi-plus"
+  size="small"
+/>`;
 
 const antiPatterns = [
   { bad: 'Múltiples botones primary en la misma vista', good: 'Un único CTA primario por pantalla. Los demás: outlined / text / secondary.' },
@@ -67,6 +84,24 @@ const antiPatterns = [
       </div>
     </ExampleFrame>
 
+    <!-- CTA marca (mismo estilo que submit de login) -->
+    <ExampleFrame
+      title="CTA marca — clase alega-btn-cta-brand"
+      description="Gradiente Zafiro → Real, texto fg-on-brand, sombra suave. Un solo CTA primario por vista (cabeceras, login, etc.). Estilos en src/styles/alega-cta-brand-button.css."
+      :code="codeCtaBrand"
+    >
+      <div class="flex flex-wrap items-center gap-4">
+        <Button class="alega-btn-cta-brand border-0 w-full max-w-sm" label="Iniciar sesión" type="button" />
+        <Button
+          class="alega-btn-cta-brand border-0"
+          label="Nuevo expediente"
+          icon="pi pi-plus"
+          size="small"
+          type="button"
+        />
+      </div>
+    </ExampleFrame>
+
     <!-- Con iconos -->
     <ExampleFrame title="Botones con iconos">
       <div class="flex flex-wrap gap-3 items-center">
@@ -77,6 +112,20 @@ const antiPatterns = [
         <Button icon="pi pi-trash" variant="text" rounded severity="danger" aria-label="Eliminar" v-tooltip.top="'Eliminar'" />
         <Button icon="pi pi-eye" variant="outlined" rounded size="small" severity="secondary" aria-label="Ver" v-tooltip.top="'Ver'" />
       </div>
+    </ExampleFrame>
+
+    <!-- Navigation capsule -->
+    <ExampleFrame
+      title="Button pattern — cápsula de navegación"
+      description="Componente reutilizable para pares anterior/siguiente. Usa Button text, aria-label, tooltip y separador interno."
+      :code="codeNavButtons"
+    >
+      <CalendarNavButtons
+        prev-label="Anterior"
+        next-label="Siguiente"
+        @prev="toast.add({ severity: 'info', summary: 'Anterior', life: 1500 })"
+        @next="toast.add({ severity: 'info', summary: 'Siguiente', life: 1500 })"
+      />
     </ExampleFrame>
 
     <!-- Modifiers -->

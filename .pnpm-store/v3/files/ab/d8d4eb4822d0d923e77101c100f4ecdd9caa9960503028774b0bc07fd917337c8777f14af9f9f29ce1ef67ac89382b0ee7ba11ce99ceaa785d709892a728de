@@ -1,9 +1,0 @@
-declare const _default: import('vue').DefineComponent<{}, {
-    $emit: (event: "submit", ...args: any[]) => void;
-    searchRef?: Record<string, any> | undefined;
-    $props: {
-        readonly searchRef?: Record<string, any> | undefined;
-    };
-}, {}, {}, {}, import('vue').ComponentOptionsMixin, import('vue').ComponentOptionsMixin, {}, string, import('vue').PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import('vue').ComponentProvideOptions, true, {}, HTMLDivElement>;
-export default _default;
-//# sourceMappingURL=SearchInput.vue.d.ts.map

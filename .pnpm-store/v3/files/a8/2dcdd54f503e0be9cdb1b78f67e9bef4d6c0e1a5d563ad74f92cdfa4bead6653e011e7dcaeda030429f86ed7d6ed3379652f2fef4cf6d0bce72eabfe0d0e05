@@ -1,4 +1,0 @@
-import { HistoryAdapter } from '@superdoc/document-api';
-import { Editor } from '../core/Editor.js';
-export declare function createHistoryAdapter(editor: Editor): HistoryAdapter;
-//# sourceMappingURL=history-adapter.d.ts.map

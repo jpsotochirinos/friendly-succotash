@@ -1,6 +1,0 @@
-import { Editor } from '../../core/Editor.js';
-import { SectionProjection } from './sections-resolver.js';
-import { XmlElement } from './sections-xml.js';
-/** Read the raw sectPr XML element for a given section projection. */
-export declare function readTargetSectPr(editor: Editor, projection: SectionProjection): XmlElement | null;
-//# sourceMappingURL=section-projection-access.d.ts.map

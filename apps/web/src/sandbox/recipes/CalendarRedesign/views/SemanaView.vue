@@ -159,12 +159,14 @@ function levelOf(a: Actuacion): UrgencyLevel {
   background: var(--surface-raised);
   border: 1px solid var(--surface-border);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .wk__grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  min-height: 420px;
+  grid-template-columns: repeat(7, minmax(8.75rem, 1fr));
+  min-width: min(100%, 61.25rem);
+  min-height: clamp(26rem, 58vh, 42rem);
 }
 .wk__col {
   border-right: 1px solid var(--surface-border);
@@ -224,6 +226,7 @@ function levelOf(a: Actuacion): UrgencyLevel {
   display: flex;
   flex-direction: column;
   gap: 3px;
+  min-width: 0;
 }
 .wk__section + .wk__section { border-top: 1px dashed var(--surface-border); }
 .wk__section-label {
@@ -247,10 +250,17 @@ function levelOf(a: Actuacion): UrgencyLevel {
   display: flex;
   flex-direction: column;
   gap: 1px;
+  min-width: 0;
 }
 .wk__time { font-weight: 700; font-size: 10px; font-feature-settings: 'tnum' 1; }
 .wk__title { font-weight: 600; }
-.wk__exp { font-size: 10px; opacity: 0.8; }
+.wk__exp {
+  font-size: 10px;
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .wk__empty {
   font-size: 10px;
   font-style: italic;

@@ -1,2 +1,0 @@
-export declare function toRelsPathForPart(partPath: string): string | null;
-//# sourceMappingURL=part-paths.d.ts.map

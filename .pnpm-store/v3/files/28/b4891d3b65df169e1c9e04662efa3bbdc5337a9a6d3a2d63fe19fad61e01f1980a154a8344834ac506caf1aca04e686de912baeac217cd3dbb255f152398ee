@@ -1,6 +1,0 @@
-export function isLinkedParagraphStyleId(editor: any, styleId: any): boolean;
-export function isLinkedCharacterStyleId(editor: any, styleId: any): boolean;
-export function clearInheritedLinkedStyleId(attrs: any, editor: any, { emptyParagraph }?: {
-    emptyParagraph?: boolean | undefined;
-}): any;
-//# sourceMappingURL=linkedStyleSplitHelpers.d.ts.map

@@ -1,4 +1,0 @@
-import { Editor } from '../core/Editor.js';
-import { ExtractInput, ExtractResult } from '@superdoc/document-api';
-export declare function extractAdapter(editor: Editor, _input: ExtractInput): ExtractResult;
-//# sourceMappingURL=extract-adapter.d.ts.map

@@ -1,7 +1,0 @@
-import { Editor } from '../core/Editor.js';
-/**
- * Returns `true` when collaboration is active and out-of-band mutations
- * should be blocked.
- */
-export declare function isCollaborationActive(editor: Editor): boolean;
-//# sourceMappingURL=collaboration-detection.d.ts.map

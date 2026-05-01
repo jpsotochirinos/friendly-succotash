@@ -37,7 +37,7 @@
         >
       </div>
 
-      <Button type="submit" class="login-submit-btn w-full border-0 font-semibold !text-[var(--fg-on-brand)]" :label="$t('auth.forgotSubmit')" :loading="loading" />
+      <Button type="submit" class="alega-btn-cta-brand w-full border-0" :label="$t('auth.forgotSubmit')" :loading="loading" />
 
       <div class="text-center text-sm text-fg-muted">
         <RouterLink :to="{ name: 'login' }" class="font-medium text-accent hover:underline">{{ $t('auth.backToLogin') }}</RouterLink>
@@ -83,14 +83,3 @@ async function onSubmit() {
   }
 }
 </script>
-
-<style scoped>
-.login-submit-btn {
-  background-image: linear-gradient(135deg, var(--brand-zafiro) 0%, var(--brand-real) 100%) !important;
-  border-radius: 0.625rem;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand-zafiro) 35%, transparent);
-}
-.login-submit-btn:hover:not(:disabled) {
-  filter: brightness(1.05);
-}
-</style>

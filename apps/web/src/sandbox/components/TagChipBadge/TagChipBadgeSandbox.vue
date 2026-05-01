@@ -5,6 +5,7 @@ import Chip from 'primevue/chip';
 import Badge from 'primevue/badge';
 import Button from 'primevue/button';
 import ExampleFrame from '../../_shared/ExampleFrame.vue';
+import CalendarUrgencyLegend from '@/views/calendar/components/CalendarUrgencyLegend.vue';
 
 const chips = ref([
   { label: 'Derecho laboral', icon: 'pi pi-tag' },
@@ -52,6 +53,12 @@ const codeBadge = `<!-- Badge sobre icono de notificaciones -->
 
 <!-- Badge como dot (sin número) -->
 <i class="pi pi-bell" v-badge.danger />`;
+
+const codeUrgencyLegend = `<!-- Leyenda reutilizable de pills de estado -->
+<CalendarUrgencyLegend />
+
+<!-- Variante compacta para sidebar -->
+<CalendarUrgencyLegend compact />`;
 
 const antiPatterns = [
   { bad: 'Tag para etiquetas editables por el usuario', good: 'Chip (removable) para entidades que el usuario puede añadir/quitar. Tag solo para clasificaciones read-only.' },
@@ -205,6 +212,21 @@ const antiPatterns = [
             <i class="pi pi-bell text-2xl" style="color: var(--fg-muted);" v-badge.danger />
           </div>
           <span class="text-[10px]" style="color: var(--fg-subtle);">Dot (sin número)</span>
+        </div>
+      </div>
+    </ExampleFrame>
+
+    <!-- Legend -->
+    <ExampleFrame
+      title="Pill legend — urgencia / estado"
+      description="Leyenda reusable compuesta de pills de color. Útil en sidebars, toolbars y paneles de ayuda, no solo en calendario."
+      :code="codeUrgencyLegend"
+    >
+      <div class="flex flex-col gap-4">
+        <CalendarUrgencyLegend />
+        <div class="max-w-xs rounded-lg border border-[var(--surface-border)] p-3">
+          <p class="m-0 mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--fg-muted)]">Compacta</p>
+          <CalendarUrgencyLegend compact />
         </div>
       </div>
     </ExampleFrame>

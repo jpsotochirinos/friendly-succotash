@@ -1,9 +1,0 @@
-/**
- * @type {import("./docxImporter.js").NodeHandlerEntry}
- */
-export const permEndHandlerEntity: import('./docxImporter.js').NodeHandlerEntry;
-export function handlePermEndNode(params: import('./docxImporter.js').NodeHandlerParams): {
-    nodes: any[];
-    consumed: number;
-};
-//# sourceMappingURL=permEndImporter.d.ts.map

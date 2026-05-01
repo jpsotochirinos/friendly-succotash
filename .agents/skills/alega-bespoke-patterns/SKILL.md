@@ -2,15 +2,16 @@
 name: alega-bespoke-patterns
 description: >
   Patrones UI específicos de Alega no cubiertos por PrimeVue puro: type-chip con --chip-accent,
-  assignee-avatar con hash determinista de color, KPI card con --kpi-accent y pulse dot,
-  urgency KPI chips + banda de urgencia en filas de expedientes, activity-stat mini-rows,
+  assignee-avatar con hash determinista, involved-stack (avatares jerárquicos responsable + colaboradores),
+  KPI card con --kpi-accent y pulse dot, urgency KPI chips + banda de urgencia en filas de expedientes,
+  activity-stat (métrica y variante tarea enlazable), filtro toolbar con CalendarFilterTrigger + Popover,
   calendario lawyer-grade, y misceláneos (case-key pill, dirty-dot, counter-chip, empty-states).
   Usar como referencia al implementar cualquier vista lawyer-grade.
 ---
 
 # Alega — Patrones bespoke
 
-**Sandbox:** `/sandbox/patterns/*`
+**Sandboxes:** `/sandbox/patterns/*` (type-chip, kpi-card, activity-stat, **hierarchical-involved**, **workbench-assignee-filter**, misc-pills)
 
 Estos patrones combinan tokens CSS, Tailwind y PrimeVue de forma específica para Alega. Son la "capa 3" del sistema: encima de foundations (tokens/tipografía) y componentes PrimeVue.
 
@@ -162,6 +163,29 @@ export function avatarInitials(name: string): string {
 
 ---
 
+## F2b. Involved stack — avatares jerárquicos (responsable + colaboradores)
+
+**Sandbox:** `/sandbox/patterns/hierarchical-involved`  
+**Origen canónico:** [apps/web/src/sandbox/recipes/ExpedienteV21/ExpedienteV21Sandbox.vue](apps/web/src/sandbox/recipes/ExpedienteV21/ExpedienteV21Sandbox.vue) — columna «Involucrados» (`body-class="wb-col-assignee"`).
+
+### Anatomía
+
+- Contenedor **`.wb-involved`**: fila flex; a la izquierda la pila de avatares, a la derecha el bloque de texto.
+- **`.wb-inv-stack`**: columna centrada, ancho fijo = diámetro del primario.
+- **`.wb-avatar-primary`**: círculo grande (~2.15rem), color de fondo del responsable, **doble anillo** (`surface-raised` + mezcla con acento) para jerarquía visual; `z-index` alto.
+- **`.wb-collab-row`**: fila bajo el primario con **`.wb-avatar-collab--h`** (círculos más pequeños, solapados horizontalmente, borde `surface-raised`, `z-index` decreciente).
+- **`.wb-involved__copy`**: nombre truncado + **`.wb-involved__role`** (uppercase, color acento).
+- Sin responsable: **`.wb-avatar-primary--empty`** + texto *Sin asignar* (`.wb-involved__name--empty`).
+- Si hay más de un involucrado: botón texto **`.wb-involved__more-link`** («+N involucrado(s)») que abre **`Popover`** con lista detallada (`.wb-inv-pop__*` en la receta).
+
+### Reglas
+
+- Cada avatar lleva **`aria-label`** + **`v-tooltip`** con nombre y rol.
+- **No** sustituir este patrón por un `AvatarGroup` horizontal de PrimeVue en la celda de tabla: la lectura lawyer-grade depende del **primario dominante** y colaboradores en **segundo plano**.
+- El popover de desglose reutiliza filas con avatar + nombre + rol + badge «Responsable» en la primera fila.
+
+---
+
 ## F3. kpi-card — tarjeta de métrica
 
 **Sandbox:** `/sandbox/patterns/kpi-card`
@@ -261,8 +285,8 @@ Las **cards KPI grandes** (`exp-kpi-card`, §F3) quedan como referencia históri
 
 ## F4. activity-stat — mini-row de estadística
 
-**Sandbox:** `/sandbox/patterns/activity-stat`
-**Origen:** `TrackablesListView.vue` L593-638
+**Sandbox (métrica con número):** `/sandbox/patterns/activity-stat`  
+**Origen (métrica):** `TrackablesListView.vue` L593-638
 
 ```vue
 <div
@@ -287,6 +311,15 @@ Las **cards KPI grandes** (`exp-kpi-card`, §F3) quedan como referencia históri
 - Número: `tabular-nums` + color condicional (accent si `> 0`, subtle si `=== 0`).
 - Label: `min-w-0 truncate` para no empujar el número.
 - Icono con `aria-hidden="true"`.
+
+### Variante «tarea» (selectable, sin contador)
+
+**Origen:** columna **«Por hacer»** en [ExpedienteV21Sandbox.vue](apps/web/src/sandbox/recipes/ExpedienteV21/ExpedienteV21Sandbox.vue): filas **`.wb-action-stat`** apiladas en vertical.
+
+- Misma base visual: `surface-sunken`, bordes sutiles al hover, icono coloreado con `accent`, label truncado en `0.6875rem`.
+- Sin columna numérica: a la derecha un **`pi-angle-right`** discret (`opacity` ~0.55, sube en hover) para affordance de enlace.
+- Implementación típica: **`RouterLink`** (o `<a>`) por fila hacia expediente; `v-tooltip.top` con descripción larga del pendiente.
+- Apilar varias filas en la celda (`flex-direction: column`, `gap` pequeño); overflow «+N» con tooltip listando etiquetas adicionales.
 
 ---
 
@@ -354,29 +387,72 @@ Las **cards KPI grandes** (`exp-kpi-card`, §F3) quedan como referencia históri
 
 ### Toolbar de calendario
 
-Separar jerarquía en 2 bandas dentro del mismo panel:
+Separar jerarquía en 2 bandas dentro del mismo panel. El selector de vistas y el scope van como tabs edge-to-edge; navegación temporal (`Anterior` / `Siguiente`) vive en el heading del frame, no en la command bar.
 
-1. **Primaria:** navegación temporal (`Anterior`, `Siguiente`, `Hoy`) + fecha literal (`rangeTitle`) + cambio de vista (`Hoy`, `Semana`, `Mes`, `Por expediente`).
-2. **Secundaria:** alcance (`Mi agenda` / `Despacho`) + búsqueda + CTA `Agregar actividad`.
+1. **Primaria:** cambio de vista (`Hoy`, `Semana`, `Mes`, `Por expediente`) en `.cal-redesign__toolbar-quick-end`; scope (`Mi agenda` / `Despacho`) en `.cal-redesign__toolbar-quick-start`; separador `.cal-redesign__toolbar-quick-sep`.
+2. **Secundaria:** búsqueda + filtros compactos inline + CTA `Agregar actividad`.
+3. **Frame heading:** `CalendarProductFrameHeading` muestra `primary`, `secondary` y la cápsula de navegación integrada al fondo `surface-sunken`.
+
+Componentes canónicos:
+
+- `CalendarNavButtons.vue`: cápsula de botones `Anterior/Siguiente` con PrimeVue `Button text`. Sandbox genérico: `/sandbox/components/button`.
+- `CalendarViewSelect.vue`: `SelectButton` para vistas, incluye dayball tabular en `Hoy`. Sandbox genérico: `/sandbox/components/selectbutton-toggle`.
+- `CalendarScopeSelect.vue`: `SelectButton` para `Mi agenda/Despacho`. Sandbox genérico: `/sandbox/components/selectbutton-toggle`.
+- `CalendarToolbarSearch.vue`: `IconField + InputText` para búsqueda. Sandbox genérico: `/sandbox/components/inputs`.
+- `CalendarFilterTrigger.vue`: botón de filtro compacto con icon/avatar slot + chevron; usarlo dentro de popovers de filtros. Sandbox genérico: `/sandbox/components/menu-popover`.
+- `GlobalCalendarFiltersBar.vue`: composición productiva de triggers + `Popover` + reset.
+- `CalendarUrgencyLegend.vue`: leyenda compacta para urgencias (`Vencido/24h`, `2–5 días`, `> 5 días`, `Audiencia`, `Cumplido`, `Feriado PE`); usar en sidebar y sandbox. Sandbox genérico: `/sandbox/components/tag-chip-badge`.
+
+#### Filtro «Asignado» en toolbar de mesa (fuera del calendario)
+
+Mismo **`CalendarFilterTrigger`** + **`Popover`** que en calendario, aplicado a **listados tipo workbench** (expedientes):
+
+- Props: `a11y-label`, `label` corta (p. ej. «Asignado»), `icon`, `:active` si hay selección, `:expanded` ligado al `@show`/`@hide` del Popover, `@toggle` → `popover.toggle($event)`.
+- **Slot del trigger:** vacío → `cal-filter-trigger-empty`; selección múltiple → `AvatarGroup` de PrimeVue con hasta N avatares + avatar «+K» con tooltip de nombres restantes; solo «sin asignar» → avatar «SA» con borde punteado.
+- **Popover:** lista con `Checkbox` binary por opción; primera opción **«Asignado a mí»** (`id` tipo `__mine`) con avatar relativo y badge **«Yo»** (`.wb-assignee-pop__me-badge`); divisores; usuarios con `Avatar` o `hashAvatarColor`; entrada **«Sin asignar»** al final.
+- **Paridad con API (nota):** el estado inicial puede ser `['__mine']` para mesa personal; backend debería alinear facets cuando aplique.
+
+**Referencias:** [ExpedienteV21Sandbox.vue](apps/web/src/sandbox/recipes/ExpedienteV21/ExpedienteV21Sandbox.vue) (toolbar); composición calendario: [GlobalCalendarFiltersBar.vue](apps/web/src/views/calendar/components/GlobalCalendarFiltersBar.vue). **Sandbox aislado:** `/sandbox/patterns/workbench-assignee-filter`.
 
 ```vue
 <div class="cal-redesign__toolbar">
   <div class="cal-redesign__toolbar-primary">
-    <div class="cal-redesign__toolbar-track">
-      <!-- nav + h2 rangeTitle -->
+    <div class="cal-redesign__toolbar-primary-tail">
+      <div class="cal-redesign__toolbar-quick">
+        <div class="cal-redesign__toolbar-quick-end">
+          <CalendarViewSelect v-model="view" class="cal-redesign__views" :day-of-month="navDayOfMonth" />
+        </div>
+        <span class="cal-redesign__toolbar-quick-sep" aria-hidden="true" />
+        <div class="cal-redesign__toolbar-quick-start">
+          <CalendarScopeSelect v-model="scope" class="cal-redesign__scope" />
+        </div>
+      </div>
     </div>
-    <SelectButton v-model="view" class="cal-redesign__views" aria-label="Vista del calendario" />
   </div>
-  <div class="cal-redesign__toolbar-divider" aria-hidden="true" />
   <div class="cal-redesign__toolbar-actions">
-    <SelectButton v-model="scope" class="cal-redesign__scope" aria-label="Ámbito" />
-    <IconField class="cal-redesign__search-field">
-      <InputText aria-label="Buscar en el calendario" name="cal-redesign-search" autocomplete="off" />
-    </IconField>
+    <CalendarToolbarSearch v-model="search" class="cal-redesign__search-field" />
+    <div class="cal-redesign__toolbar-filters-inline">
+      <GlobalCalendarFiltersBar />
+    </div>
     <Button label="Agregar actividad" icon="pi pi-plus" />
   </div>
 </div>
+
+<CalendarProductFrameHeading
+  :primary="frameTitle"
+  :secondary="frameSubtitle"
+  @prev="calendarPrev"
+  @next="calendarNext"
+/>
 ```
+
+Reglas visuales:
+
+- `.cal-redesign__toolbar-primary` usa `surface-sunken` y tabs sin caja propia; el tab activo usa `surface-raised` con borde inset.
+- `.cal-redesign__toolbar-actions` usa grid `search | filters | CTA`; búsqueda nunca debe empujar el CTA fuera del panel.
+- Filtros inline usan triggers de 32px de alto con avatar/icono + chevron; reset solo aparece si hay filtros activos.
+- El icono de `Hoy` usa dayball tabular con el día del mes; no usar `pi-circle-fill`.
+- La navegación del frame es una cápsula `text` buttons, no botones `outlined`.
 
 ### Responsive de calendario
 
@@ -401,6 +477,14 @@ Los chips son para señales operativas con peso de notificación:
 ### Resumen mensual
 
 Para sidebar usar `activity-stat` compacto (§F4): icono + label truncado + número tabular. Evitar lista plana sin iconos si el panel convive con calendario mini.
+
+### Leyenda de urgencias
+
+Usar `CalendarUrgencyLegend` en vez de recrear pills sueltos. En sidebars estrechos pasar `compact`; en páginas/sandbox usar tamaño normal:
+
+```vue
+<CalendarUrgencyLegend compact />
+```
 
 ---
 

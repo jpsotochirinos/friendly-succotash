@@ -1,8 +1,0 @@
-import { StylesApplyInput, StylesApplyReceipt, NormalizedStylesApplyOptions } from '@superdoc/document-api';
-import { Editor } from '../core/Editor.js';
-/**
- * Adapter function for `styles.apply` bound to a specific editor instance.
- * Called by the document-api dispatch layer after input validation.
- */
-export declare function stylesApplyAdapter(editor: Editor, input: StylesApplyInput, options: NormalizedStylesApplyOptions): StylesApplyReceipt;
-//# sourceMappingURL=styles-adapter.d.ts.map

@@ -1,3 +1,0 @@
-import { Node } from '../../core/Node.js';
-export const PageReference: Node<Record<string, never>, Record<string, never>, Record<string, unknown>>;
-//# sourceMappingURL=page-reference.d.ts.map

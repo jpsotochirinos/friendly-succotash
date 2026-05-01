@@ -1,3 +1,0 @@
-import { NodeTranslator } from '../../../node-translator/index.js';
-export const translator: NodeTranslator;
-//# sourceMappingURL=tblCellMar-translator.d.ts.map

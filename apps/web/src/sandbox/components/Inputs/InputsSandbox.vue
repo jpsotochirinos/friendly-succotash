@@ -9,6 +9,7 @@ import InputGroupAddon from 'primevue/inputgroupaddon';
 import Button from 'primevue/button';
 import ExampleFrame from '../../_shared/ExampleFrame.vue';
 import { useToast } from 'primevue/usetoast';
+import CalendarToolbarSearch from '@/views/calendar/components/CalendarToolbarSearch.vue';
 
 const toast = useToast();
 const title = ref('');
@@ -37,6 +38,14 @@ const codeIconField = `<!-- Buscador con icono izquierdo (toolbar) -->
   <InputText v-model="search" placeholder="Buscar…" />
   <InputIcon v-if="search" class="pi pi-times cursor-pointer" @click="search = ''" />
 </IconField>`;
+
+const codeToolbarSearch = `<!-- Buscador reutilizable para toolbars -->
+<CalendarToolbarSearch
+  v-model="search"
+  placeholder="Buscar expediente o actividad…"
+  a11y-label="Buscar"
+  input-id="toolbar-search"
+/>`;
 
 const codeInputGroup = `<!-- InputGroup: input + botón (copiar n.º expediente) -->
 <InputGroup>
@@ -72,10 +81,11 @@ const antiPatterns = [
     <ExampleFrame title="InputText — tamaños" description="small (32px) · default (38px) · large (44px). En toolbars usar small; en formularios usar default.">
       <div class="flex flex-col gap-4">
         <div v-for="size in ['small', undefined, 'large']" :key="String(size)" class="flex flex-col gap-1">
-          <label class="text-[0.8125rem] font-medium" style="color: var(--fg-default);">
+          <label :for="`inp-size-${String(size ?? 'default')}`" class="text-[0.8125rem] font-medium" style="color: var(--fg-default);">
             {{ size === 'small' ? 'Small' : size === 'large' ? 'Large' : 'Default' }}
           </label>
           <InputText
+            :id="`inp-size-${String(size ?? 'default')}`"
             :size="size as any"
             :placeholder="size === 'small' ? 'Buscar expedientes…' : 'Ej. Pérez vs. Constructora Andina'"
           />
@@ -128,6 +138,22 @@ const antiPatterns = [
           <InputText v-model="searchQuery" placeholder="Buscar…" />
           <InputIcon v-if="searchQuery" class="pi pi-times" style="color: var(--fg-subtle); cursor: pointer;" @click="searchQuery = ''" />
         </IconField>
+      </div>
+    </ExampleFrame>
+
+    <!-- Toolbar search component -->
+    <ExampleFrame
+      title="Input pattern — toolbar search"
+      description="Componente reusable con IconField + InputText small. Para toolbars, filtros de listas y búsquedas inline."
+      :code="codeToolbarSearch"
+    >
+      <div class="max-w-md">
+        <CalendarToolbarSearch
+          v-model="searchQuery"
+          input-id="inputs-toolbar-search"
+          placeholder="Buscar expediente o actividad…"
+          a11y-label="Buscar"
+        />
       </div>
     </ExampleFrame>
 

@@ -1,6 +1,0 @@
-/**
- * @param {Object} node
- * @returns {Object}
- */
-export function pictNodeTypeStrategy(node: Object): Object;
-//# sourceMappingURL=pict-node-type-strategy.d.ts.map

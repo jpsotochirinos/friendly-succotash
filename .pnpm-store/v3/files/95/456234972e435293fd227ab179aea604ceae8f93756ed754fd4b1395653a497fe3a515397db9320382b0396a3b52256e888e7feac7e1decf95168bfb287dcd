@@ -1,4 +1,0 @@
-export type { EditorCommands, CommandProps, Command, ChainedCommand, ChainableCommandObject, } from '../../core/types/ChainedCommands.js';
-export type { NodeAttributesMap, NodeName, NodeAttrs, TypedNode } from '../../core/types/NodeAttributesMap.js';
-export type { MarkAttributesMap, MarkName, MarkAttrs } from '../../core/types/MarkAttributesMap.js';
-//# sourceMappingURL=index.d.ts.map

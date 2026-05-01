@@ -1,8 +1,0 @@
-import { Node } from '../../core/Node.js';
-export const MathBlock: Node<Record<string, never>, Record<string, never>, {
-    originalXml: unknown;
-    textContent: unknown;
-    justification: unknown;
-    paragraphProperties: unknown;
-}>;
-//# sourceMappingURL=math-block.d.ts.map

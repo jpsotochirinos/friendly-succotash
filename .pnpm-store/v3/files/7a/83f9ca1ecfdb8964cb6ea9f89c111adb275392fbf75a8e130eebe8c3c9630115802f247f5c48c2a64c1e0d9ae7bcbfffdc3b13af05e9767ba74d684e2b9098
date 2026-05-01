@@ -1,1 +1,0 @@
-{"version":3,"file":"toggleMarkCascade.d.ts","sourceRoot":"","sources":["../../../../../../../../super-editor/src/editors/v1/core/commands/toggleMarkCascade.js"],"names":[],"mappings":"AAgEA,uDASC;AAtDM,4CAPI,MAAM,YACN;IACN,aAAa,CAAC,EAAE,MAAM,CAAC;IACvB,UAAU,CAAC,EAAE,CAAC,KAAK,EAAC,MAAM,KAAG,OAAO,CAAC;IACrC,oBAAoB,CAAC,EAAE,OAAO,CAAC;CAChC,IAID;;;;CAAwB,SA4BxB"}

@@ -1,7 +1,0 @@
-/**
- * Handle document section node. Special case of w:sdt nodes
- * @param {Object} params - The parameters containing nodes and nodeListHandler
- * @returns {Object|null} An object containing the processed node and consumed count
- */
-export function handleDocumentSectionNode(params: Object): Object | null;
-//# sourceMappingURL=handle-document-section-node.d.ts.map

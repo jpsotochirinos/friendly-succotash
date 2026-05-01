@@ -1,2 +1,0 @@
-export function backspaceNextToRun(): import('./types').Command;
-//# sourceMappingURL=backspaceNextToRun.d.ts.map

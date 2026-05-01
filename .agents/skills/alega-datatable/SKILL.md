@@ -19,6 +19,7 @@ description: >
 | **A — Tabla funcional (CRUD)** | `/sandbox/recipes/data-table-functional` | Clientes · Usuarios · Roles · Partes · Plantillas · Feed sources |
 | **B — Cockpit agrupado (legacy UX)** | `/sandbox/recipes/trackables-cockpit` | Prototipo **agrupado** por buckets de plazo; no es el default de producción |
 | **D — Portafolio virtualizado** | `TrackablesListView.vue` (producción) | **Expedientes en `/trackables`**: KPI en chips, facets backend, `GET /api/trackables/list`, virtual scroll |
+| **E — Mesa workbench expedientes (prototipo)** | `/sandbox/recipes/expediente-v21` | Toolbar en dos bandas (scope edge-to-edge + señales), búsqueda, **filtro asignado** (`CalendarFilterTrigger` + `Popover`), columna **Involucrados** (involved-stack), **Por hacer** (activity-stat como enlaces), plazo con `Tag`, paginación local. **No sustituye** el patrón **D** hasta portarse a producción con API + virtual scroll. |
 | **C — Tabla informativa (read-only)** | `/sandbox/recipes/data-table-informational` | Activity log · Historial · Audit trail · Reportes |
 
 **Referencia viva en producción (expedientes):**
@@ -33,6 +34,7 @@ Cargar **siempre** junto con [alega-ui-context](../alega-ui-context/SKILL.md) y 
 | Entidad | Patrón | Razón |
 |---------|--------|-------|
 | **Expedientes / Trackables (lista principal)** | **D (Portafolio virtualizado)** | Escala 1k–10k+ filas; urgencia en columnas denormalizadas + chips |
+| **Expedientes — mesa workbench (UX coherente calendario)** | **E (Expediente v2.1)** | Prototipo en sandbox: toolbar, señales, filtro asignado, involucrados jerárquicos, tareas enlazables |
 | **Expedientes — vista agrupada futura** | **B (Cockpit)** | Cuando se habilite tab **Agrupado** (sandbox mantiene el prototipo) |
 | **Audiencias / Eventos calendario** | **B (Cockpit)** | Por fecha (hoy / mañana / esta semana) |
 | **Documentos pendientes de revisión** | **B (Cockpit)** | Por urgencia de revisión |

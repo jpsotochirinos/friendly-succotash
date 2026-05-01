@@ -1,5 +1,0 @@
-export function hasExpandedSelection(selection: {
-    from?: number;
-    to?: number;
-} | null | undefined): boolean;
-//# sourceMappingURL=selectionUtils.d.ts.map

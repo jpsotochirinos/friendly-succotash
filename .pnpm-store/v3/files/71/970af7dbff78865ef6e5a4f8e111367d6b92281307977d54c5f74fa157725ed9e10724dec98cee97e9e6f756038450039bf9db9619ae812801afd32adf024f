@@ -1,5 +1,0 @@
-import { ToolbarCommandState, ToolbarContext } from '../types.js';
-export declare const createTableActionsStateDeriver: () => ({ context }: {
-    context: ToolbarContext | null;
-}) => ToolbarCommandState;
-//# sourceMappingURL=table.d.ts.map

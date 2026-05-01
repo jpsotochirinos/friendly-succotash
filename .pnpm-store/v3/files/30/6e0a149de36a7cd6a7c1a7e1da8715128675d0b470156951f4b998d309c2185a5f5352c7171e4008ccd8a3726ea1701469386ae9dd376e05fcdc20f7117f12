@@ -1,9 +1,0 @@
-/**
- * Get the merged run properties for a paragraph style from styles.xml (including basedOn chain).
- * @param {Object} docx - Converted XML (e.g. converter.convertedXml)
- * @param {string} styleId - Paragraph style id (e.g. from w:pStyle)
- * @param {import('@translator').SCEncoderConfig} [params] - Params for encoding (docx for theme etc.)
- * @returns {Object} Run properties object from the style, or {} if not found
- */
-export function getParagraphStyleRunPropertiesFromStylesXml(docx: Object, styleId: string, params?: import('../v3/node-translator/index.js').SCEncoderConfig): Object;
-//# sourceMappingURL=run-properties-export.d.ts.map

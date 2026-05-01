@@ -1,2 +1,0 @@
-export function deleteNextToRun(): import('./types').Command;
-//# sourceMappingURL=deleteNextToRun.d.ts.map

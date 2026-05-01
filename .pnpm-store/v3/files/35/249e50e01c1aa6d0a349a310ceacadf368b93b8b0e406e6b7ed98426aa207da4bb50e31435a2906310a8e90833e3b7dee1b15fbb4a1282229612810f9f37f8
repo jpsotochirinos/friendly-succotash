@@ -1,4 +1,0 @@
-export function createSuperdocVueApp({ disablePiniaDevtools }?: {
-    disablePiniaDevtools?: boolean | undefined;
-}): Object;
-//# sourceMappingURL=create-app.d.ts.map

@@ -58,6 +58,8 @@ const navGroups: NavGroup[] = [
       { to: '/sandbox/patterns/type-chip', label: 'Type-chip' },
       { to: '/sandbox/patterns/kpi-card', label: 'KPI Card' },
       { to: '/sandbox/patterns/activity-stat', label: 'Activity-stat' },
+      { to: '/sandbox/patterns/hierarchical-involved', label: 'Involved stack' },
+      { to: '/sandbox/patterns/workbench-assignee-filter', label: 'Filtro asignado' },
       { to: '/sandbox/patterns/misc-pills', label: 'Misc pills · Empty' },
     ],
   },
@@ -66,6 +68,7 @@ const navGroups: NavGroup[] = [
     icon: 'pi-objects-column',
     links: [
       { to: '/sandbox/recipes/trackables-cockpit', label: 'Cockpit (expedientes)' },
+      { to: '/sandbox/recipes/expediente-v21', label: 'Expediente v2.1' },
       { to: '/sandbox/recipes/data-table-functional', label: 'Tabla funcional' },
       { to: '/sandbox/recipes/data-table-informational', label: 'Tabla informativa' },
       { to: '/sandbox/recipes/calendar-redesign', label: 'Calendario rediseñado' },

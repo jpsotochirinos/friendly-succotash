@@ -1,3 +1,0 @@
-const require_rolldown_runtime = require("./rolldown-runtime-C34Jxks9.cjs");
-const require_remark_gfm = require("./remark-gfm-BP2i96xr.cjs");
-exports.default = require_remark_gfm.remarkGfm;

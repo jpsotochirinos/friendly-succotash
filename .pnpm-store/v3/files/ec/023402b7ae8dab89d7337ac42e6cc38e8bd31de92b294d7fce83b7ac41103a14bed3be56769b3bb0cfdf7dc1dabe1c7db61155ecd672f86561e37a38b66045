@@ -1,8 +1,0 @@
-/**
- * Translates a text watermark node back to w:pict XML with VML text path.
- *
- * @param {Object} params - The parameters for translation.
- * @returns {Object} The XML representation (w:pict).
- */
-export function translateTextWatermark(params: Object): Object;
-//# sourceMappingURL=translate-text-watermark.d.ts.map

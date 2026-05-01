@@ -1,3 +1,0 @@
-import { PartDescriptor } from '../types.js';
-export declare const relsPartDescriptor: PartDescriptor;
-//# sourceMappingURL=rels-part-descriptor.d.ts.map
